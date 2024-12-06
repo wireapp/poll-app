@@ -1,6 +1,6 @@
 package com.wire.bots.polls.setup
 
-import io.ktor.application.Application
+import io.ktor.application.*
 import org.kodein.di.ktor.di
 
 /**

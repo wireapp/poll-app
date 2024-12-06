@@ -1,6 +1,6 @@
 package com.wire.bots.polls.setup.errors
 
-import io.ktor.http.HttpStatusCode
+import io.ktor.http.*
 
 data class RomanUnavailableException(
     val status: HttpStatusCode,

@@ -8,18 +8,12 @@ import com.wire.bots.polls.setup.errors.registerExceptionHandlers
 import com.wire.bots.polls.setup.logging.APP_REQUEST
 import com.wire.bots.polls.setup.logging.INFRA_REQUEST
 import com.wire.bots.polls.utils.createLogger
-import io.ktor.application.Application
-import io.ktor.application.install
-import io.ktor.features.CallId
-import io.ktor.features.CallLogging
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.features.callId
-import io.ktor.jackson.jackson
-import io.ktor.metrics.micrometer.MicrometerMetrics
-import io.ktor.request.header
-import io.ktor.request.uri
-import io.ktor.routing.routing
+import io.ktor.application.*
+import io.ktor.features.*
+import io.ktor.jackson.*
+import io.ktor.metrics.micrometer.*
+import io.ktor.request.*
+import io.ktor.routing.*
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.flywaydb.core.Flyway
@@ -27,7 +21,7 @@ import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import org.slf4j.event.Level
 import java.text.DateFormat
-import java.util.UUID
+import java.util.*
 
 
 private val installationLogger = createLogger("ApplicationSetup")

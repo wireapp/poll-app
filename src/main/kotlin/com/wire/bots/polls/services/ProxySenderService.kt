@@ -10,7 +10,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.url
 import io.ktor.client.statement.HttpStatement
 import io.ktor.client.statement.readText
-import io.ktor.http.ContentType
+import io.ktor.http.*
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import mu.KLogging
