@@ -23,6 +23,6 @@ object PollOptions : Table("poll_option") {
      */
     val optionContent: Column<String> = varchar("option_content", 256)
 
-    override val primaryKey: PrimaryKey?
+    override val primaryKey: PrimaryKey
         get() = PrimaryKey(pollId, optionOrder)
 }

@@ -22,6 +22,6 @@ object Votes : Table("votes") {
      */
     val userId: Column<String> = varchar("user_id", 36)
 
-    override val primaryKey: PrimaryKey?
+    override val primaryKey: PrimaryKey
         get() = PrimaryKey(pollId, userId)
 }

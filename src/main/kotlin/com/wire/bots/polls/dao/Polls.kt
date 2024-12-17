@@ -41,6 +41,6 @@ object Polls : Table("polls") {
      */
     val created: Column<LocalDateTime> = datetime("time_stamp")
 
-    override val primaryKey: PrimaryKey?
+    override val primaryKey: PrimaryKey
         get() = PrimaryKey(id)
 }
