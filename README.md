@@ -5,7 +5,8 @@
 ![Staging Deployment](https://github.com/wireapp/poll-bot/workflows/Staging%20Deployment/badge.svg)
 ![Release Pipeline](https://github.com/wireapp/poll-bot/workflows/Release%20Pipeline/badge.svg)
 
-[Wire](https://wire.com/) bot for the polls.
+[Wire](https://wire.com/) bot for the polls. This version is based on Roman therefore does not employ E2EE directly
+
 Service code to enable Poll bot in your team:
 ```bash
 3131a0af-89d4-4569-b36d-50bcced4b1fb:163a422b-c314-4e34-95af-10b6b36cde18
