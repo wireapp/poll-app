@@ -1,7 +1,10 @@
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+
 plugins {
     kotlin("jvm") version "1.5.30"
     application
     distribution
+    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
     id("net.nemerosa.versioning") version "3.1.0"
 }
 
@@ -67,6 +70,22 @@ dependencies {
 
     // database migrations from the code
     implementation("org.flywaydb", "flyway-core", "7.8.2")
+}
+
+ktlint {
+    verbose.set(true)
+    outputToConsole.set(true)
+    coloredOutput.set(true)
+    reporters {
+        reporter(ReporterType.CHECKSTYLE)
+        reporter(ReporterType.JSON)
+        reporter(ReporterType.HTML)
+    }
+    filter {
+        exclude { element ->
+            element.file.path.contains("generated/")
+        }
+    }
 }
 
 tasks {
