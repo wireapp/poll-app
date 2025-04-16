@@ -1,10 +1,11 @@
 import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 
 plugins {
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "2.1.20"
     application
     distribution
     id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("net.nemerosa.versioning") version "3.1.0"
 }
 
@@ -86,6 +87,15 @@ ktlint {
             element.file.path.contains("generated/")
         }
     }
+}
+
+detekt {
+    toolVersion = "1.23.7"
+    config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+    parallel = true
+    buildUponDefaultConfig = true
+    source.setFrom("src/main/kotlin")
 }
 
 tasks {
