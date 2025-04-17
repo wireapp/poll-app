@@ -98,48 +98,33 @@ detekt {
     source.setFrom("src/main/kotlin")
 }
 
-tasks {
-    val jvmTarget = "1.8"
-    compileKotlin {
-        kotlinOptions.jvmTarget = jvmTarget
-    }
-    compileJava {
-        targetCompatibility = jvmTarget
-    }
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = jvmTarget
-    }
-    compileTestJava {
-        targetCompatibility = jvmTarget
-    }
+kotlin {
+    jvmToolchain(17)
+}
 
-    distTar {
-        archiveFileName.set("app.tar")
-    }
+tasks.distTar {
+    archiveFileName.set("app.tar")
+}
 
-    withType<Test> {
-        useJUnitPlatform()
-    }
+tasks.test {
+    useJUnitPlatform()
+}
 
-    register<Jar>("fatJar") {
-        manifest {
-            attributes["Main-Class"] = mClass
-        }
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveFileName.set("polls.jar")
-        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-        from(sourceSets.main.get().output)
+tasks.register<Jar>("fatJar") {
+    manifest {
+        attributes["Main-Class"] = mClass
     }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName.set("polls.jar")
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    from(sourceSets.main.get().output)
+}
 
-    register("resolveDependencies") {
-        doLast {
-            project.allprojects.forEach { subProject ->
-                with(subProject) {
-                    buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
-                    configurations.compileClasspath.get().resolve()
-                    configurations.testCompileClasspath.get().resolve()
-                }
-            }
-        }
+
+tasks.register("resolveDependencies") {
+    doLast {
+        buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
+        configurations.compileClasspath.get().resolve()
+        configurations.testCompileClasspath.get().resolve()
     }
 }
