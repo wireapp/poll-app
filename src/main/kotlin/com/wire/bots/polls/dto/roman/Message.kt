@@ -103,7 +103,9 @@ data class Message(
      * Avoid printing out the token by mistake if object is printed.
      */
     override fun toString(): String =
-        "Message(botId='$botId', userId=$userId, conversationId=$conversationId, type='$type', messageId=$messageId, text=$text, refMessageId=$refMessageId, reaction=$reaction, image=$image, handle=$handle, locale=$locale, poll=$poll, mimeType=$mimeType)"
+        "Message(botId='$botId', userId=$userId, conversationId=$conversationId, type='$type', " +
+            "messageId=$messageId, text=$text, refMessageId=$refMessageId, reaction=$reaction, " +
+            "image=$image, handle=$handle, locale=$locale, poll=$poll, mimeType=$mimeType)"
 }
 
 /* JSON from the swagger
