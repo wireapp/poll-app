@@ -19,14 +19,18 @@ import pw.forst.katlib.mapToSet
  * Simple repository for handling database transactions on one place.
  */
 class PollRepository {
-
     private companion object : KLogging()
 
     /**
      * Saves given poll to database and returns its id (same as the [pollId] parameter,
      * but this design supports fluent style in the services.
      */
-    suspend fun savePoll(poll: PollDto, pollId: String, userId: String, botSelfId: String) = newSuspendedTransaction {
+    suspend fun savePoll(
+        poll: PollDto,
+        pollId: String,
+        userId: String,
+        botSelfId: String
+    ) = newSuspendedTransaction {
         Polls.insert {
             it[id] = pollId
             it[ownerId] = userId
@@ -56,78 +60,90 @@ class PollRepository {
     /**
      * Returns question for given poll Id. If the poll does not exist, null is returned.
      */
-    suspend fun getPollQuestion(pollId: String) = newSuspendedTransaction {
-        (Polls leftJoin Mentions)
-            .select { Polls.id eq pollId }
-            .groupBy(
-                { it[Polls.body] },
-                {
-                    if (it.getOrNull(Mentions.userId) != null) {
-                        Mention(
-                            userId = it[Mentions.userId],
-                            offset = it[Mentions.offset],
-                            length = it[Mentions.length]
-                        )
-                    } else {
-                        null
+    suspend fun getPollQuestion(pollId: String) =
+        newSuspendedTransaction {
+            (Polls leftJoin Mentions)
+                .select { Polls.id eq pollId }
+                .groupBy(
+                    { it[Polls.body] },
+                    {
+                        if (it.getOrNull(Mentions.userId) != null) {
+                            Mention(
+                                userId = it[Mentions.userId],
+                                offset = it[Mentions.offset],
+                                length = it[Mentions.length]
+                            )
+                        } else {
+                            null
+                        }
                     }
-                }
-            ).map { (pollBody, mentions) ->
-                Question(body = pollBody, mentions = mentions.filterNotNull())
-            }.singleOrNull()
-    }
+                ).map { (pollBody, mentions) ->
+                    Question(body = pollBody, mentions = mentions.filterNotNull())
+                }.singleOrNull()
+        }
 
     /**
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
      */
-    suspend fun vote(pollAction: PollAction) = newSuspendedTransaction {
-        Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
-            it[pollId] = pollAction.pollId
-            it[pollOption] = pollAction.optionId
-            it[userId] = pollAction.userId
+    suspend fun vote(pollAction: PollAction) =
+        newSuspendedTransaction {
+            Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
+                it[pollId] = pollAction.pollId
+                it[pollOption] = pollAction.optionId
+                it[userId] = pollAction.userId
+            }
         }
-    }
 
     /**
      * Retrieves stats for given pollId.
      *
      * Offset/option/button content as keys and count of the votes as values.
      */
-    suspend fun stats(pollId: String) = newSuspendedTransaction {
-        PollOptions.join(Votes, JoinType.LEFT,
-            additionalConstraint = {
-                (Votes.pollId eq PollOptions.pollId) and (Votes.pollOption eq PollOptions.optionOrder)
-            }
-        ).slice(PollOptions.optionOrder, PollOptions.optionContent, Votes.userId)
-            .select { PollOptions.pollId eq pollId }
-            // left join so userId can be null
-            .groupBy({ it[PollOptions.optionOrder] to it[PollOptions.optionContent] }, { it.getOrNull(Votes.userId) })
-            .mapValues { (_, votingUsers) -> votingUsers.count { !it.isNullOrBlank() } }
-    }
+    suspend fun stats(pollId: String) =
+        newSuspendedTransaction {
+            PollOptions
+                .join(
+                    Votes,
+                    JoinType.LEFT,
+                    additionalConstraint = {
+                        (Votes.pollId eq PollOptions.pollId) and
+                            (Votes.pollOption eq PollOptions.optionOrder)
+                    }
+                ).slice(PollOptions.optionOrder, PollOptions.optionContent, Votes.userId)
+                .select { PollOptions.pollId eq pollId }
+                // left join so userId can be null
+                .groupBy({
+                    it[PollOptions.optionOrder] to it[PollOptions.optionContent]
+                }, { it.getOrNull(Votes.userId) })
+                .mapValues { (_, votingUsers) -> votingUsers.count { !it.isNullOrBlank() } }
+        }
 
     /**
      * Returns set of user ids that voted in the poll with given pollId.
      */
-    suspend fun votingUsers(pollId: String) = newSuspendedTransaction {
-        Votes
-            .slice(Votes.userId)
-            .select { Votes.pollId eq pollId }
-            .mapToSet { it[Votes.userId] }
-    }
+    suspend fun votingUsers(pollId: String) =
+        newSuspendedTransaction {
+            Votes
+                .slice(Votes.userId)
+                .select { Votes.pollId eq pollId }
+                .mapToSet { it[Votes.userId] }
+        }
 
     /**
      * Returns set of user ids that voted in the poll with given pollId.
      */
-    suspend fun getLatestForBot(botId: String) = newSuspendedTransaction {
-        Polls.slice(Polls.id)
-            // it must be for single bot
-            .select { Polls.botId eq botId }
-            // such as latest is on top
-            .orderBy(Polls.created to SortOrder.DESC)
-            // select just one
-            .limit(1)
-            .singleOrNull()
-            ?.get(Polls.id)
-    }
+    suspend fun getLatestForBot(botId: String) =
+        newSuspendedTransaction {
+            Polls
+                .slice(Polls.id)
+                // it must be for single bot
+                .select { Polls.botId eq botId }
+                // such as latest is on top
+                .orderBy(Polls.created to SortOrder.DESC)
+                // select just one
+                .limit(1)
+                .singleOrNull()
+                ?.get(Polls.id)
+        }
 }

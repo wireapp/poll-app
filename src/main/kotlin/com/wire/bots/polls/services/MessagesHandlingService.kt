@@ -10,7 +10,6 @@ class MessagesHandlingService(
     private val pollService: PollService,
     private val userCommunicationService: UserCommunicationService
 ) {
-
     private companion object : KLogging()
 
     suspend fun handle(message: Message) {
@@ -18,22 +17,35 @@ class MessagesHandlingService(
         logger.trace { "Message: $message" }
 
         val handled = when (message.type) {
-            "conversation.bot_request" -> false.also { logger.debug { "Bot was added to conversation." } }
-            "conversation.bot_removed" -> false.also { logger.debug { "Bot was removed from the conversation." } }
+            "conversation.bot_request" -> false.also {
+                logger.debug { "Bot was added to conversation." }
+            }
+            "conversation.bot_removed" -> false.also {
+                logger.debug { "Bot was removed from the conversation." }
+            }
             else -> {
                 logger.debug { "Handling type: ${message.type}" }
                 when {
                     message.token != null -> tokenAwareHandle(message.token, message)
-                    else -> false.also { logger.warn { "Proxy didn't send token along side the message with type ${message.type}. Message:$message" } }
+                    else -> false.also {
+                        logger.warn {
+                            "Proxy didn't send token along side the message with type ${message.type}. Message:$message"
+                        }
+                    }
                 }
             }
         }
 
-        logger.debug { if (handled) "Bot reacted to the message" else "Bot didn't react to the message." }
+        logger.debug {
+            if (handled) "Bot reacted to the message" else "Bot didn't react to the message."
+        }
         logger.debug { "Message handled." }
     }
 
-    private suspend fun tokenAwareHandle(token: String, message: Message): Boolean {
+    private suspend fun tokenAwareHandle(
+        token: String,
+        message: Message
+    ): Boolean {
         logger.debug { "Message contains token." }
         return runCatching {
             when (message.type) {
@@ -46,35 +58,53 @@ class MessagesHandlingService(
                     logger.debug { "New text message received." }
                     handleText(token, message)
                 }
-                "conversation.new_image" -> true.also { logger.debug { "New image posted to conversation, ignoring." } }
+                "conversation.new_image" -> true.also {
+                    logger.debug { "New image posted to conversation, ignoring." }
+                }
                 "conversation.reaction" -> {
                     logger.debug { "Reaction message" }
                     pollService.sendStats(
                         token = token,
-                        pollId = requireNotNull(message.refMessageId) { "Reaction must contain refMessageId" }
+                        pollId = requireNotNull(
+                            message.refMessageId
+                        ) { "Reaction must contain refMessageId" }
                     )
                     true
                 }
                 "conversation.poll.action" -> {
-                    val poll = requireNotNull(message.poll) { "Reaction to a poll, poll object must be set!" }
+                    val poll =
+                        requireNotNull(
+                            message.poll
+                        ) { "Reaction to a poll, poll object must be set!" }
                     pollService.pollAction(
                         token,
                         PollAction(
                             pollId = poll.id,
-                            optionId = requireNotNull(poll.offset) { "Offset/Option id must be set!" },
-                            userId = requireNotNull(message.userId) { "UserId of user who sent the message must be set." }
+                            optionId = requireNotNull(
+                                poll.offset
+                            ) { "Offset/Option id must be set!" },
+                            userId = requireNotNull(
+                                message.userId
+                            ) { "UserId of user who sent the message must be set." }
                         )
                     )
                     true
                 }
-                else -> false.also { logger.warn { "Unknown message type of ${message.type}. Ignoring." } }
+                else -> false.also {
+                    logger.warn { "Unknown message type of ${message.type}. Ignoring." }
+                }
             }
         }.onFailure {
-            logger.error(it) { "Exception during handling the message: $message with token $token." }
+            logger.error(
+                it
+            ) { "Exception during handling the message: $message with token $token." }
         }.getOrThrow()
     }
 
-    private suspend fun handleText(token: String, message: Message): Boolean {
+    private suspend fun handleText(
+        token: String,
+        message: Message
+    ): Boolean {
         var handled = true
 
         fun ignore(reason: () -> String) {
@@ -88,9 +118,16 @@ class MessagesHandlingService(
                 // it is a reply on something
                 refMessageId != null && text != null -> when {
                     // request for stats
-                    text.data.trim().startsWith("/stats") -> pollService.sendStats(token, refMessageId)
+                    text.data.trim().startsWith(
+                        "/stats"
+                    ) -> pollService.sendStats(token, refMessageId)
                     // integer vote where the text contains offset
-                    text.data.trim().toIntOrNull() != null -> vote(token, userId, refMessageId, text.data)
+                    text.data.trim().toIntOrNull() != null -> vote(
+                        token,
+                        userId,
+                        refMessageId,
+                        text.data
+                    )
                     else -> ignore { "Ignoring the message as it is reply unrelated to the bot" }
                 }
                 // text message with just text
@@ -99,11 +136,21 @@ class MessagesHandlingService(
                     when {
                         // poll request
                         trimmed.startsWith("/poll") ->
-                            pollService.createPoll(token, UsersInput(userId, trimmed, text.mentions ?: emptyList()), botId)
+                            pollService.createPoll(
+                                token,
+                                UsersInput(
+                                    userId,
+                                    trimmed,
+                                    text.mentions ?: emptyList()
+                                ),
+                                botId
+                            )
                         // stats request
                         trimmed.startsWith("/stats") -> pollService.sendStatsForLatest(token, botId)
                         // send version when asked
-                        trimmed.startsWith("/version") -> userCommunicationService.sendVersion(token)
+                        trimmed.startsWith(
+                            "/version"
+                        ) -> userCommunicationService.sendVersion(token)
                         // send version when asked
                         trimmed.startsWith("/help") -> userCommunicationService.sendHelp(token)
                         // easter egg, good bot is good
@@ -117,11 +164,18 @@ class MessagesHandlingService(
         return handled
     }
 
-    private suspend fun vote(token: String, userId: String, refMessageId: String, text: String) = pollService.pollAction(
+    private suspend fun vote(
+        token: String,
+        userId: String,
+        refMessageId: String,
+        text: String
+    ) = pollService.pollAction(
         token,
         PollAction(
             pollId = refMessageId,
-            optionId = requireNotNull(text.toIntOrNull()) { "Text message must be a valid integer." },
+            optionId = requireNotNull(
+                text.toIntOrNull()
+            ) { "Text message must be a valid integer." },
             userId = userId
         )
     )

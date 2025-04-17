@@ -24,7 +24,10 @@ class StatsFormattingService(
      * Prepares message with statistics about the poll to the proxy.
      * When conversationMembers is null, stats are formatted according to the max votes per option.
      */
-    suspend fun formatStats(pollId: String, conversationMembers: Int?): BotMessage? {
+    suspend fun formatStats(
+        pollId: String,
+        conversationMembers: Int?
+    ): BotMessage? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
         } ?: return null
@@ -39,7 +42,11 @@ class StatsFormattingService(
         val options = formatVotes(stats, conversationMembers)
         return statsMessage(
             text = "$title$newLine$options",
-            mentions = pollQuestion.mentions.map { it.copy(offset = it.offset + titlePrefix.length) }
+            mentions = pollQuestion.mentions.map {
+                it.copy(
+                    offset = it.offset + titlePrefix.length
+                )
+            }
         )
     }
 
@@ -63,9 +70,13 @@ class StatsFormattingService(
      * - ⬛⬛⬛ A (3)
      * - ⬜⬜⬜ B (1)
      */
-    private fun formatVotes(stats: Map<Pair<Int, String>, Int>, conversationMembers: Int?): String {
+    private fun formatVotes(
+        stats: Map<Pair<Int, String>, Int>,
+        conversationMembers: Int?
+    ): String {
         // we can use assert as the result size is checked
-        val mostPopularOptionVoteCount = requireNotNull(stats.values.maxOrNull()) { "There were no stats!" }
+        val mostPopularOptionVoteCount =
+            requireNotNull(stats.values.maxOrNull()) { "There were no stats!" }
 
         val maximumSize = min(
             conversationMembers ?: Integer.MAX_VALUE,
@@ -74,21 +85,33 @@ class StatsFormattingService(
 
         return stats
             .map { (option, votingUsers) ->
-                VotingOption(if (votingUsers == mostPopularOptionVoteCount) "**" else "*", option.second, votingUsers)
+                VotingOption(
+                    if (votingUsers ==
+                        mostPopularOptionVoteCount
+                    ) {
+                        "**"
+                    } else {
+                        "*"
+                    },
+                    option.second,
+                    votingUsers
+                )
             }.let { votes ->
                 votes.joinToString(newLine) { it.toString(maximumSize) }
             }
     }
 
     private fun prepareTitle(body: String) = "$titlePrefix${body}\"*"
-
 }
 
 /**
  * Class used for formatting voting objects.
  */
-private data class VotingOption(val style: String, val option: String, val votingUsers: Int) {
-
+private data class VotingOption(
+    val style: String,
+    val option: String,
+    val votingUsers: Int
+) {
     private companion object {
         const val notVote = "⚪"
         const val vote = "🟢"
@@ -100,4 +123,3 @@ private data class VotingOption(val style: String, val option: String, val votin
         return "$votes$missingVotes $style$option$style ($votingUsers)"
     }
 }
-

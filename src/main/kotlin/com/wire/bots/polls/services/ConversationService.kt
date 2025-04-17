@@ -11,8 +11,10 @@ import mu.KLogging
 /**
  * Provides possibility to check the conversation details.
  */
-class ConversationService(private val client: HttpClient, config: ProxyConfiguration) {
-
+class ConversationService(
+    private val client: HttpClient,
+    config: ProxyConfiguration
+) {
     private companion object : KLogging() {
         const val conversationPath = "/conversation"
     }

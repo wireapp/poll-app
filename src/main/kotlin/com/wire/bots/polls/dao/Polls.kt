@@ -19,12 +19,10 @@ object Polls : Table("polls") {
      */
     val ownerId: Column<String> = varchar("owner_id", 36)
 
-
     /**
      * Id of the bot that created this poll. UUID.
      */
     val botId: Column<String> = varchar("bot_id", 36)
-
 
     /**
      * Determines whether is the pool active and whether new votes should be accepted.

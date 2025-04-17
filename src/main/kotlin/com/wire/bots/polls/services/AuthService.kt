@@ -7,8 +7,9 @@ import pw.forst.katlib.whenNull
 /**
  * Authentication service.
  */
-class AuthService(private val proxyToken: String) {
-
+class AuthService(
+    private val proxyToken: String
+) {
     private companion object : KLogging() {
         const val authHeader = "Authorization"
         const val bearerPrefix = "Bearer "
@@ -17,7 +18,8 @@ class AuthService(private val proxyToken: String) {
     /**
      * Validates token.
      */
-    fun isTokenValid(headersGet: () -> Headers) = runCatching { isTokenValid(headersGet()) }.getOrNull() ?: false
+    fun isTokenValid(headersGet: () -> Headers) =
+        runCatching { isTokenValid(headersGet()) }.getOrNull() ?: false
 
     private fun isTokenValid(headers: Headers): Boolean {
         val header = headers[authHeader].whenNull {
@@ -26,6 +28,8 @@ class AuthService(private val proxyToken: String) {
 
         return if (!header.startsWith(bearerPrefix)) {
             false
-        } else header.substringAfter(bearerPrefix) == proxyToken
+        } else {
+            header.substringAfter(bearerPrefix) == proxyToken
+        }
     }
 }

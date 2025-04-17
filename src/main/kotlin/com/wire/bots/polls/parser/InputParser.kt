@@ -7,7 +7,6 @@ import com.wire.bots.polls.dto.common.Mention
 import mu.KLogging
 
 class InputParser {
-
     private companion object : KLogging() {
         val delimiters = charArrayOf('\"', '“')
 
@@ -15,7 +14,7 @@ class InputParser {
     }
 
     fun parsePoll(userInput: UsersInput): PollDto? {
-        //TODO currently not supporting char " in the strings
+        // TODO currently not supporting char " in the strings
         val inputs = userInput.input
             .substringAfter("/poll", "")
             .substringBeforeLast("\"")
@@ -37,10 +36,10 @@ class InputParser {
         )
     }
 
-
     private fun shiftMentions(usersInput: UsersInput): List<Mention> {
         val delimiterIndex = usersInput.input.indexOfFirst { delimitersSet.contains(it) }
-        val emptyCharsInQuestion = usersInput.input.substringAfter(usersInput.input[delimiterIndex])
+        val emptyCharsInQuestion = usersInput.input
+            .substringAfter(usersInput.input[delimiterIndex])
             .takeWhile { it == ' ' }
             .count()
 

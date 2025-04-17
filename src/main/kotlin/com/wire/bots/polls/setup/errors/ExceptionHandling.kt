@@ -26,13 +26,18 @@ fun Application.registerExceptionHandlers() {
         }
 
         exception<RomanUnavailableException> { cause ->
-            logger.error(cause) { "Error in communication with Roman. Status: ${cause.status}, body: ${cause.body}." }
+            logger.error(cause) {
+                "Error in communication with Roman. Status: ${cause.status}, body: ${cause.body}."
+            }
             call.errorResponse(HttpStatusCode.ServiceUnavailable, cause.message)
             registry.countException(cause)
         }
     }
 }
 
-suspend inline fun ApplicationCall.errorResponse(statusCode: HttpStatusCode, message: String?) {
+suspend inline fun ApplicationCall.errorResponse(
+    statusCode: HttpStatusCode,
+    message: String?
+) {
     respond(status = statusCode, message = mapOf("message" to (message ?: "No details specified")))
 }

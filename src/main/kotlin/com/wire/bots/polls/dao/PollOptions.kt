@@ -7,7 +7,6 @@ import org.jetbrains.exposed.sql.Table
  * Poll options.
  */
 object PollOptions : Table("poll_option") {
-
     /**
      * Id of the poll this option is for. UUID.
      */

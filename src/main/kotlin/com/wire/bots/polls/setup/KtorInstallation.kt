@@ -23,7 +23,6 @@ import org.slf4j.event.Level
 import java.text.DateFormat
 import java.util.*
 
-
 private val installationLogger = createLogger("ApplicationSetup")
 
 /**
@@ -59,7 +58,9 @@ fun Application.connectDatabase() {
         migrateDatabase(dbConfig)
     } else {
         // TODO verify handling, maybe exit the App?
-        installationLogger.error { "It was not possible to connect to db database! The application will start but it won't work." }
+        installationLogger.error {
+            "It was not possible to connect to db database! The application will start but it won't work."
+        }
     }
 }
 
@@ -75,8 +76,11 @@ fun migrateDatabase(dbConfig: DatabaseConfiguration) {
         .migrate()
 
     installationLogger.info {
-        if (migrateResult.migrationsExecuted == 0) "No migrations necessary."
-        else "Applied ${migrateResult.migrationsExecuted} migrations."
+        if (migrateResult.migrationsExecuted == 0) {
+            "No migrations necessary."
+        } else {
+            "Applied ${migrateResult.migrationsExecuted} migrations."
+        }
     }
 }
 
@@ -125,7 +129,8 @@ fun Application.installFrameworks() {
     val prometheusRegistry by closestDI().instance<PrometheusMeterRegistry>()
     install(MicrometerMetrics) {
         registry = prometheusRegistry
-        distributionStatisticConfig = DistributionStatisticConfig.Builder()
+        distributionStatisticConfig = DistributionStatisticConfig
+            .Builder()
             .percentilesHistogram(true)
             .build()
     }

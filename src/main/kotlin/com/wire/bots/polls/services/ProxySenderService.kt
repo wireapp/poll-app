@@ -20,8 +20,10 @@ import java.nio.charset.Charset
 /**
  * Service responsible for sending requests to the proxy service Roman.
  */
-class ProxySenderService(private val client: HttpClient, config: ProxyConfiguration) {
-
+class ProxySenderService(
+    private val client: HttpClient,
+    config: ProxyConfiguration
+) {
     private companion object : KLogging() {
         const val conversationPath = "/conversation"
     }
@@ -31,32 +33,40 @@ class ProxySenderService(private val client: HttpClient, config: ProxyConfigurat
     /**
      * Send given message with provided token.
      */
-    suspend fun send(token: String, message: BotMessage): Response? {
+    suspend fun send(
+        token: String,
+        message: BotMessage
+    ): Response? {
         logger.debug { "Sending: ${createJson(message)}" }
 
-        return client.post<HttpStatement>(body = message) {
-            url(conversationEndpoint)
-            contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer $token")
-        }.execute {
-            logger.debug { "Message sent." }
-            when {
-                it.status.isSuccess() -> {
-                    it.receive<Response>().also {
-                        logger.info { "Message sent successfully: message id: ${it.messageId}" }
+        return client
+            .post<HttpStatement>(body = message) {
+                url(conversationEndpoint)
+                contentType(ContentType.Application.Json)
+                header("Authorization", "Bearer $token")
+            }.execute {
+                logger.debug { "Message sent." }
+                when {
+                    it.status.isSuccess() -> {
+                        it.receive<Response>().also {
+                            logger.info { "Message sent successfully: message id: ${it.messageId}" }
+                        }
+                    }
+                    else -> {
+                        val body = it.readText(Charset.defaultCharset())
+                        logger.error {
+                            "Error in communication with proxy. Status: ${it.status}, body: $body."
+                        }
+                        null
                     }
                 }
-                else -> {
-                    val body = it.readText(Charset.defaultCharset())
-                    logger.error { "Error in communication with proxy. Status: ${it.status}, body: $body." }
-                    null
-                }
             }
-        }
     }
 }
 
 /**
  * Configuration used to connect to the proxy.
  */
-data class ProxyConfiguration(val baseUrl: String)
+data class ProxyConfiguration(
+    val baseUrl: String
+)

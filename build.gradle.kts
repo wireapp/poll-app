@@ -120,7 +120,6 @@ tasks.register<Jar>("fatJar") {
     from(sourceSets.main.get().output)
 }
 
-
 tasks.register("resolveDependencies") {
     doLast {
         buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }

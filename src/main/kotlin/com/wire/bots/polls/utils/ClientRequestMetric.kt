@@ -13,12 +13,12 @@ import mu.KLogging
  */
 typealias RequestMetricHandler = suspend (RequestMetric) -> Unit
 
-
 /**
  * Enables callback after HttpClient sends a request with [RequestMetric].
  */
-class ClientRequestMetric(private val metricHandler: RequestMetricHandler) {
-
+class ClientRequestMetric(
+    private val metricHandler: RequestMetricHandler
+) {
     class Config {
         internal var metricHandler: RequestMetricHandler = {}
 
@@ -31,14 +31,16 @@ class ClientRequestMetric(private val metricHandler: RequestMetricHandler) {
     }
 
     companion object Feature : HttpClientFeature<Config, ClientRequestMetric>, KLogging() {
-
         override val key: AttributeKey<ClientRequestMetric> =
             AttributeKey("ClientRequestMetric")
 
         override fun prepare(block: Config.() -> Unit) =
             ClientRequestMetric(Config().apply(block).metricHandler)
 
-        override fun install(feature: ClientRequestMetric, scope: HttpClient) {
+        override fun install(
+            feature: ClientRequestMetric,
+            scope: HttpClient
+        ) {
             // synchronous response pipeline hook
             // instead of ResponseObserver - which spawns a new coroutine
             scope.receivePipeline.intercept(HttpReceivePipeline.After) { response ->
@@ -50,16 +52,16 @@ class ClientRequestMetric(private val metricHandler: RequestMetricHandler) {
         }
 
         // does not touch the content
-        private fun HttpResponse.toRequestMetric() = RequestMetric(
-            requestTime = requestTime.timestamp,
-            responseTime = responseTime.timestamp,
-            method = request.method.value,
-            url = request.url.toString(),
-            responseCode = status.value
-        )
+        private fun HttpResponse.toRequestMetric() =
+            RequestMetric(
+                requestTime = requestTime.timestamp,
+                responseTime = responseTime.timestamp,
+                method = request.method.value,
+                url = request.url.toString(),
+                responseCode = status.value
+            )
     }
 }
-
 
 data class RequestMetric(
     // number of epoch milliseconds
@@ -69,4 +71,3 @@ data class RequestMetric(
     val url: String,
     val responseCode: Int
 )
-
