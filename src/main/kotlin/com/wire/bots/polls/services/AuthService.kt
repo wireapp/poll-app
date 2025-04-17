@@ -1,6 +1,6 @@
 package com.wire.bots.polls.services
 
-import io.ktor.http.*
+import io.ktor.http.Headers
 import mu.KLogging
 import pw.forst.katlib.whenNull
 

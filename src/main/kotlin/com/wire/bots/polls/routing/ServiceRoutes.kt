@@ -1,10 +1,12 @@
 package com.wire.bots.polls.routing
 
 import com.wire.bots.polls.dao.DatabaseSetup
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.response.respond
+import io.ktor.routing.Routing
+import io.ktor.routing.get
+import io.ktor.response.respondTextWriter
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI

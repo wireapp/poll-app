@@ -1,7 +1,7 @@
 package com.wire.bots.polls.setup
 
-import io.ktor.application.*
 import org.kodein.di.ktor.di
+import io.ktor.application.Application
 
 /**
  * Inits and sets up DI container.

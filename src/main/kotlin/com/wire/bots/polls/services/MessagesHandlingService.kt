@@ -3,7 +3,7 @@ package com.wire.bots.polls.services
 import com.wire.bots.polls.dto.PollAction
 import com.wire.bots.polls.dto.UsersInput
 import com.wire.bots.polls.dto.roman.Message
-import io.ktor.features.*
+import io.ktor.features.BadRequestException
 import mu.KLogging
 
 class MessagesHandlingService(

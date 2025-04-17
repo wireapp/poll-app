@@ -5,7 +5,7 @@ import io.ktor.client.features.HttpClientFeature
 import io.ktor.client.statement.HttpReceivePipeline
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.request
-import io.ktor.util.*
+import io.ktor.util.AttributeKey
 import mu.KLogging
 
 /**
