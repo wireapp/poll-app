@@ -12,7 +12,7 @@ class StatsFormattingService(
     private val repository: PollRepository
 ) {
     private companion object : KLogging() {
-        const val titlePrefix = "**Results** for poll *\""
+        const val TITLE_PREFIX = "**Results** for poll *\""
 
         /**
          * Maximum number of trailing vote slots to be displayed, considered the most voted option.
@@ -30,11 +30,11 @@ class StatsFormattingService(
     ): BotMessage? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
-        } ?: return null
+        }
 
         val stats = repository.stats(pollId)
-        if (stats.isEmpty()) {
-            logger.info { "There are no data for given pollId." }
+        stats.ifEmpty { logger.info { "There are no data for given pollId." } }
+        if (pollQuestion == null || stats.isEmpty()) {
             return null
         }
 
@@ -44,7 +44,7 @@ class StatsFormattingService(
             text = "$title$newLine$options",
             mentions = pollQuestion.mentions.map {
                 it.copy(
-                    offset = it.offset + titlePrefix.length
+                    offset = it.offset + TITLE_PREFIX.length
                 )
             }
         )
@@ -101,7 +101,7 @@ class StatsFormattingService(
             }
     }
 
-    private fun prepareTitle(body: String) = "$titlePrefix${body}\"*"
+    private fun prepareTitle(body: String) = "$TITLE_PREFIX${body}\"*"
 }
 
 /**
@@ -113,13 +113,13 @@ private data class VotingOption(
     val votingUsers: Int
 ) {
     private companion object {
-        const val notVote = "⚪"
-        const val vote = "🟢"
+        const val NOT_VOTE = "⚪"
+        const val VOTE = "🟢"
     }
 
     fun toString(max: Int): String {
-        val missingVotes = (0 until max - votingUsers).joinToString("") { notVote }
-        val votes = (0 until votingUsers).joinToString("") { vote }
+        val missingVotes = (0 until max - votingUsers).joinToString("") { NOT_VOTE }
+        val votes = (0 until votingUsers).joinToString("") { VOTE }
         return "$votes$missingVotes $style$option$style ($votingUsers)"
     }
 }
