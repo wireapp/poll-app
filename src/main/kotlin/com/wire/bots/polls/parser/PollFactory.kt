@@ -9,8 +9,10 @@ import pw.forst.katlib.whenNull
 /**
  * Class used for creating the polls from the text. Parsing and creating the poll objects.
  */
-class PollFactory(private val inputParser: InputParser, private val pollValidation: PollValidation) {
-
+class PollFactory(
+    private val inputParser: InputParser,
+    private val pollValidation: PollValidation
+) {
     private companion object : KLogging()
 
     /**
@@ -28,8 +30,9 @@ class PollFactory(private val inputParser: InputParser, private val pollValidati
             poll
         } else {
             logger.warn {
-                "It was not possible to create poll for user input: $usersInput due to errors listed bellow:" +
-                        "$newLine${errors.joinToString(newLine)}"
+                "It was not possible to create poll for user input: " +
+                    "$usersInput due to errors listed bellow:" +
+                    "$newLine${errors.joinToString(newLine)}"
             }
             null
         }

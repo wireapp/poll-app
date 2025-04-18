@@ -22,7 +22,6 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 
 fun DI.MainBuilder.configureContainer() {
-
     bind<PollValidation>() with singleton { PollValidation() }
 
     bind<HttpClient>() with singleton { createHttpClient(instance()) }
@@ -48,13 +47,25 @@ fun DI.MainBuilder.configureContainer() {
 
     bind<PollRepository>() with singleton { PollRepository() }
 
-    bind<PollService>() with singleton { PollService(instance(), instance(), instance(), instance(), instance(), instance()) }
+    bind<PollService>() with
+        singleton {
+            PollService(
+                instance(),
+                instance(),
+                instance(),
+                instance(),
+                instance(),
+                instance()
+            )
+        }
 
-    bind<UserCommunicationService>() with singleton { UserCommunicationService(instance(), instance("version")) }
+    bind<UserCommunicationService>() with
+        singleton { UserCommunicationService(instance(), instance("version")) }
 
     bind<ConversationService>() with singleton { ConversationService(instance(), instance()) }
 
-    bind<MessagesHandlingService>() with singleton { MessagesHandlingService(instance(), instance()) }
+    bind<MessagesHandlingService>() with
+        singleton { MessagesHandlingService(instance(), instance()) }
 
     bind<AuthService>() with singleton {
         AuthService(proxyToken = instance("proxy-auth"))

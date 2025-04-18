@@ -1,7 +1,11 @@
+import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
+
 plugins {
-    kotlin("jvm") version "1.5.30"
+    kotlin("jvm") version "2.1.20"
     application
     distribution
+    id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
+    id("io.gitlab.arturbosch.detekt") version "1.23.7"
     id("net.nemerosa.versioning") version "3.1.0"
 }
 
@@ -69,48 +73,52 @@ dependencies {
     implementation("org.flywaydb", "flyway-core", "7.8.2")
 }
 
-tasks {
-    val jvmTarget = "1.8"
-    compileKotlin {
-        kotlinOptions.jvmTarget = jvmTarget
+ktlint {
+    verbose.set(true)
+    outputToConsole.set(true)
+    coloredOutput.set(true)
+    reporters {
+        reporter(ReporterType.CHECKSTYLE)
+        reporter(ReporterType.JSON)
+        reporter(ReporterType.HTML)
     }
-    compileJava {
-        targetCompatibility = jvmTarget
-    }
-    compileTestKotlin {
-        kotlinOptions.jvmTarget = jvmTarget
-    }
-    compileTestJava {
-        targetCompatibility = jvmTarget
-    }
+}
 
-    distTar {
-        archiveFileName.set("app.tar")
-    }
+detekt {
+    toolVersion = "1.23.7"
+    config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
+    baseline = file("$rootDir/config/detekt/baseline.xml")
+    parallel = true
+    buildUponDefaultConfig = true
+    source.setFrom("src/main/kotlin")
+}
 
-    withType<Test> {
-        useJUnitPlatform()
-    }
+kotlin {
+    jvmToolchain(17)
+}
 
-    register<Jar>("fatJar") {
-        manifest {
-            attributes["Main-Class"] = mClass
-        }
-        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        archiveFileName.set("polls.jar")
-        from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-        from(sourceSets.main.get().output)
-    }
+tasks.distTar {
+    archiveFileName.set("app.tar")
+}
 
-    register("resolveDependencies") {
-        doLast {
-            project.allprojects.forEach { subProject ->
-                with(subProject) {
-                    buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
-                    configurations.compileClasspath.get().resolve()
-                    configurations.testCompileClasspath.get().resolve()
-                }
-            }
-        }
+tasks.test {
+    useJUnitPlatform()
+}
+
+tasks.register<Jar>("fatJar") {
+    manifest {
+        attributes["Main-Class"] = mClass
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveFileName.set("polls.jar")
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    from(sourceSets.main.get().output)
+}
+
+tasks.register("resolveDependencies") {
+    doLast {
+        buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
+        configurations.compileClasspath.get().resolve()
+        configurations.testCompileClasspath.get().resolve()
     }
 }

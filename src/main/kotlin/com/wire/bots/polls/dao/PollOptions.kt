@@ -7,11 +7,10 @@ import org.jetbrains.exposed.sql.Table
  * Poll options.
  */
 object PollOptions : Table("poll_option") {
-
     /**
      * Id of the poll this option is for. UUID.
      */
-    val pollId: Column<String> = varchar("poll_id", 36) references Polls.id
+    val pollId: Column<String> = varchar("poll_id", UUID_LENGTH) references Polls.id
 
     /**
      * Option order or option id.
@@ -21,7 +20,8 @@ object PollOptions : Table("poll_option") {
     /**
      * Option content, the text inside the button/choice.
      */
-    val optionContent: Column<String> = varchar("option_content", 256)
+    private const val OPTION_LENGTH = 256
+    val optionContent: Column<String> = varchar("option_content", OPTION_LENGTH)
 
     override val primaryKey: PrimaryKey
         get() = PrimaryKey(pollId, optionOrder)

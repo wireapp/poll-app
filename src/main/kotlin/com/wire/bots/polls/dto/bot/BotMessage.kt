@@ -9,4 +9,3 @@ interface BotMessage {
      */
     val type: String
 }
-

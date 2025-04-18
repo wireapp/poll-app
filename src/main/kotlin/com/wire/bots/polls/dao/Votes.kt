@@ -10,7 +10,7 @@ object Votes : Table("votes") {
     /**
      * Id of the poll.
      */
-    val pollId: Column<String> = varchar("poll_id", 36)
+    val pollId: Column<String> = varchar("poll_id", UUID_LENGTH)
 
     /**
      * Id of the option.
@@ -20,7 +20,7 @@ object Votes : Table("votes") {
     /**
      * User who voted for this option.
      */
-    val userId: Column<String> = varchar("user_id", 36)
+    val userId: Column<String> = varchar("user_id", UUID_LENGTH)
 
     override val primaryKey: PrimaryKey
         get() = PrimaryKey(pollId, userId)

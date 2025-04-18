@@ -15,9 +15,9 @@ class UserCommunicationService(
     private val proxySenderService: ProxySenderService,
     private val version: String
 ) {
-
     private companion object : KLogging() {
-        const val usage = "To create poll please text: `/poll \"Question\" \"Option 1\" \"Option 2\"`. To display usage write `/help`"
+        const val USAGE = "To create poll please text: " +
+            "`/poll \"Question\" \"Option 1\" \"Option 2\"`. To display usage write `/help`"
         val commands = """
             Following commands are available:
             `/poll "Question" "Option 1" "Option 2"` will create poll
@@ -29,12 +29,13 @@ class UserCommunicationService(
     /**
      * Sends hello message with instructions to the conversation.
      */
-    suspend fun sayHello(token: String) = greeting("Hello, I'm Poll Bot. $usage").send(token)
+    suspend fun sayHello(token: String) = greeting("Hello, I'm Poll Bot. $USAGE").send(token)
 
     /**
      * Sends message with help.
      */
-    suspend fun reactionToWrongCommand(token: String) = fallBackMessage("I couldn't recognize your command. $usage").send(token)
+    suspend fun reactionToWrongCommand(token: String) =
+        fallBackMessage("I couldn't recognize your command. $USAGE").send(token)
 
     /**
      * Sends message containing help

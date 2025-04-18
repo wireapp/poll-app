@@ -21,6 +21,6 @@ data class UsersInput(
      */
     val mentions: List<Mention>
 ) {
-    //TODO modify this in the future - because we do not want to print decrypted users text to the log
+    // TODO modify this in the future - because we do not want to print decrypted users text to the log
     override fun toString(): String = "User: $userId wrote $input"
 }

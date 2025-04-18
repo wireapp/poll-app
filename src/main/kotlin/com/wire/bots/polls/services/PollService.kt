@@ -9,7 +9,7 @@ import com.wire.bots.polls.parser.PollFactory
 import mu.KLogging
 import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
-import java.util.*
+import java.util.UUID
 
 /**
  * Service handling the polls. It communicates with the proxy via [proxySenderService].
@@ -22,74 +22,96 @@ class PollService(
     private val userCommunicationService: UserCommunicationService,
     private val statsFormattingService: StatsFormattingService
 ) {
-
     private companion object : KLogging()
 
     /**
      * Create poll.
      */
-    suspend fun createPoll(token: String, usersInput: UsersInput, botId: String): String? {
-        val poll = factory.forUserInput(usersInput)
+    suspend fun createPoll(
+        token: String,
+        usersInput: UsersInput,
+        botId: String
+    ): String? {
+        val poll = factory
+            .forUserInput(usersInput)
             .whenNull {
                 logger.warn { "It was not possible to create poll." }
                 pollNotParsedFallback(token, usersInput)
             } ?: return null
 
-        val pollId = repository.savePoll(poll, pollId = UUID.randomUUID().toString(), userId = usersInput.userId, botSelfId = botId)
+        val pollId = repository.savePoll(
+            poll,
+            pollId = UUID.randomUUID().toString(),
+            userId = usersInput.userId,
+            botSelfId = botId
+        )
         logger.info { "Poll successfully created with id: $pollId" }
 
-        proxySenderService.send(
-            token,
-            message = newPoll(
-                id = pollId,
-                body = poll.question.body,
-                buttons = poll.options,
-                mentions = poll.question.mentions
-            )
-        ).whenNull {
-            logger.error { "It was not possible to send the poll to the Roman!" }
-        }?.also { (messageId) ->
-            logger.info { "Poll successfully created with id: $messageId" }
-        }
+        proxySenderService
+            .send(
+                token,
+                message = newPoll(
+                    id = pollId,
+                    body = poll.question.body,
+                    buttons = poll.options,
+                    mentions = poll.question.mentions
+                )
+            ).whenNull {
+                logger.error { "It was not possible to send the poll to the Roman!" }
+            }?.also { (messageId) ->
+                logger.info { "Poll successfully created with id: $messageId" }
+            }
 
         return pollId
     }
 
-
-    private suspend fun pollNotParsedFallback(token: String, usersInput: UsersInput) {
+    private suspend fun pollNotParsedFallback(
+        token: String,
+        usersInput: UsersInput
+    ) {
         usersInput.input.startsWith("/poll").whenTrue {
             logger.info { "Command started with /poll, sending usage to user." }
             userCommunicationService.reactionToWrongCommand(token)
         }
-
     }
 
     /**
      * Record that the user voted.
      */
-    suspend fun pollAction(token: String, pollAction: PollAction) {
+    suspend fun pollAction(
+        token: String,
+        pollAction: PollAction
+    ) {
         logger.info { "User voted" }
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
-        proxySenderService.send(
-            token = token,
-            message = confirmVote(
-                pollId = pollAction.pollId,
-                offset = pollAction.optionId,
-                userId = pollAction.userId
-            )
-        ).whenNull {
-            logger.error { "It was not possible to send response to vote." }
-        }?.also { (messageId) ->
-            logger.info { "Proxy received confirmation for vote under id: $messageId" }
-            sendStatsIfAllVoted(token, pollAction.pollId)
-        }
+        proxySenderService
+            .send(
+                token = token,
+                message = confirmVote(
+                    pollId = pollAction.pollId,
+                    offset = pollAction.optionId,
+                    userId = pollAction.userId
+                )
+            ).whenNull {
+                logger.error { "It was not possible to send response to vote." }
+            }?.also { (messageId) ->
+                logger.info { "Proxy received confirmation for vote under id: $messageId" }
+                sendStatsIfAllVoted(token, pollAction.pollId)
+            }
     }
 
-    private suspend fun sendStatsIfAllVoted(token: String, pollId: String) {
-        val conversationMembersCount = conversationService.getNumberOfConversationMembers(token)
-            .whenNull { logger.warn { "It was not possible to determine number of conversation members!" } } ?: return
+    private suspend fun sendStatsIfAllVoted(
+        token: String,
+        pollId: String
+    ) {
+        val conversationMembersCount = conversationService
+            .getNumberOfConversationMembers(token)
+            .whenNull {
+                logger.warn { "It was not possible to determine number of conversation members!" }
+            }
+            ?: return
 
         val votedSize = repository.votingUsers(pollId).size
 
@@ -97,21 +119,35 @@ class PollService(
             logger.info { "All users voted, sending statistics to the conversation." }
             sendStats(token, pollId, conversationMembersCount)
         } else {
-            logger.info { "Users voted: $votedSize, members of conversation: $conversationMembersCount" }
+            logger.info {
+                "Users voted: $votedSize, members of conversation: $conversationMembersCount"
+            }
         }
     }
 
     /**
      * Sends statistics about the poll to the proxy.
      */
-    suspend fun sendStats(token: String, pollId: String, conversationMembers: Int? = null) {
+    suspend fun sendStats(
+        token: String,
+        pollId: String,
+        conversationMembers: Int? = null
+    ) {
         logger.debug { "Sending stats for poll $pollId" }
-        val conversationMembersCount = conversationMembers ?: conversationService.getNumberOfConversationMembers(token)
-            .whenNull { logger.warn { "It was not possible to determine number of conversation members!" } }
+        val conversationMembersCount =
+            conversationMembers ?: conversationService
+                .getNumberOfConversationMembers(token)
+                .whenNull {
+                    logger.warn {
+                        "It was not possible to determine number of conversation members!"
+                    }
+                }
 
         logger.debug { "Conversation members: $conversationMembersCount" }
-        val stats = statsFormattingService.formatStats(pollId, conversationMembersCount)
-            .whenNull { logger.warn { "It was not possible to format stats for poll $pollId" } } ?: return
+        val stats = statsFormattingService
+            .formatStats(pollId, conversationMembersCount)
+            .whenNull { logger.warn { "It was not possible to format stats for poll $pollId" } }
+            ?: return
 
         proxySenderService.send(token, stats)
     }
@@ -119,7 +155,10 @@ class PollService(
     /**
      * Sends stats for latest poll.
      */
-    suspend fun sendStatsForLatest(token: String, botId: String) {
+    suspend fun sendStatsForLatest(
+        token: String,
+        botId: String
+    ) {
         logger.debug { "Sending latest stats for bot $botId" }
 
         val latest = repository.getLatestForBot(botId).whenNull {

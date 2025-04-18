@@ -3,10 +3,13 @@ package com.wire.bots.polls.setup
 import com.wire.bots.polls.utils.ClientRequestMetric
 import com.wire.bots.polls.utils.createLogger
 import com.wire.bots.polls.utils.httpCall
-import io.ktor.client.*
-import io.ktor.client.engine.apache.*
-import io.ktor.client.features.json.*
-import io.ktor.client.features.logging.*
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.apache.Apache
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.JacksonSerializer
+import io.ktor.client.features.logging.Logger
+import io.ktor.client.features.logging.Logging
+import io.ktor.client.features.logging.LogLevel
 import io.micrometer.core.instrument.MeterRegistry
 
 fun createHttpClient(meterRegistry: MeterRegistry) =

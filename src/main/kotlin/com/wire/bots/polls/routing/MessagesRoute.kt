@@ -5,11 +5,12 @@ import com.wire.bots.polls.services.AuthService
 import com.wire.bots.polls.services.MessagesHandlingService
 import com.wire.bots.polls.setup.logging.USER_ID
 import com.wire.bots.polls.utils.mdc
-import io.ktor.application.*
-import io.ktor.http.*
-import io.ktor.request.*
-import io.ktor.response.*
-import io.ktor.routing.*
+import io.ktor.application.call
+import io.ktor.http.HttpStatusCode
+import io.ktor.request.receive
+import io.ktor.response.respond
+import io.ktor.routing.Routing
+import io.ktor.routing.post
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 

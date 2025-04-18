@@ -1,7 +1,7 @@
 package com.wire.bots.polls.routing
 
 import com.wire.bots.polls.utils.createLogger
-import io.ktor.routing.*
+import io.ktor.routing.Routing
 
 internal val routingLogger by lazy { createLogger("RoutingLogger") }
 
