@@ -9,7 +9,7 @@ import com.wire.bots.polls.parser.PollFactory
 import mu.KLogging
 import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
-import java.util.*
+import java.util.UUID
 
 /**
  * Service handling the polls. It communicates with the proxy via [proxySenderService].

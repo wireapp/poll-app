@@ -25,10 +25,10 @@ class ProxySenderService(
     config: ProxyConfiguration
 ) {
     private companion object : KLogging() {
-        const val conversationPath = "/conversation"
+        const val CONVERSATION_PATH = "/conversation"
     }
 
-    private val conversationEndpoint = config.baseUrl appendPath conversationPath
+    private val conversationEndpoint = config.baseUrl appendPath CONVERSATION_PATH
 
     /**
      * Send given message with provided token.

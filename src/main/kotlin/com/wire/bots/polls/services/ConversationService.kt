@@ -16,10 +16,10 @@ class ConversationService(
     config: ProxyConfiguration
 ) {
     private companion object : KLogging() {
-        const val conversationPath = "/conversation"
+        const val CONVERSATION_PATH = "/conversation"
     }
 
-    private val endpoint = config.baseUrl appendPath conversationPath
+    private val endpoint = config.baseUrl appendPath CONVERSATION_PATH
 
     /**
      * Returns the number of members of conversation.

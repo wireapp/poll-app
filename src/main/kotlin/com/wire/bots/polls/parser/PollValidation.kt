@@ -27,7 +27,11 @@ class PollValidation {
 
     private val pollRules =
         listOf<PollRule> { poll ->
-            if (poll.options.isNotEmpty()) null else "There must be at least one option for answering the poll."
+            if (poll.options.isNotEmpty()) {
+                null
+            } else {
+                "There must be at least one option for answering the poll."
+            }
         }
 
     /**

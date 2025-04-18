@@ -30,7 +30,8 @@ class PollFactory(
             poll
         } else {
             logger.warn {
-                "It was not possible to create poll for user input: $usersInput due to errors listed bellow:" +
+                "It was not possible to create poll for user input: " +
+                    "$usersInput due to errors listed bellow:" +
                     "$newLine${errors.joinToString(newLine)}"
             }
             null

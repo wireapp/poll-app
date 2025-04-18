@@ -25,13 +25,14 @@ class MessagesHandlingService(
             }
             else -> {
                 logger.debug { "Handling type: ${message.type}" }
-                when {
-                    message.token != null -> tokenAwareHandle(message.token, message)
-                    else -> false.also {
-                        logger.warn {
-                            "Proxy didn't send token along side the message with type ${message.type}. Message:$message"
-                        }
+                if (message.token != null) {
+                    tokenAwareHandle(message.token, message)
+                } else {
+                    logger.warn {
+                        "Proxy didn't send token along side the message " +
+                            "with type ${message.type}. Message:$message"
                     }
+                    false
                 }
             }
         }
@@ -153,7 +154,7 @@ class MessagesHandlingService(
                         ) -> userCommunicationService.sendVersion(token)
                         // send version when asked
                         trimmed.startsWith("/help") -> userCommunicationService.sendHelp(token)
-                        // easter egg, good bot is good
+                        // Easter egg, good bot is good
                         trimmed == "good bot" -> userCommunicationService.goodBot(token)
                         else -> ignore { "Ignoring the message, unrecognized command." }
                     }

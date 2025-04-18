@@ -31,10 +31,11 @@ private fun loadVersion(defaultVersion: String): String = runCatching {
         ?: defaultVersion
 }.getOrNull() ?: defaultVersion
 
+// TODO load all config from the file and then allow the replacement with env variables
+
 /**
  * Loads the DI container with configuration from the system environment.
  */
-// TODO load all config from the file and then allow the replacement with env variables
 fun DI.MainBuilder.bindConfiguration() {
     // The default values used in this configuration are for the local development.
 

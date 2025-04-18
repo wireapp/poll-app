@@ -65,7 +65,8 @@ fun Application.connectDatabase() {
     } else {
         // TODO verify handling, maybe exit the App?
         installationLogger.error {
-            "It was not possible to connect to db database! The application will start but it won't work."
+            "It was not possible to connect to db database! " +
+                "The application will start but it won't work."
         }
     }
 }
