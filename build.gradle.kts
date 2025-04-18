@@ -82,11 +82,6 @@ ktlint {
         reporter(ReporterType.JSON)
         reporter(ReporterType.HTML)
     }
-    filter {
-        exclude { element ->
-            element.file.path.contains("generated/")
-        }
-    }
 }
 
 detekt {
