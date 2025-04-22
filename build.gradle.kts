@@ -5,7 +5,7 @@ plugins {
     application
     distribution
     id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
-    id("io.gitlab.arturbosch.detekt") version "1.23.7"
+    id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("net.nemerosa.versioning") version "3.1.0"
 }
 
