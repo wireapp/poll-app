@@ -3,10 +3,13 @@ package com.wire.bots.polls.routing
 import com.wire.bots.polls.dto.roman.Message
 import com.wire.bots.polls.services.AuthService
 import com.wire.bots.polls.services.MessagesHandlingService
+import com.wire.bots.polls.services.UserCommunicationService
 import com.wire.bots.polls.setup.logging.USER_ID
 import com.wire.bots.polls.utils.mdc
 import com.wire.integrations.jvm.WireAppSdk
 import com.wire.integrations.jvm.WireEventsHandler
+import com.wire.integrations.jvm.model.ConversationData
+import com.wire.integrations.jvm.model.ConversationMember
 import com.wire.integrations.jvm.model.WireMessage
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
@@ -24,6 +27,7 @@ import java.util.UUID
 fun Routing.messages() {
     val k = closestDI()
     val handler by k.instance<MessagesHandlingService>()
+    val communicate by k.instance<UserCommunicationService>()
     val authService by k.instance<AuthService>()
 
     /**
@@ -69,6 +73,21 @@ fun Routing.messages() {
 
                 manager.sendMessageSuspending(
                     conversationId = wireMessage.conversationId,
+                    message = message
+                )
+            }
+
+            override fun onConversationJoin(
+                conversation: ConversationData,
+                members: List<ConversationMember>
+            ) {
+                val message = WireMessage.Text.create(
+                    conversationId = conversation.id,
+                    text = communicate.sayHello().type
+                )
+
+                manager.sendMessage(
+                    conversationId = conversation.id,
                     message = message
                 )
             }

@@ -29,7 +29,7 @@ class UserCommunicationService(
     /**
      * Sends hello message with instructions to the conversation.
      */
-    suspend fun sayHello(token: String) = greeting("Hello, I'm Poll Bot. $USAGE").send(token)
+    fun sayHello() = greeting("Hello, I'm Poll App. $USAGE")
 
     /**
      * Sends message with help.

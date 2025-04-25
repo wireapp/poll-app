@@ -50,11 +50,6 @@ class MessagesHandlingService(
         logger.debug { "Message contains token." }
         return runCatching {
             when (message.type) {
-                "conversation.init" -> {
-                    logger.debug { "Init message received." }
-                    userCommunicationService.sayHello(token)
-                    true
-                }
                 "conversation.new_text" -> {
                     logger.debug { "New text message received." }
                     handleText(token, message)
