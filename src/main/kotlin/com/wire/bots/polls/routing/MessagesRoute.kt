@@ -5,6 +5,9 @@ import com.wire.bots.polls.services.AuthService
 import com.wire.bots.polls.services.MessagesHandlingService
 import com.wire.bots.polls.setup.logging.USER_ID
 import com.wire.bots.polls.utils.mdc
+import com.wire.integrations.jvm.WireAppSdk
+import com.wire.integrations.jvm.WireEventsHandler
+import com.wire.integrations.jvm.model.WireMessage
 import io.ktor.application.call
 import io.ktor.http.HttpStatusCode
 import io.ktor.request.receive
@@ -13,6 +16,7 @@ import io.ktor.routing.Routing
 import io.ktor.routing.post
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
+import java.util.UUID
 
 /**
  * Messages API.
@@ -51,4 +55,24 @@ fun Routing.messages() {
             call.respond(HttpStatusCode.Unauthorized, "Please provide Authorization header.")
         }
     }
+    val wireAppSdk = WireAppSdk(
+        applicationId = UUID.randomUUID(),
+        apiToken = "myApiToken",
+        apiHost = "https://nginz-https.chala.wire.link",
+        cryptographyStoragePassword = "myDummyPassword",
+        object : WireEventsHandler() {
+            override suspend fun onNewMessageSuspending(wireMessage: WireMessage.Text) {
+                val message = WireMessage.Text.create(
+                    conversationId = wireMessage.conversationId,
+                    text = "${wireMessage.text} -- Sent from the SDK"
+                )
+
+                manager.sendMessageSuspending(
+                    conversationId = wireMessage.conversationId,
+                    message = message
+                )
+            }
+        }
+    )
+    wireAppSdk.startListening()
 }
