@@ -57,16 +57,6 @@ class MessagesHandlingService(
                 "conversation.new_image" -> true.also {
                     logger.debug { "New image posted to conversation, ignoring." }
                 }
-                "conversation.reaction" -> {
-                    logger.debug { "Reaction message" }
-                    pollService.sendStats(
-                        token = token,
-                        pollId = requireNotNull(
-                            message.refMessageId
-                        ) { "Reaction must contain refMessageId" }
-                    )
-                    true
-                }
                 "conversation.poll.action" -> {
                     val poll =
                         requireNotNull(
