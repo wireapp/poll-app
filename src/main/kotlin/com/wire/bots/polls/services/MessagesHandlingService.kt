@@ -110,22 +110,7 @@ class MessagesHandlingService(
 
         with(message) {
             when {
-                userId == null -> throw BadRequestException("UserId must be set for text messages.")
-                // it is a reply on something
-                refMessageId != null && text != null -> when {
-                    // request for stats
-                    text.data.trim().startsWith(
-                        "/stats"
-                    ) -> pollService.sendStats(token, refMessageId)
-                    // integer vote where the text contains offset
-                    text.data.trim().toIntOrNull() != null -> vote(
-                        token,
-                        userId,
-                        refMessageId,
-                        text.data
-                    )
-                    else -> ignore { "Ignoring the message as it is reply unrelated to the bot" }
-                }
+                sender == null -> throw BadRequestException("UserId must be set for text messages.")
                 // text message with just text
                 text != null -> {
                     val trimmed = text.data.trim()
@@ -159,20 +144,4 @@ class MessagesHandlingService(
         }
         return handled
     }
-
-    private suspend fun vote(
-        token: String,
-        userId: String,
-        refMessageId: String,
-        text: String
-    ) = pollService.pollAction(
-        token,
-        PollAction(
-            pollId = refMessageId,
-            optionId = requireNotNull(
-                text.toIntOrNull()
-            ) { "Text message must be a valid integer." },
-            userId = userId
-        )
-    )
 }
