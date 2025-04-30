@@ -6,6 +6,8 @@ import com.wire.bots.polls.dto.UsersInput
 import com.wire.bots.polls.dto.bot.confirmVote
 import com.wire.bots.polls.dto.bot.newPoll
 import com.wire.bots.polls.parser.PollFactory
+import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
@@ -28,50 +30,44 @@ class PollService(
      * Create poll.
      */
     suspend fun createPoll(
-        token: String,
-        usersInput: UsersInput,
-        botId: String
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        usersInput: UsersInput
     ): String? {
         val poll = factory
             .forUserInput(usersInput)
             .whenNull {
                 logger.warn { "It was not possible to create poll." }
-                pollNotParsedFallback(token, usersInput)
+                pollNotParsedFallback(manager, conversationId, usersInput)
             } ?: return null
 
         val pollId = repository.savePoll(
             poll,
             pollId = UUID.randomUUID().toString(),
-            userId = usersInput.userId,
-            botSelfId = botId
+            userId = usersInput.userId?.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
 
-        proxySenderService
-            .send(
-                token,
-                message = newPoll(
-                    id = pollId,
-                    body = poll.question.body,
-                    buttons = poll.options,
-                    mentions = poll.question.mentions
-                )
-            ).whenNull {
-                logger.error { "It was not possible to send the poll to the Roman!" }
-            }?.also { (messageId) ->
-                logger.info { "Poll successfully created with id: $messageId" }
-            }
+        val message = newPoll(
+            conversationId = conversationId,
+//            id = pollId,
+            body = poll.question.body,
+            buttons = poll.options
+//            mentions = poll.question.mentions
+        )
+        proxySenderService.send(manager, message)
 
         return pollId
     }
 
     private suspend fun pollNotParsedFallback(
-        token: String,
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
         usersInput: UsersInput
     ) {
         usersInput.input.startsWith("/poll").whenTrue {
             logger.info { "Command started with /poll, sending usage to user." }
-            userCommunicationService.reactionToWrongCommand(token)
+            userCommunicationService.reactionToWrongCommand(manager, conversationId)
         }
     }
 
@@ -79,35 +75,30 @@ class PollService(
      * Record that the user voted.
      */
     suspend fun pollAction(
-        token: String,
-        pollAction: PollAction
-    ) {
+        manager: WireApplicationManager,
+        pollAction: PollAction,
+        conversationId: QualifiedId
+    ): String? {
         logger.info { "User voted" }
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
-        proxySenderService
-            .send(
-                token = token,
-                message = confirmVote(
-                    pollId = pollAction.pollId,
-                    offset = pollAction.optionId,
-                    userId = pollAction.userId
-                )
-            ).whenNull {
-                logger.error { "It was not possible to send response to vote." }
-            }?.also { (messageId) ->
-                logger.info { "Proxy received confirmation for vote under id: $messageId" }
-                sendStatsIfAllVoted(token, pollAction.pollId)
-            }
+        val message = confirmVote(
+            pollId = pollAction.pollId,
+            offset = pollAction.optionId,
+            userId = pollAction.userId
+        )
+        sendStatsIfAllVoted(manager, pollAction.pollId, conversationId)
+        return message.toString()
     }
 
     private suspend fun sendStatsIfAllVoted(
-        token: String,
-        pollId: String
+        manager: WireApplicationManager,
+        pollId: String,
+        conversationId: QualifiedId
     ) {
         val conversationMembersCount = conversationService
-            .getNumberOfConversationMembers(token)
+            .getNumberOfConversationMembers(manager, conversationId)
             .whenNull {
                 logger.warn { "It was not possible to determine number of conversation members!" }
             }
@@ -117,7 +108,7 @@ class PollService(
 
         if (votedSize == conversationMembersCount) {
             logger.info { "All users voted, sending statistics to the conversation." }
-            sendStats(token, pollId, conversationMembersCount)
+            sendStats(manager, pollId, conversationId, conversationMembersCount)
         } else {
             logger.info {
                 "Users voted: $votedSize, members of conversation: $conversationMembersCount"
@@ -129,14 +120,15 @@ class PollService(
      * Sends statistics about the poll to the proxy.
      */
     suspend fun sendStats(
-        token: String,
+        manager: WireApplicationManager,
         pollId: String,
+        conversationId: QualifiedId,
         conversationMembers: Int? = null
     ) {
         logger.debug { "Sending stats for poll $pollId" }
         val conversationMembersCount =
             conversationMembers ?: conversationService
-                .getNumberOfConversationMembers(token)
+                .getNumberOfConversationMembers(manager, conversationId)
                 .whenNull {
                     logger.warn {
                         "It was not possible to determine number of conversation members!"
@@ -145,26 +137,26 @@ class PollService(
 
         logger.debug { "Conversation members: $conversationMembersCount" }
         val stats = statsFormattingService
-            .formatStats(pollId, conversationMembersCount)
+            .formatStats(pollId, conversationId, conversationMembersCount)
             .whenNull { logger.warn { "It was not possible to format stats for poll $pollId" } }
             ?: return
 
-        proxySenderService.send(token, stats)
+        proxySenderService.send(manager, stats)
     }
 
     /**
      * Sends stats for latest poll.
      */
     suspend fun sendStatsForLatest(
-        token: String,
-        botId: String
+        manager: WireApplicationManager,
+        conversationId: QualifiedId
     ) {
-        logger.debug { "Sending latest stats for bot $botId" }
+        logger.debug { "Sending latest stats" }
 
-        val latest = repository.getLatestForBot(botId).whenNull {
-            logger.info { "No polls found for bot $botId" }
+        val latest = repository.getLatestForConversation(conversationId).whenNull {
+            logger.info { "No polls found for conversation $conversationId" }
         } ?: return
 
-        sendStats(token, latest)
+        sendStats(manager, latest, conversationId)
     }
 }
