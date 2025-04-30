@@ -1,11 +1,9 @@
 package com.wire.bots.polls.setup
 
 import com.wire.bots.polls.dto.conf.DatabaseConfiguration
-import com.wire.bots.polls.services.ProxyConfiguration
 import com.wire.bots.polls.setup.EnvConfigVariables.DB_PASSWORD
 import com.wire.bots.polls.setup.EnvConfigVariables.DB_URL
 import com.wire.bots.polls.setup.EnvConfigVariables.DB_USER
-import com.wire.bots.polls.setup.EnvConfigVariables.PROXY_DOMAIN
 import com.wire.bots.polls.setup.EnvConfigVariables.SERVICE_TOKEN
 import com.wire.bots.polls.utils.createLogger
 import org.kodein.di.DI
@@ -53,9 +51,5 @@ fun DI.MainBuilder.bindConfiguration() {
 
     bind<String>("version") with singleton {
         loadVersion("development")
-    }
-
-    bind<ProxyConfiguration>() with singleton {
-        ProxyConfiguration(getEnvOrLogDefault(PROXY_DOMAIN, "http://proxy.services.zinfra.io"))
     }
 }

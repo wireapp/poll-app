@@ -26,12 +26,7 @@ fun DI.MainBuilder.configureContainer() {
 
     bind<HttpClient>() with singleton { createHttpClient(instance()) }
 
-    bind<ProxySenderService>() with singleton {
-        ProxySenderService(
-            client = instance(),
-            config = instance()
-        )
-    }
+    bind<ProxySenderService>() with singleton { ProxySenderService() }
 
     bind<PrometheusMeterRegistry>() with singleton {
         PrometheusMeterRegistry(PrometheusConfig.DEFAULT).apply {
@@ -62,7 +57,7 @@ fun DI.MainBuilder.configureContainer() {
     bind<UserCommunicationService>() with
         singleton { UserCommunicationService(instance(), instance("version")) }
 
-    bind<ConversationService>() with singleton { ConversationService(instance(), instance()) }
+    bind<ConversationService>() with singleton { ConversationService() }
 
     bind<MessagesHandlingService>() with
         singleton { MessagesHandlingService(instance(), instance()) }
