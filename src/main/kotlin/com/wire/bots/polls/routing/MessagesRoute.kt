@@ -21,35 +21,6 @@ fun Routing.messages() {
     val handler by k.instance<MessagesHandlingService>()
     val userCommunicationService by k.instance<UserCommunicationService>()
 
-    /**
-     * API for receiving messages from Roman.
-     */
-    post("/messages") {
-        routingLogger.debug { "POST /messages" }
-        // verify whether request contain correct auth header
-        if (authService.isTokenValid { call.request.headers }) {
-            routingLogger.debug { "Token is valid." }
-            // bot responds either with 200 or with 400
-            runCatching {
-                routingLogger.debug { "Parsing an message." }
-                call.receive<Message>()
-            }.onFailure {
-                routingLogger.error(it) { "Exception occurred during the request handling!" }
-                call.respond(HttpStatusCode.BadRequest, "Bot did not understand the message.")
-            }.onSuccess {
-                routingLogger.debug { "Message parsed." }
-                // includes user id to current MDC
-                mdc(USER_ID) { it.userId }
-
-                handler.handle(it)
-                routingLogger.debug { "Responding OK" }
-                call.respond(HttpStatusCode.OK)
-            }
-        } else {
-            routingLogger.warn { "Token is invalid." }
-            call.respond(HttpStatusCode.Unauthorized, "Please provide Authorization header.")
-        }
-    }
     val wireAppSdk = WireAppSdk(
         applicationId = UUID.randomUUID(),
         apiToken = "myApiToken",
