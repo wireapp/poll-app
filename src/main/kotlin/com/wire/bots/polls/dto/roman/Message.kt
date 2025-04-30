@@ -1,7 +1,7 @@
 package com.wire.bots.polls.dto.roman
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.wire.bots.polls.dto.common.Mention
+import com.wire.integrations.jvm.model.WireMessage
 
 /**
  * Message received by the bot from the proxy.
@@ -69,7 +69,7 @@ data class Message(
 ) {
     data class Text(
         val data: String,
-        val mentions: List<Mention>?
+        val mentions: List<WireMessage.Text.Mention>?
     ) {
         override fun toString(): String = "Text(mentions=$mentions)"
     }

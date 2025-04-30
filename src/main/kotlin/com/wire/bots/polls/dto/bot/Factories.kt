@@ -1,6 +1,5 @@
 package com.wire.bots.polls.dto.bot
 
-import com.wire.bots.polls.dto.common.Mention
 import com.wire.bots.polls.dto.common.Text
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
@@ -41,60 +40,46 @@ fun confirmVote(
  * Creates message which greets the users in the conversation.
  */
 fun greeting(
-    text: String,
-    mentions: List<Mention> = emptyList()
-): BotMessage = text(text, mentions)
+    conversationId: QualifiedId,
+    text: String
+): WireMessage.Text = WireMessage.Text.create(conversationId, text)
 
 /**
  * Creates stats (result of the poll) message.
  */
 fun statsMessage(
-    text: String,
-    mentions: List<Mention> = emptyList()
-): BotMessage = text(text, mentions)
+    conversationId: QualifiedId,
+    text: String
+): WireMessage.Text = WireMessage.Text.create(conversationId, text)
 
 /**
  * Creates message notifying user about wrongly used command.
  */
 fun fallBackMessage(
-    text: String,
-    mentions: List<Mention> = emptyList()
-): BotMessage = text(text, mentions)
+    conversationId: QualifiedId,
+    text: String
+): WireMessage.Text = WireMessage.Text.create(conversationId, text)
 
 /**
  * Creates good bot message.
  */
 fun goodBotMessage(
-    text: String,
-    mentions: List<Mention> = emptyList()
-): BotMessage = text(text, mentions)
+    conversationId: QualifiedId,
+    text: String
+): WireMessage.Text = WireMessage.Text.create(conversationId, text)
 
 /**
  * Creates version message.
  */
 fun versionMessage(
-    text: String,
-    mentions: List<Mention> = emptyList()
-): BotMessage = text(text, mentions)
+    conversationId: QualifiedId,
+    text: String
+): WireMessage.Text = WireMessage.Text.create(conversationId, text)
 
 /**
  * Creates message with help.
  */
 fun helpMessage(
-    text: String,
-    mentions: List<Mention> = emptyList()
-): BotMessage = text(text, mentions)
-
-/**
- * Creates text message.
- */
-private fun text(
-    text: String,
-    mentions: List<Mention>
-): BotMessage =
-    TextMessage(
-        text = Text(
-            data = text,
-            mentions = mentions
-        )
-    )
+    conversationId: QualifiedId,
+    text: String
+): WireMessage.Text = WireMessage.Text.create(conversationId, text)

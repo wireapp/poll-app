@@ -1,8 +1,9 @@
 package com.wire.bots.polls.services
 
 import com.wire.bots.polls.dao.PollRepository
-import com.wire.bots.polls.dto.bot.BotMessage
 import com.wire.bots.polls.dto.bot.statsMessage
+import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.integrations.jvm.model.WireMessage
 import mu.KLogging
 import pw.forst.katlib.newLine
 import pw.forst.katlib.whenNull
@@ -26,8 +27,9 @@ class StatsFormattingService(
      */
     suspend fun formatStats(
         pollId: String,
+        conversationId: QualifiedId,
         conversationMembers: Int?
-    ): BotMessage? {
+    ): WireMessage.Text? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
         }

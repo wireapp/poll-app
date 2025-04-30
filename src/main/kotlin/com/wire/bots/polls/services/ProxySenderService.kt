@@ -12,46 +12,15 @@ class ProxySenderService {
     private companion object : KLogging()
 
     /**
-     * Send given message with provided token.
+     * Send given message
      */
     suspend fun send(
         manager: WireApplicationManager,
         message: WireMessage
     ) {
         logger.debug { "Sending: ${createJson(message)}" }
-
-        return client
-            .post<HttpStatement>(body = message) {
-                url(conversationEndpoint)
-                contentType(ContentType.Application.Json)
-                header("Authorization", "Bearer $token")
-            }.execute {
-                logger.debug { "Message sent." }
-                when {
-                    it.status.isSuccess() -> {
-                        it.receive<Response>().also {
-                            logger.info { "Message sent successfully: message id: ${it.messageId}" }
-                        }
-                    }
-                    else -> {
-                        val body = it.readText(Charset.defaultCharset())
-                        logger.error {
-                            "Error in communication with proxy. Status: ${it.status}, body: $body."
-                        }
-                        null
-                    }
-                }
-            }
-    }
-}
-
-/**
- * Configuration used to connect to the proxy.
- */
-data class ProxyConfiguration(
-    val baseUrl: String
-)
         val conversationId = when (message) {
+            is WireMessage.Text -> message.conversationId
             is WireMessage.Composite -> message.textContent?.conversationId
             else -> null
         }

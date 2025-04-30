@@ -3,7 +3,7 @@ package com.wire.bots.polls.dto.bot
 import com.wire.integrations.jvm.model.WireMessage
 
 internal data class NewPoll(
-    val text: Text,
+    val text: WireMessage.Text,
     val poll: WireMessage.Composite,
     override val type: String = "poll"
 ) : BotMessage {

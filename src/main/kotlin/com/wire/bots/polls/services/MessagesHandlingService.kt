@@ -43,53 +43,9 @@ class MessagesHandlingService(
         logger.debug { "Message handled." }
     }
 
-    private suspend fun tokenAwareHandle(
-        token: String,
-        message: Message
-    ): Boolean {
-        logger.debug { "Message contains token." }
-        return runCatching {
-            when (message.type) {
-                "conversation.new_text" -> {
-                    logger.debug { "New text message received." }
-                    handleText(token, message)
-                }
-                "conversation.new_image" -> true.also {
-                    logger.debug { "New image posted to conversation, ignoring." }
-                }
-                "conversation.poll.action" -> {
-                    val poll =
-                        requireNotNull(
-                            message.poll
-                        ) { "Reaction to a poll, poll object must be set!" }
-                    pollService.pollAction(
-                        token,
-                        PollAction(
-                            pollId = poll.id,
-                            optionId = requireNotNull(
-                                poll.offset
-                            ) { "Offset/Option id must be set!" },
-                            userId = requireNotNull(
-                                message.userId
-                            ) { "UserId of user who sent the message must be set." }
-                        )
-                    )
-                    true
-                }
-                else -> false.also {
-                    logger.warn { "Unknown message type of ${message.type}. Ignoring." }
-                }
-            }
-        }.onFailure {
-            logger.error(
-                it
-            ) { "Exception during handling the message: $message with token $token." }
-        }.getOrThrow()
-    }
-
-    private suspend fun handleText(
-        token: String,
-        message: Message
+    suspend fun handleText(
+        manager: WireApplicationManager,
+        message: WireMessage.Text
     ): Boolean {
         var handled = true
 
@@ -99,37 +55,43 @@ class MessagesHandlingService(
         }
 
         with(message) {
-            when {
-                sender == null -> throw BadRequestException("UserId must be set for text messages.")
-                // text message with just text
-                text != null -> {
-                    val trimmed = text.data.trim()
-                    when {
-                        // poll request
-                        trimmed.startsWith("/poll") ->
-                            pollService.createPoll(
-                                token,
-                                UsersInput(
-                                    userId,
-                                    trimmed,
-                                    text.mentions ?: emptyList()
-                                ),
-                                botId
+            if (sender == null) {
+                throw BadRequestException("UserId must be set for text messages.")
+            } else if (text != null) {
+                val trimmed = (text as String).trim()
+                when {
+                    // poll request
+                    trimmed.startsWith("/poll") ->
+                        pollService.createPoll(
+                            manager,
+                            message.conversationId,
+                            UsersInput(
+                                sender,
+                                trimmed,
+                                mentions
                             )
-                        // stats request
-                        trimmed.startsWith("/stats") -> pollService.sendStatsForLatest(token, botId)
-                        // send version when asked
-                        trimmed.startsWith(
-                            "/version"
-                        ) -> userCommunicationService.sendVersion(token)
-                        // send version when asked
-                        trimmed.startsWith("/help") -> userCommunicationService.sendHelp(token)
-                        // Easter egg, good bot is good
-                        trimmed == "good bot" -> userCommunicationService.goodBot(token)
-                        else -> ignore { "Ignoring the message, unrecognized command." }
+                        )
+                    // stats request
+                    trimmed.startsWith("/stats") -> {
+                        pollService.sendStatsForLatest(manager, conversationId)
                     }
+                    // send version when asked
+                    trimmed.startsWith("/version") -> {
+                        userCommunicationService.sendVersion(manager, conversationId)
+                    }
+                    // send version when asked
+                    trimmed.startsWith("/help") -> {
+                        userCommunicationService.sendHelp(manager, conversationId)
+                    }
+                    // Easter egg, good app is good
+                    trimmed == "good app" -> {
+                        userCommunicationService.goodApp(manager, conversationId)
+                    }
+//                    else -> ignore { "Ignoring the message, unrecognized command." }
+                    else -> null
                 }
-                else -> ignore { "Ignoring message as it does not have correct fields set." }
+            } else {
+                ignore { "Ignoring message as it does not have correct fields set." }
             }
         }
         return handled

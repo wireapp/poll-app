@@ -1,22 +1,14 @@
 package com.wire.bots.polls.routing
 
-import com.wire.bots.polls.dto.roman.Message
-import com.wire.bots.polls.services.AuthService
 import com.wire.bots.polls.services.MessagesHandlingService
 import com.wire.bots.polls.services.UserCommunicationService
-import com.wire.bots.polls.setup.logging.USER_ID
-import com.wire.bots.polls.utils.mdc
 import com.wire.integrations.jvm.WireAppSdk
 import com.wire.integrations.jvm.WireEventsHandler
 import com.wire.integrations.jvm.model.ConversationData
 import com.wire.integrations.jvm.model.ConversationMember
 import com.wire.integrations.jvm.model.WireMessage
-import io.ktor.application.call
-import io.ktor.http.HttpStatusCode
-import io.ktor.request.receive
-import io.ktor.response.respond
 import io.ktor.routing.Routing
-import io.ktor.routing.post
+import kotlinx.coroutines.runBlocking
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import java.util.UUID
@@ -27,8 +19,7 @@ import java.util.UUID
 fun Routing.messages() {
     val k = closestDI()
     val handler by k.instance<MessagesHandlingService>()
-    val communicate by k.instance<UserCommunicationService>()
-    val authService by k.instance<AuthService>()
+    val userCommunicationService by k.instance<UserCommunicationService>()
 
     /**
      * API for receiving messages from Roman.
@@ -66,30 +57,16 @@ fun Routing.messages() {
         cryptographyStoragePassword = "myDummyPassword",
         object : WireEventsHandler() {
             override suspend fun onNewMessageSuspending(wireMessage: WireMessage.Text) {
-                val message = WireMessage.Text.create(
-                    conversationId = wireMessage.conversationId,
-                    text = "${wireMessage.text} -- Sent from the SDK"
-                )
-
-                manager.sendMessageSuspending(
-                    conversationId = wireMessage.conversationId,
-                    message = message
-                )
+                handler.handleText(manager, wireMessage)
             }
 
             override fun onConversationJoin(
                 conversation: ConversationData,
                 members: List<ConversationMember>
             ) {
-                val message = WireMessage.Text.create(
-                    conversationId = conversation.id,
-                    text = communicate.sayHello().type
-                )
-
-                manager.sendMessage(
-                    conversationId = conversation.id,
-                    message = message
-                )
+                runBlocking {
+                    userCommunicationService.sayHello(manager, conversation.id)
+                }
             }
         }
     )
