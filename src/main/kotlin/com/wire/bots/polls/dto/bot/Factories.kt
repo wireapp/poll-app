@@ -2,22 +2,23 @@ package com.wire.bots.polls.dto.bot
 
 import com.wire.bots.polls.dto.common.Mention
 import com.wire.bots.polls.dto.common.Text
+import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.integrations.jvm.model.WireMessage
 
 /**
  * Creates message for poll.
  */
 fun newPoll(
-    id: String,
+    conversationId: QualifiedId,
+//    id: String,
     body: String,
-    buttons: List<String>,
-    mentions: List<Mention> = emptyList()
-): BotMessage =
-    NewPoll(
-        text = Text(body, mentions),
-        poll = NewPoll.Poll(
-            id = id,
-            buttons = buttons
-        )
+    buttons: List<WireMessage.Composite.Button>
+//    mentions: List<WireMessage.Text.Mention> = emptyList()
+): WireMessage.Composite =
+    WireMessage.Composite.create(
+        conversationId = conversationId,
+        text = body,
+        buttonList = buttons
     )
 
 /**

@@ -1,8 +1,8 @@
 package com.wire.bots.polls.dto
 
-import com.wire.bots.polls.dto.common.Mention
+import com.wire.integrations.jvm.model.WireMessage
 
-typealias Option = String
+typealias Option = WireMessage.Composite.Button
 
 data class PollDto(
     val question: Question,

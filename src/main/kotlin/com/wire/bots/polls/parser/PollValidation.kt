@@ -22,7 +22,7 @@ class PollValidation {
 
     private val optionRules =
         listOf<OptionRule> { option ->
-            if (option.isNotBlank()) null else "The option must not be empty!"
+            if (option.text.isNotBlank()) null else "The option must not be empty!"
         }
 
     private val pollRules =

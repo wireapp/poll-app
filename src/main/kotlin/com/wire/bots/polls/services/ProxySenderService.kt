@@ -1,42 +1,23 @@
 package com.wire.bots.polls.services
 
-import com.wire.bots.polls.dto.bot.BotMessage
-import com.wire.bots.polls.dto.roman.Response
-import com.wire.bots.polls.utils.appendPath
-import io.ktor.client.HttpClient
-import io.ktor.client.call.receive
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.url
-import io.ktor.client.statement.HttpStatement
-import io.ktor.client.statement.readText
-import io.ktor.http.contentType
-import io.ktor.http.ContentType
-import io.ktor.http.isSuccess
+import com.wire.integrations.jvm.model.WireMessage
+import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.createJson
-import java.nio.charset.Charset
 
 /**
  * Service responsible for sending requests to the proxy service Roman.
  */
-class ProxySenderService(
-    private val client: HttpClient,
-    config: ProxyConfiguration
-) {
-    private companion object : KLogging() {
-        const val CONVERSATION_PATH = "/conversation"
-    }
-
-    private val conversationEndpoint = config.baseUrl appendPath CONVERSATION_PATH
+class ProxySenderService {
+    private companion object : KLogging()
 
     /**
      * Send given message with provided token.
      */
     suspend fun send(
-        token: String,
-        message: BotMessage
-    ): Response? {
+        manager: WireApplicationManager,
+        message: WireMessage
+    ) {
         logger.debug { "Sending: ${createJson(message)}" }
 
         return client
@@ -70,3 +51,13 @@ class ProxySenderService(
 data class ProxyConfiguration(
     val baseUrl: String
 )
+        val conversationId = when (message) {
+            is WireMessage.Composite -> message.textContent?.conversationId
+            else -> null
+        }
+        manager.sendMessageSuspending(
+            conversationId = conversationId!!,
+            message = message
+        )
+    }
+}

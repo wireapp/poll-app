@@ -3,7 +3,7 @@ package com.wire.bots.polls.parser
 import com.wire.bots.polls.dto.PollDto
 import com.wire.bots.polls.dto.Question
 import com.wire.bots.polls.dto.UsersInput
-import com.wire.bots.polls.dto.common.Mention
+import com.wire.integrations.jvm.model.WireMessage
 import mu.KLogging
 
 class InputParser {
@@ -32,11 +32,15 @@ class InputParser {
                 body = inputs.first(),
                 mentions = shiftMentions(userInput)
             ),
-            options = inputs.takeLast(inputs.size - 1)
+            options = parseButtons(inputs.takeLast(inputs.size - 1))
         )
     }
 
-    private fun shiftMentions(usersInput: UsersInput): List<Mention> {
+    private fun parseButtons(buttons: List<String>): List<WireMessage.Composite.Button> {
+        return buttons.map { WireMessage.Composite.Button.create(it, isSelected = false) }
+    }
+
+    private fun shiftMentions(usersInput: UsersInput): List<WireMessage.Text.Mention> {
         val delimiterIndex = usersInput.input.indexOfFirst { delimitersSet.contains(it) }
         val emptyCharsInQuestion = usersInput.input
             .substringAfter(usersInput.input[delimiterIndex])
