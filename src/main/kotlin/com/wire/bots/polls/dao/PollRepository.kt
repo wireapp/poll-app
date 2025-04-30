@@ -29,13 +29,11 @@ class PollRepository {
     suspend fun savePoll(
         poll: PollDto,
         pollId: String,
-        userId: String,
-        botSelfId: String
+        userId: String
     ) = newSuspendedTransaction {
         Polls.insert {
             it[id] = pollId
             it[ownerId] = userId
-            it[botId] = botSelfId
             it[isActive] = true
             it[body] = poll.question.body
         }
@@ -134,12 +132,12 @@ class PollRepository {
     /**
      * Returns set of user ids that voted in the poll with given pollId.
      */
-    suspend fun getLatestForBot(botId: String) =
+    suspend fun getLatestForConversation(conversationId: QualifiedId) =
         newSuspendedTransaction {
             Polls
                 .slice(Polls.id)
                 // it must be for single bot
-                .select { Polls.botId eq botId }
+                .select { Polls.conversationId eq conversationId.id.toString() }
                 // such as latest is on top
                 .orderBy(Polls.created to SortOrder.DESC)
                 // select just one
