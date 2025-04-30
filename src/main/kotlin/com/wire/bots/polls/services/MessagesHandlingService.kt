@@ -1,6 +1,5 @@
 package com.wire.bots.polls.services
 
-import com.wire.bots.polls.dto.PollAction
 import com.wire.bots.polls.dto.UsersInput
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -13,36 +12,56 @@ class MessagesHandlingService(
 ) {
     private companion object : KLogging()
 
-    suspend fun handle(message: Message) {
-        logger.debug { "Handling message." }
-        logger.trace { "Message: $message" }
+//    suspend fun handle(message: WireMessage.Text) {
+//        logger.debug { "Handling message." }
+//        logger.trace { "Message: $message" }
+//
+//        logger.debug { "Handling type: ${message.type}" }
+//        val handled = tokenAwareHandle(message)
+//
+//        logger.debug {
+//            if (handled) "Bot reacted to the message" else "Bot didn't react to the message."
+//        }
+//        logger.debug { "Message handled." }
+//    }
 
-        val handled = when (message.type) {
-            "conversation.bot_request" -> false.also {
-                logger.debug { "Bot was added to conversation." }
-            }
-            "conversation.bot_removed" -> false.also {
-                logger.debug { "Bot was removed from the conversation." }
-            }
-            else -> {
-                logger.debug { "Handling type: ${message.type}" }
-                if (message.token != null) {
-                    tokenAwareHandle(message.token, message)
-                } else {
-                    logger.warn {
-                        "Proxy didn't send token along side the message " +
-                            "with type ${message.type}. Message:$message"
-                    }
-                    false
-                }
-            }
-        }
-
-        logger.debug {
-            if (handled) "Bot reacted to the message" else "Bot didn't react to the message."
-        }
-        logger.debug { "Message handled." }
-    }
+//    private suspend fun tokenAwareHandle(message: WireMessage.Text): Boolean {
+//        logger.debug { "Message contains token." }
+//        return runCatching {
+//            when (message.type) {
+//                "conversation.new_text" -> {
+//                    logger.debug { "New text message received." }
+//                    handleText(message)
+//                }
+//                "conversation.poll.action" -> {
+//                    val poll =
+//                        requireNotNull(
+//                            message.poll
+//                        ) { "Reaction to a poll, poll object must be set!" }
+//                    pollService.pollAction(
+//                        PollAction(
+//                            pollId = poll.id,
+//                            optionId = requireNotNull(
+//                                poll.offset
+//                            ) { "Offset/Option id must be set!" },
+//                            userId = requireNotNull(
+//                                message.userId
+//                            ) { "UserId of user who sent the message must be set." }
+//                        ),
+//                        message.conversationId
+//                    )
+//                    true
+//                }
+//                else -> false.also {
+//                    logger.warn { "Unknown message type of ${message.type}. Ignoring." }
+//                }
+//            }
+//        }.onFailure {
+//            logger.error(
+//                it
+//            ) { "Exception during handling the message: $message with token $token." }
+//        }.getOrThrow()
+//    }
 
     suspend fun handleText(
         manager: WireApplicationManager,

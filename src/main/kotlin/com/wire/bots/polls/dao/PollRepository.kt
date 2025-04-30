@@ -40,7 +40,7 @@ class PollRepository {
 
         Mentions.batchInsert(poll.question.mentions) {
             this[Mentions.pollId] = pollId
-            this[Mentions.userId] = it.userId
+//            this[Mentions.userId] = it.userId.id
             this[Mentions.offset] = it.offset
             this[Mentions.length] = it.length
         }
@@ -51,7 +51,7 @@ class PollRepository {
             val (index, option) = it
             this[PollOptions.pollId] = pollId
             this[PollOptions.optionOrder] = index
-            this[PollOptions.optionContent] = option
+//            this[PollOptions.optionContent] = option
         }
         pollId
     }
