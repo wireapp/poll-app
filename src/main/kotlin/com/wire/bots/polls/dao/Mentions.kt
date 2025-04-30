@@ -13,9 +13,14 @@ object Mentions : IntIdTable("mentions") {
     val pollId: Column<String> = varchar("poll_id", UUID_LENGTH) references Polls.id
 
     /**
-     * If of user that is mentioned.
+     * Id of user that is mentioned.
      */
     val userId: Column<String> = varchar("user_id", UUID_LENGTH)
+
+    /**
+     * Domain of user that is mentioned.
+     */
+    val domain: Column<String> = varchar("domain", UUID_LENGTH)
 
     /**
      * Where mention begins.

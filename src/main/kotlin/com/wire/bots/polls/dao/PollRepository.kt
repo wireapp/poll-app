@@ -3,7 +3,8 @@ package com.wire.bots.polls.dao
 import com.wire.bots.polls.dto.PollAction
 import com.wire.bots.polls.dto.PollDto
 import com.wire.bots.polls.dto.Question
-import com.wire.bots.polls.dto.common.Mention
+import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.integrations.jvm.model.WireMessage
 import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
@@ -68,8 +69,8 @@ class PollRepository {
                     { it[Polls.body] },
                     {
                         if (it.getOrNull(Mentions.userId) != null) {
-                            Mention(
-                                userId = it[Mentions.userId],
+                            WireMessage.Text.Mention(
+                                userId = null,
                                 offset = it[Mentions.offset],
                                 length = it[Mentions.length]
                             )

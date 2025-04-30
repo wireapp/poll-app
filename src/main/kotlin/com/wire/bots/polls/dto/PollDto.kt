@@ -11,5 +11,5 @@ data class PollDto(
 
 data class Question(
     val body: String,
-    val mentions: List<Mention>
+    val mentions: List<WireMessage.Text.Mention>
 )
