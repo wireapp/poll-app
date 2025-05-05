@@ -80,18 +80,20 @@ class PollService(
         manager: WireApplicationManager,
         pollAction: WireMessage.ButtonAction,
         conversationId: QualifiedId
-    ): String? {
+    ) {
         logger.info { "User voted" }
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
         val message = confirmVote(
             pollId = pollAction.referencedMessageId,
-            offset = pollAction.buttonId.toInt(),
-            userId = pollAction.sender.id.toString()
+            offset = pollAction.buttonId.toInt()
         )
         sendStatsIfAllVoted(manager, pollAction.referencedMessageId, conversationId)
-        return message.toString()
+        manager.sendMessageSuspending(
+            conversationId = conversationId,
+            message = message
+        )
     }
 
     private suspend fun sendStatsIfAllVoted(

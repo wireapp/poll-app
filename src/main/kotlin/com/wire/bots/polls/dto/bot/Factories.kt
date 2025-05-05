@@ -24,16 +24,13 @@ fun newPoll(
  */
 fun confirmVote(
     pollId: String,
-    userId: String,
     offset: Int
-): BotMessage =
-    PollVote(
-        poll = PollVote.Poll(
-            id = pollId,
-            userId = userId,
-            offset = offset
-        )
+): WireMessage.ButtonActionConfirmation {
+    return WireMessage.ButtonActionConfirmation(
+        pollId,
+        offset.toString()
     )
+}
 
 /**
  * Creates message which greets the users in the conversation.
