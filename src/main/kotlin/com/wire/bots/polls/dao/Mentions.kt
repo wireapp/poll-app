@@ -20,7 +20,7 @@ object Mentions : IntIdTable("mentions") {
     /**
      * Domain of user that is mentioned.
      */
-    val domain: Column<String> = varchar("domain", UUID_LENGTH)
+    val domain: Column<String> = varchar("domain", DOMAIN_LENGTH)
 
     /**
      * Where mention begins.

@@ -25,6 +25,11 @@ object Polls : Table("polls") {
     val conversationId: Column<String> = varchar("conversation_id", UUID_LENGTH)
 
     /**
+     * Domain of conversation.
+     */
+    val domain: Column<String> = varchar("domain", DOMAIN_LENGTH)
+
+    /**
      * Determines whether is the pool active and whether new votes should be accepted.
      */
     val isActive: Column<Boolean> = bool("is_active")
