@@ -1,6 +1,5 @@
 package com.wire.bots.polls.dto.bot
 
-import com.wire.bots.polls.dto.common.Text
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 

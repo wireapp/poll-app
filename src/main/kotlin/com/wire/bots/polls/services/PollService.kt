@@ -1,7 +1,6 @@
 package com.wire.bots.polls.services
 
 import com.wire.bots.polls.dao.PollRepository
-import com.wire.bots.polls.dto.PollAction
 import com.wire.bots.polls.dto.UsersInput
 import com.wire.bots.polls.dto.bot.confirmVote
 import com.wire.bots.polls.dto.bot.newPoll
@@ -11,7 +10,6 @@ import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
-import java.util.UUID
 
 /**
  * Service handling the polls. It communicates with the proxy via [proxySenderService].

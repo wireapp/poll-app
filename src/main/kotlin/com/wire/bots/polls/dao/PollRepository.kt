@@ -1,6 +1,5 @@
 package com.wire.bots.polls.dao
 
-import com.wire.bots.polls.dto.PollAction
 import com.wire.bots.polls.dto.PollDto
 import com.wire.bots.polls.dto.Question
 import com.wire.integrations.jvm.model.QualifiedId
