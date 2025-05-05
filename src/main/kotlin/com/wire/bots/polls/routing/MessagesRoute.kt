@@ -1,6 +1,7 @@
 package com.wire.bots.polls.routing
 
 import com.wire.bots.polls.services.MessagesHandlingService
+import com.wire.bots.polls.services.PollService
 import com.wire.bots.polls.services.UserCommunicationService
 import com.wire.integrations.jvm.WireAppSdk
 import com.wire.integrations.jvm.WireEventsHandler
@@ -20,6 +21,7 @@ fun Routing.messages() {
     val k = closestDI()
     val handler by k.instance<MessagesHandlingService>()
     val userCommunicationService by k.instance<UserCommunicationService>()
+    val pollService by k.instance<PollService>()
 
     val wireAppSdk = WireAppSdk(
         applicationId = UUID.randomUUID(),
@@ -38,6 +40,16 @@ fun Routing.messages() {
                 runBlocking {
                     userCommunicationService.sayHello(manager, conversation.id)
                 }
+            }
+
+            override suspend fun onNewButtonActionSuspending(
+                wireMessage: WireMessage.ButtonAction
+            ) {
+                pollService.pollAction(
+                    manager,
+                    wireMessage,
+                    wireMessage.conversationId
+                )
             }
         }
     )

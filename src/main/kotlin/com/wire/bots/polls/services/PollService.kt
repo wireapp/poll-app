@@ -6,6 +6,7 @@ import com.wire.bots.polls.dto.bot.confirmVote
 import com.wire.bots.polls.dto.bot.newPoll
 import com.wire.bots.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.whenNull
@@ -39,13 +40,6 @@ class PollService(
                 pollNotParsedFallback(manager, conversationId, usersInput)
             } ?: return null
 
-        val pollId = repository.savePoll(
-            poll,
-            pollId = UUID.randomUUID().toString(),
-            userId = usersInput.userId?.id.toString()
-        )
-        logger.info { "Poll successfully created with id: $pollId" }
-
         val message = newPoll(
             conversationId = conversationId,
 //            id = pollId,
@@ -53,6 +47,16 @@ class PollService(
             buttons = poll.options
 //            mentions = poll.question.mentions
         )
+
+        val pollId = repository.savePoll(
+            poll,
+            pollId = message.textContent?.id.toString(),
+            userId = usersInput.userId?.id.toString(),
+            userDomain = usersInput.userId?.domain.toString(),
+            conversationId.toString()
+        )
+        logger.info { "Poll successfully created with id: $pollId" }
+
         proxySenderService.send(manager, message)
 
         return pollId
@@ -74,7 +78,7 @@ class PollService(
      */
     suspend fun pollAction(
         manager: WireApplicationManager,
-        pollAction: PollAction,
+        pollAction: WireMessage.ButtonAction,
         conversationId: QualifiedId
     ): String? {
         logger.info { "User voted" }
@@ -82,11 +86,11 @@ class PollService(
         logger.info { "Vote registered." }
 
         val message = confirmVote(
-            pollId = pollAction.pollId,
-            offset = pollAction.optionId,
-            userId = pollAction.userId
+            pollId = pollAction.referencedMessageId,
+            offset = pollAction.buttonId.toInt(),
+            userId = pollAction.sender.id.toString()
         )
-        sendStatsIfAllVoted(manager, pollAction.pollId, conversationId)
+        sendStatsIfAllVoted(manager, pollAction.referencedMessageId, conversationId)
         return message.toString()
     }
 

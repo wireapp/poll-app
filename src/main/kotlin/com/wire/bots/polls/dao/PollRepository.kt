@@ -28,29 +28,33 @@ class PollRepository {
     suspend fun savePoll(
         poll: PollDto,
         pollId: String,
-        userId: String
+        userId: String,
+        userDomain: String,
+        conversationUUID: String
     ) = newSuspendedTransaction {
         Polls.insert {
             it[id] = pollId
             it[ownerId] = userId
+            it[domain] = userDomain
             it[isActive] = true
+            it[conversationId] = conversationUUID
             it[body] = poll.question.body
         }
 
         Mentions.batchInsert(poll.question.mentions) {
             this[Mentions.pollId] = pollId
-//            this[Mentions.userId] = it.userId.id
+            this[Mentions.userId] = it.userId?.id.toString()
+            this[Mentions.domain] = it.userId?.domain.toString()
             this[Mentions.offset] = it.offset
             this[Mentions.length] = it.length
         }
 
         PollOptions.batchInsert(
-            poll.options.mapIndexed { index, option -> index to option }
+            poll.options
         ) {
-            val (index, option) = it
             this[PollOptions.pollId] = pollId
-            this[PollOptions.optionOrder] = index
-//            this[PollOptions.optionContent] = option
+            this[PollOptions.optionOrder] = it.id.toInt()
+            this[PollOptions.optionContent] = it.text
         }
         pollId
     }
@@ -84,12 +88,12 @@ class PollRepository {
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
      */
-    suspend fun vote(pollAction: PollAction) =
+    suspend fun vote(pollAction: WireMessage.ButtonAction) =
         newSuspendedTransaction {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
-                it[pollId] = pollAction.pollId
-                it[pollOption] = pollAction.optionId
-                it[userId] = pollAction.userId
+                it[pollId] = pollAction.referencedMessageId
+                it[pollOption] = pollAction.buttonId.toInt()
+                it[userId] = pollAction.sender.id.toString()
             }
         }
 
