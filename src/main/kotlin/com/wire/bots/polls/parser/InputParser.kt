@@ -37,7 +37,9 @@ class InputParser {
     }
 
     private fun parseButtons(buttons: List<String>): List<WireMessage.Composite.Button> {
-        return buttons.map { WireMessage.Composite.Button.create(it, isSelected = false) }
+        return buttons.mapIndexed { index, text ->
+            WireMessage.Composite.Button.create(text, isSelected = false, id = index.toString())
+        }
     }
 
     private fun shiftMentions(usersInput: UsersInput): List<WireMessage.Text.Mention> {
