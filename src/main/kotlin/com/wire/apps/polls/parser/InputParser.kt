@@ -44,6 +44,7 @@ class InputParser {
 
     private fun shiftMentions(usersInput: UsersInput): List<WireMessage.Text.Mention> {
         val delimiterIndex = usersInput.input.indexOfFirst { delimitersSet.contains(it) }
+        if (delimiterIndex == -1) return emptyList()
         val emptyCharsInQuestion = usersInput.input
             .substringAfter(usersInput.input[delimiterIndex])
             .takeWhile { it == ' ' }
