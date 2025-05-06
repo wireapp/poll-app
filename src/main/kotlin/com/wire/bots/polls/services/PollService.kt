@@ -55,7 +55,7 @@ class PollService(
         )
         logger.info { "Poll successfully created with id: $pollId" }
 
-        proxySenderService.send(manager, message)
+        proxySenderService.send(manager, message, message.textContent?.conversationId)
     }
 
     private suspend fun pollNotParsedFallback(
@@ -85,11 +85,8 @@ class PollService(
             pollId = pollAction.referencedMessageId,
             offset = pollAction.buttonId.toInt()
         )
+        proxySenderService.send(manager, message, conversationId)
         sendStatsIfAllVoted(manager, pollAction.referencedMessageId, conversationId)
-        manager.sendMessageSuspending(
-            conversationId = conversationId,
-            message = message
-        )
     }
 
     private suspend fun sendStatsIfAllVoted(
@@ -141,7 +138,7 @@ class PollService(
             .whenNull { logger.warn { "It was not possible to format stats for poll $pollId" } }
             ?: return
 
-        proxySenderService.send(manager, stats)
+        proxySenderService.send(manager, stats, conversationId)
     }
 
     /**
