@@ -24,8 +24,9 @@ class ProxySenderService {
             is WireMessage.Composite -> message.textContent?.conversationId
             else -> null
         }
+        if (conversationId == null) return
         manager.sendMessageSuspending(
-            conversationId = conversationId!!,
+            conversationId = conversationId,
             message = message
         )
     }
