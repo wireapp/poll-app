@@ -144,7 +144,7 @@ class PollService(
         val latest = repository.getLatestForConversation(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
         } ?: return
-
+        // todo send message to user that no polls were created
         sendStats(manager, latest, conversationId)
     }
 }

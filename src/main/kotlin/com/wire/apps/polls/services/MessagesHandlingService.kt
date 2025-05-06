@@ -42,6 +42,18 @@ class MessagesHandlingService(
             } else if (text != null) {
                 val trimmed = (text as String).trim()
                 when {
+                    // stats request
+                    trimmed.startsWith("/poll stats") -> {
+                        pollService.sendStatsForLatest(manager, conversationId)
+                    }
+                    // send version when asked
+                    trimmed.startsWith("/poll version") -> {
+                        userCommunicationService.sendVersion(manager, conversationId)
+                    }
+                    // send version when asked
+                    trimmed.startsWith("/poll help") -> {
+                        userCommunicationService.sendHelp(manager, conversationId)
+                    }
                     // poll request
                     trimmed.startsWith("/poll") ->
                         pollService.createPoll(
@@ -53,18 +65,6 @@ class MessagesHandlingService(
                                 mentions
                             )
                         )
-                    // stats request
-                    trimmed.startsWith("/stats") -> {
-                        pollService.sendStatsForLatest(manager, conversationId)
-                    }
-                    // send version when asked
-                    trimmed.startsWith("/version") -> {
-                        userCommunicationService.sendVersion(manager, conversationId)
-                    }
-                    // send version when asked
-                    trimmed.startsWith("/help") -> {
-                        userCommunicationService.sendHelp(manager, conversationId)
-                    }
                     // Easter egg, good app is good
                     trimmed == "good app" -> {
                         userCommunicationService.goodApp(manager, conversationId)

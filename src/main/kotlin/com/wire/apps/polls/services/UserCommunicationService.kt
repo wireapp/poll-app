@@ -19,12 +19,12 @@ class UserCommunicationService(
 ) {
     private companion object : KLogging() {
         const val USAGE = "To create poll please text: " +
-            "`/poll \"Question\" \"Option 1\" \"Option 2\"`. To display usage write `/help`"
+            "`/poll \"Question\" \"Option 1\" \"Option 2\"`. To display usage write `/poll help`"
         val commands = """
             Following commands are available:
             `/poll "Question" "Option 1" "Option 2"` will create poll
-            `/stats` will send result of the last poll in the conversation
-            `/help` to show help
+            `/poll stats` will send result of the last poll in the conversation
+            `/poll help` to show help
         """.trimIndent()
     }
 
