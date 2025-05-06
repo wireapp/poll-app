@@ -96,10 +96,6 @@ class PollService(
     ) {
         val conversationMembersCount = conversationService
             .getNumberOfConversationMembers(manager, conversationId)
-            .whenNull {
-                logger.warn { "It was not possible to determine number of conversation members!" }
-            }
-            ?: return
 
         val votedSize = repository.votingUsers(pollId).size
 
@@ -126,11 +122,6 @@ class PollService(
         val conversationMembersCount =
             conversationMembers ?: conversationService
                 .getNumberOfConversationMembers(manager, conversationId)
-                .whenNull {
-                    logger.warn {
-                        "It was not possible to determine number of conversation members!"
-                    }
-                }
 
         logger.debug { "Conversation members: $conversationMembersCount" }
         val stats = statsFormattingService

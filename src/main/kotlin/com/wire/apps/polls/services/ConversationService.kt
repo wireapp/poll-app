@@ -13,7 +13,7 @@ class ConversationService {
     fun getNumberOfConversationMembers(
         manager: WireApplicationManager,
         conversationId: QualifiedId
-    ): Int? {
+    ): Int {
         return manager.getStoredConversationMembers(conversationId).size
     }
 }
