@@ -32,20 +32,18 @@ class PollService(
         manager: WireApplicationManager,
         conversationId: QualifiedId,
         usersInput: UsersInput
-    ): String? {
+    ) {
         val poll = factory
             .forUserInput(usersInput)
             .whenNull {
                 logger.warn { "It was not possible to create poll." }
                 pollNotParsedFallback(manager, conversationId, usersInput)
-            } ?: return null
+            } ?: return
 
         val message = newPoll(
             conversationId = conversationId,
-//            id = pollId,
             body = poll.question.body,
             buttons = poll.options
-//            mentions = poll.question.mentions
         )
 
         val pollId = repository.savePoll(
@@ -53,13 +51,11 @@ class PollService(
             pollId = message.textContent?.id.toString(),
             userId = usersInput.userId?.id.toString(),
             userDomain = usersInput.userId?.domain.toString(),
-            conversationId.toString()
+            conversationId = conversationId.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
 
         proxySenderService.send(manager, message)
-
-        return pollId
     }
 
     private suspend fun pollNotParsedFallback(

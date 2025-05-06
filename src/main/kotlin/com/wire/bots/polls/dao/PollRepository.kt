@@ -30,15 +30,15 @@ class PollRepository {
         pollId: String,
         userId: String,
         userDomain: String,
-        conversationUUID: String
+        conversationId: String
     ) = newSuspendedTransaction {
         Polls.insert {
-            it[id] = pollId
-            it[ownerId] = userId
-            it[domain] = userDomain
-            it[isActive] = true
-            it[conversationId] = conversationUUID
-            it[body] = poll.question.body
+            it[this.id] = pollId
+            it[this.ownerId] = userId
+            it[this.domain] = userDomain
+            it[this.isActive] = true
+            it[this.conversationId] = conversationId
+            it[this.body] = poll.question.body
         }
 
         Mentions.batchInsert(poll.question.mentions) {
