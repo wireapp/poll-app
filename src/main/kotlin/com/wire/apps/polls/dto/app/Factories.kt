@@ -46,8 +46,14 @@ fun greeting(
  */
 fun statsMessage(
     conversationId: QualifiedId,
-    text: String
-): WireMessage.Text = WireMessage.Text.create(conversationId, text)
+    text: String,
+    mentions: List<WireMessage.Text.Mention>
+) = WireMessage.Text(
+    id = UUID.randomUUID(),
+    conversationId = conversationId,
+    text = text,
+    mentions = mentions
+)
 
 /**
  * Creates message notifying user about wrongly used command.

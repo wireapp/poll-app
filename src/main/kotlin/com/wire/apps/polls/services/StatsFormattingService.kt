@@ -44,13 +44,13 @@ class StatsFormattingService(
         val options = formatVotes(stats, conversationMembers)
         return statsMessage(
             conversationId,
-            "$title$newLine$options"
+            "$title$newLine$options",
+            mentions = pollQuestion.mentions.map {
+                it.copy(
+                    offset = it.offset + TITLE_PREFIX.length
+                )
+            }
         )
-//            mentions = pollQuestion.mentions.map {
-//                it.copy(
-//                    offset = it.offset + TITLE_PREFIX.length
-//                )
-//            }
     }
 
     /**
