@@ -14,6 +14,7 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import pw.forst.exposed.insertOrUpdate
 import pw.forst.katlib.mapToSet
+import java.util.UUID
 
 /**
  * Simple repository for handling database transactions on one place.
@@ -71,7 +72,10 @@ class PollRepository {
                     {
                         if (it.getOrNull(Mentions.userId) != null) {
                             WireMessage.Text.Mention(
-                                userId = null,
+                                userId = QualifiedId(
+                                    UUID.fromString(it[Mentions.userId]),
+                                    it[Mentions.domain]
+                                ),
                                 offset = it[Mentions.offset],
                                 length = it[Mentions.length]
                             )
