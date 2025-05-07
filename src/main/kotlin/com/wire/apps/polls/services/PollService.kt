@@ -48,14 +48,14 @@ class PollService(
 
         val pollId = repository.savePoll(
             poll,
-            pollId = message.textContent?.id.toString(),
+            pollId = message.id.toString(),
             userId = usersInput.userId?.id.toString(),
             userDomain = usersInput.userId?.domain.toString(),
             conversationId = conversationId.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
 
-        proxySenderService.send(manager, message, message.textContent?.conversationId)
+        proxySenderService.send(manager, message, conversationId)
     }
 
     private suspend fun pollNotParsedFallback(
@@ -83,6 +83,7 @@ class PollService(
 
         val message = confirmVote(
             pollId = pollAction.referencedMessageId,
+            conversationId,
             offset = pollAction.buttonId.toInt()
         )
         proxySenderService.send(manager, message, conversationId)

@@ -38,7 +38,7 @@ class InputParser {
 
     private fun parseButtons(buttons: List<String>): List<WireMessage.Composite.Button> {
         return buttons.mapIndexed { index, text ->
-            WireMessage.Composite.Button.create(text, isSelected = false, id = index.toString())
+            WireMessage.Composite.Button(text, index.toString())
         }
     }
 

@@ -93,7 +93,7 @@ class PollRepository {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
                 it[pollId] = pollAction.referencedMessageId
                 it[pollOption] = pollAction.buttonId.toInt()
-                it[userId] = pollAction.sender.id.toString()
+                it[userId] = pollAction.sender?.id.toString()
             }
         }
 

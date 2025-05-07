@@ -2,6 +2,7 @@ package com.wire.apps.polls.dto.app
 
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
+import java.util.UUID
 
 /**
  * Creates message for poll.
@@ -24,11 +25,14 @@ fun newPoll(
  */
 fun confirmVote(
     pollId: String,
+    conversationId: QualifiedId,
     offset: Int
 ): WireMessage.ButtonActionConfirmation {
     return WireMessage.ButtonActionConfirmation(
-        pollId,
-        offset.toString()
+        id = UUID.randomUUID(),
+        conversationId = conversationId,
+        referencedMessageId = pollId,
+        buttonId = offset.toString()
     )
 }
 
