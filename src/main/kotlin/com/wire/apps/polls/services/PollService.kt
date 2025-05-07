@@ -47,7 +47,7 @@ class PollService(
         )
 
         val pollId = repository.savePoll(
-            poll,
+            poll = poll,
             pollId = message.id.toString(),
             userId = usersInput.userId?.id.toString(),
             userDomain = usersInput.userId?.domain.toString(),
@@ -83,7 +83,7 @@ class PollService(
 
         val message = confirmVote(
             pollId = pollAction.referencedMessageId,
-            conversationId,
+            conversationId = conversationId,
             offset = pollAction.buttonId.toInt()
         )
         proxySenderService.send(manager, message, conversationId)

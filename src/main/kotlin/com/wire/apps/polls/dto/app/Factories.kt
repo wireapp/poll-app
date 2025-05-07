@@ -9,10 +9,8 @@ import java.util.UUID
  */
 fun newPoll(
     conversationId: QualifiedId,
-//    id: String,
     body: String,
     buttons: List<WireMessage.Composite.Button>
-//    mentions: List<WireMessage.Text.Mention> = emptyList()
 ): WireMessage.Composite =
     WireMessage.Composite.create(
         conversationId = conversationId,
@@ -27,14 +25,13 @@ fun confirmVote(
     pollId: String,
     conversationId: QualifiedId,
     offset: Int
-): WireMessage.ButtonActionConfirmation {
-    return WireMessage.ButtonActionConfirmation(
+): WireMessage.ButtonActionConfirmation =
+    WireMessage.ButtonActionConfirmation(
         id = UUID.randomUUID(),
         conversationId = conversationId,
         referencedMessageId = pollId,
         buttonId = offset.toString()
     )
-}
 
 /**
  * Creates message which greets the users in the conversation.
