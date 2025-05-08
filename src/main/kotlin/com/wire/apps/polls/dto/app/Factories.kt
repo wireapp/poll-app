@@ -34,14 +34,6 @@ fun confirmVote(
     )
 
 /**
- * Creates message which greets the users in the conversation.
- */
-fun greeting(
-    conversationId: QualifiedId,
-    text: String
-): WireMessage.Text = WireMessage.Text.create(conversationId, text)
-
-/**
  * Creates stats (result of the poll) message.
  */
 fun statsMessage(
@@ -56,33 +48,9 @@ fun statsMessage(
 )
 
 /**
- * Creates message notifying user about wrongly used command.
+ * Creates text WireMessage for non-database bot interactions
  */
-fun fallBackMessage(
-    conversationId: QualifiedId,
-    text: String
-): WireMessage.Text = WireMessage.Text.create(conversationId, text)
-
-/**
- * Creates good app message.
- */
-fun goodAppMessage(
-    conversationId: QualifiedId,
-    text: String
-): WireMessage.Text = WireMessage.Text.create(conversationId, text)
-
-/**
- * Creates version message.
- */
-fun versionMessage(
-    conversationId: QualifiedId,
-    text: String
-): WireMessage.Text = WireMessage.Text.create(conversationId, text)
-
-/**
- * Creates message with help.
- */
-fun helpMessage(
+fun textMessage(
     conversationId: QualifiedId,
     text: String
 ): WireMessage.Text = WireMessage.Text.create(conversationId, text)

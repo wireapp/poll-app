@@ -1,10 +1,6 @@
 package com.wire.apps.polls.services
 
-import com.wire.apps.polls.dto.app.fallBackMessage
-import com.wire.apps.polls.dto.app.goodAppMessage
-import com.wire.apps.polls.dto.app.greeting
-import com.wire.apps.polls.dto.app.helpMessage
-import com.wire.apps.polls.dto.app.versionMessage
+import com.wire.apps.polls.dto.app.textMessage
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -35,7 +31,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        greeting(conversationId, "Hello, I'm Poll App. $USAGE").send(manager)
+        textMessage(conversationId, "Hello, I'm Poll App. $USAGE").send(manager)
     }
 
     /**
@@ -45,7 +41,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        fallBackMessage(conversationId, "I couldn't recognize your command. $USAGE").send(manager)
+        textMessage(conversationId, "I couldn't recognize your command. $USAGE").send(manager)
     }
 
     /**
@@ -55,7 +51,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        helpMessage(conversationId, commands).send(manager)
+        textMessage(conversationId, commands).send(manager)
     }
 
     /**
@@ -65,7 +61,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        goodAppMessage(conversationId, "\uD83D\uDE07").send(manager)
+        textMessage(conversationId, "\uD83D\uDE07").send(manager)
     }
 
     /**
@@ -75,7 +71,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        versionMessage(conversationId, "My version is: *$version*").send(manager)
+        textMessage(conversationId, "My version is: *$version*").send(manager)
     }
 
     private suspend fun WireMessage.Text.send(manager: WireApplicationManager) {
