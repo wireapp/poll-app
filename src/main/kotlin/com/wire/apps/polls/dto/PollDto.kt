@@ -2,11 +2,9 @@ package com.wire.apps.polls.dto
 
 import com.wire.integrations.jvm.model.WireMessage
 
-typealias Option = WireMessage.Composite.Button
-
 data class PollDto(
     val question: Question,
-    val options: List<Option>
+    val options: List<WireMessage.Composite.Button>
 )
 
 data class Question(
