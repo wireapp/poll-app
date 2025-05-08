@@ -8,7 +8,7 @@ import mu.KLogging
 import pw.forst.katlib.createJson
 
 /**
- * Service responsible for sending requests to the proxy service Roman.
+ * Service responsible for sending requests to the proxy service.
  */
 class ProxySenderService {
     private companion object : KLogging()
@@ -19,11 +19,10 @@ class ProxySenderService {
     suspend fun send(
         manager: WireApplicationManager,
         message: WireMessage,
-        conversationId: QualifiedId?
+        conversationId: QualifiedId
     ) {
         logger.debug { "Sending: ${createJson(message)}" }
         try {
-            conversationId ?: throw NullPointerException("Missing conversation ID.")
             manager.sendMessageSuspending(
                 conversationId = conversationId,
                 message = message
