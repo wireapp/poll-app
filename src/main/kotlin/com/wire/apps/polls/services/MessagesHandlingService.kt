@@ -60,9 +60,9 @@ class MessagesHandlingService(
                             manager,
                             conversationId,
                             UsersInput(
-                                sender,
-                                trimmed,
-                                mentions
+                                userId = sender,
+                                input = trimmed,
+                                mentions = mentions
                             )
                         )
                     // Easter egg, good app is good
