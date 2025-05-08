@@ -20,7 +20,7 @@ object PollOptions : Table("poll_option") {
     /**
      * Option content, the text inside the button/choice.
      */
-    private const val OPTION_LENGTH = 255
+    private const val OPTION_LENGTH = 256
     val optionContent: Column<String> = varchar("option_content", OPTION_LENGTH)
 
     override val primaryKey: PrimaryKey
