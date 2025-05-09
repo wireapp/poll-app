@@ -4,7 +4,7 @@ import org.jetbrains.exposed.dao.id.IntIdTable
 import org.jetbrains.exposed.sql.Column
 
 /**
- * Table storing votes of the users.
+ * Table storing mentions of the users.
  */
 object Mentions : IntIdTable("mentions") {
     /**

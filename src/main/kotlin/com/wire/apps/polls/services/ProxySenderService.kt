@@ -14,7 +14,7 @@ class ProxySenderService {
     private companion object : KLogging()
 
     /**
-     * Send given message
+     * Respond to the event issued by user.
      */
     suspend fun send(
         manager: WireApplicationManager,

@@ -36,6 +36,9 @@ class InputParser {
         )
     }
 
+    /**
+     * Preserves compatibility with existing database schema by using index as the button ID.
+     */
     private fun parseButtons(buttons: List<String>): List<WireMessage.Composite.Button> {
         return buttons.mapIndexed { index, text ->
             WireMessage.Composite.Button(text, index.toString())

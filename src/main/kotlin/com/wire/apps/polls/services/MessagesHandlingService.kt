@@ -8,12 +8,18 @@ import io.ktor.features.BadRequestException
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
 
+/**
+ * Connect conversation-based events to app functionality
+ */
 class MessagesHandlingService(
     private val pollService: PollService,
     private val userCommunicationService: UserCommunicationService
 ) {
     private companion object : KLogging()
 
+    /**
+     * Welcomes the user by listing available commands.
+     */
     fun handleConversationJoin(
         manager: WireApplicationManager,
         conversationId: QualifiedId
@@ -21,6 +27,9 @@ class MessagesHandlingService(
         runBlocking { userCommunicationService.sayHello(manager, conversationId) }
     }
 
+    /**
+     * Records the user's vote based on the selected button.
+     */
     suspend fun handleButtonAction(
         manager: WireApplicationManager,
         message: WireMessage.ButtonAction
@@ -32,6 +41,9 @@ class MessagesHandlingService(
         )
     }
 
+    /**
+     * Makes app interactive by executing user-issued commands.
+     */
     suspend fun handleText(
         manager: WireApplicationManager,
         message: WireMessage.Text

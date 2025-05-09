@@ -24,7 +24,7 @@ class PollRepository {
 
     /**
      * Saves given poll to database and returns its id (same as the [pollId] parameter,
-     * but this design supports fluent style in the services.
+     * but this design supports fluent style in the services.)
      */
     suspend fun savePoll(
         poll: PollDto,
@@ -60,9 +60,6 @@ class PollRepository {
         pollId
     }
 
-    /**
-     * Returns question for given poll Id. If the poll does not exist, null is returned.
-     */
     suspend fun getPollQuestion(pollId: String) =
         newSuspendedTransaction {
             (Polls leftJoin Mentions)
@@ -137,9 +134,9 @@ class PollRepository {
         }
 
     /**
-     * Returns set of user ids that voted in the poll with given pollId.
+     * Allows users to view stats without specifying a poll.
      */
-    suspend fun getLatestForConversation(conversationId: QualifiedId) =
+    suspend fun getCurrentPoll(conversationId: QualifiedId) =
         newSuspendedTransaction {
             Polls
                 .slice(Polls.id)

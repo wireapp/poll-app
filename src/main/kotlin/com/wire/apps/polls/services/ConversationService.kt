@@ -8,7 +8,7 @@ import com.wire.integrations.jvm.service.WireApplicationManager
  */
 class ConversationService {
     /**
-     * Returns the number of members of conversation.
+     * Used to determine if voting is complete and to format poll stats accordingly.
      */
     fun getNumberOfConversationMembers(
         manager: WireApplicationManager,

@@ -25,9 +25,6 @@ class PollService(
 ) {
     private companion object : KLogging()
 
-    /**
-     * Create poll.
-     */
     suspend fun createPoll(
         manager: WireApplicationManager,
         conversationId: QualifiedId,
@@ -70,7 +67,7 @@ class PollService(
     }
 
     /**
-     * Record that the user voted.
+     * Confirms to the user that their vote has been successfully registered.
      */
     suspend fun pollAction(
         manager: WireApplicationManager,
@@ -90,6 +87,9 @@ class PollService(
         sendStatsIfAllVoted(manager, pollAction.referencedMessageId, conversationId)
     }
 
+    /**
+     * Provides users with immediate confirmation that voting is complete.
+     */
     private suspend fun sendStatsIfAllVoted(
         manager: WireApplicationManager,
         pollId: String,
@@ -111,7 +111,7 @@ class PollService(
     }
 
     /**
-     * Sends statistics about the poll to the proxy.
+     * Reveal the results to the user.
      */
     suspend fun sendStats(
         manager: WireApplicationManager,
@@ -134,7 +134,8 @@ class PollService(
     }
 
     /**
-     * Sends stats for latest poll.
+     * Displays intermediate results while voting is ongoing,
+     * and brings final results to the front once the poll is over for easy access.
      */
     suspend fun sendStatsForLatest(
         manager: WireApplicationManager,
@@ -142,7 +143,7 @@ class PollService(
     ) {
         logger.debug { "Sending latest stats" }
 
-        val latest = repository.getLatestForConversation(conversationId).whenNull {
+        val latest = repository.getCurrentPoll(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
         } ?: return
         // todo send message to user that no polls were created

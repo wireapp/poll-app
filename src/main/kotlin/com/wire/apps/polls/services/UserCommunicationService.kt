@@ -7,7 +7,7 @@ import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
 
 /**
- * Service used for handling init message.
+ * Service used for handling user commands.
  */
 class UserCommunicationService(
     private val proxySenderService: ProxySenderService,
@@ -25,7 +25,7 @@ class UserCommunicationService(
     }
 
     /**
-     * Sends hello message with instructions to the conversation.
+     * Introduce utility of an app to the user.
      */
     suspend fun sayHello(
         manager: WireApplicationManager,
@@ -35,7 +35,7 @@ class UserCommunicationService(
     }
 
     /**
-     * Sends message with help.
+     * Fallback message in case of user providing invalid command.
      */
     suspend fun reactionToWrongCommand(
         manager: WireApplicationManager,
@@ -45,7 +45,7 @@ class UserCommunicationService(
     }
 
     /**
-     * Sends message containing help
+     * Remind user of possible commands.
      */
     suspend fun sendHelp(
         manager: WireApplicationManager,
@@ -55,7 +55,7 @@ class UserCommunicationService(
     }
 
     /**
-     * Sends good app message.
+     * Show gratitude to the app.
      */
     suspend fun goodApp(
         manager: WireApplicationManager,
@@ -65,7 +65,7 @@ class UserCommunicationService(
     }
 
     /**
-     * Sends version of the app to the user.
+     * Informs the user whether they are interacting with a development or deployed version.
      */
     suspend fun sendVersion(
         manager: WireApplicationManager,
