@@ -12,7 +12,7 @@ data class UsersInput(
     /**
      * Id of the user who wrote this.
      */
-    val userId: QualifiedId? = null,
+    val userId: QualifiedId,
     /**
      * User's text, not logged.
      */

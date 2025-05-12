@@ -72,7 +72,7 @@ class MessagesHandlingService(
                             manager,
                             conversationId,
                             UsersInput(
-                                userId = sender,
+                                userId = sender as QualifiedId,
                                 input = trimmed,
                                 mentions = mentions
                             )
