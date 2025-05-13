@@ -1,5 +1,7 @@
 package com.wire.apps.polls.routing
 
+import com.wire.apps.polls.dto.common.mapToPollAction
+import com.wire.apps.polls.dto.common.mapToUsersInput
 import com.wire.apps.polls.services.MessagesHandlingService
 import com.wire.integrations.jvm.WireAppSdk
 import com.wire.integrations.jvm.WireEventsHandler
@@ -15,14 +17,15 @@ import java.util.UUID
  * Events API.
  */
 fun Routing.events() {
-    val handler by closestDI().instance<MessagesHandlingService>()
+    val k = closestDI()
+    val handler by k.instance<MessagesHandlingService>()
 
     val wireAppSdk = WireAppSdk(
         applicationId = UUID.randomUUID(),
         apiToken = "myApiToken",
         apiHost = "https://nginz-https.chala.wire.link",
         cryptographyStoragePassword = "myDummyPassword",
-        object : WireEventsHandler() {
+        wireEventsHandler = object : WireEventsHandler() {
             override fun onConversationJoin(
                 conversation: ConversationData,
                 members: List<ConversationMember>
@@ -31,7 +34,8 @@ fun Routing.events() {
             }
 
             override suspend fun onNewMessageSuspending(wireMessage: WireMessage.Text) {
-                handler.handleText(manager, wireMessage)
+                val usersInput = mapToUsersInput(wireMessage)
+                handler.handleText(manager, usersInput)
             }
 
             override suspend fun onNewButtonActionSuspending(

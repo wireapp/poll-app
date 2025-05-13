@@ -1,10 +1,9 @@
 package com.wire.apps.polls.services
 
+import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
-import io.ktor.features.BadRequestException
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
 
@@ -32,12 +31,13 @@ class MessagesHandlingService(
      */
     suspend fun handleButtonAction(
         manager: WireApplicationManager,
-        message: WireMessage.ButtonAction
+        pollAction: PollAction,
+        conversationId: QualifiedId
     ) {
         pollService.pollAction(
-            manager,
-            message,
-            message.conversationId
+            manager = manager,
+            pollAction = pollAction,
+            conversationId = conversationId
         )
     }
 
@@ -46,46 +46,37 @@ class MessagesHandlingService(
      */
     suspend fun handleText(
         manager: WireApplicationManager,
-        message: WireMessage.Text
+        usersInput: UsersInput?
     ) {
-        with(message) {
-            if (sender == null) {
-                throw BadRequestException("UserId must be set for text messages.")
-            } else if (text != null) {
-                val trimmed = (text as String).trim()
-                when {
-                    // stats request
-                    trimmed.startsWith("/poll stats") -> {
-                        pollService.sendStatsForLatest(manager, conversationId)
-                    }
-                    // send version when asked
-                    trimmed.startsWith("/poll version") -> {
-                        userCommunicationService.sendVersion(manager, conversationId)
-                    }
-                    // send version when asked
-                    trimmed.startsWith("/poll help") -> {
-                        userCommunicationService.sendHelp(manager, conversationId)
-                    }
-                    // poll request
-                    trimmed.startsWith("/poll") ->
-                        pollService.createPoll(
-                            manager,
-                            conversationId,
-                            UsersInput(
-                                userId = sender as QualifiedId,
-                                input = trimmed,
-                                mentions = mentions
-                            )
-                        )
-                    // Easter egg, good app is good
-                    trimmed == "good app" -> {
-                        userCommunicationService.goodApp(manager, conversationId)
-                    }
-                    else -> logger.debug("Ignoring the message, unrecognized command.")
-                }
-            } else {
-                logger.debug("Ignoring message as it does not have correct fields set.")
+        if (usersInput == null) {
+            logger.debug("Ignoring message as it does not have correct fields set.")
+            return
+        }
+
+        val conversationId = usersInput.conversationId
+        val trimmed = usersInput.text.trim()
+
+        when {
+            // stats request
+            trimmed.startsWith("/poll stats") -> {
+                pollService.sendStatsForLatest(manager, conversationId)
             }
+            // send version when asked
+            trimmed.startsWith("/poll version") -> {
+                userCommunicationService.sendVersion(manager, conversationId)
+            }
+            // send version when asked
+            trimmed.startsWith("/poll help") -> {
+                userCommunicationService.sendHelp(manager, conversationId)
+            }
+            // poll request
+            trimmed.startsWith("/poll") ->
+                pollService.createPoll(manager, usersInput)
+            // Easter egg, good app is good
+            trimmed == "good app" -> {
+                userCommunicationService.goodApp(manager, conversationId)
+            }
+            else -> logger.debug("Ignoring the message, unrecognized command.")
         }
     }
 }

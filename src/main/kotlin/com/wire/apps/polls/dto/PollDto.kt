@@ -1,13 +1,18 @@
 package com.wire.apps.polls.dto
 
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.apps.polls.dto.common.Mention
 
 data class PollDto(
     val question: Question,
-    val options: List<WireMessage.Composite.Button>
+    val options: List<Option>
 )
 
 data class Question(
     val body: String,
-    val mentions: List<WireMessage.Text.Mention>
+    val mentions: List<Mention>
+)
+
+data class Option(
+    val content: String,
+    val optionOrder: Int
 )

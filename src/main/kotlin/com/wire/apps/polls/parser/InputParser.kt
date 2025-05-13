@@ -1,9 +1,10 @@
 package com.wire.apps.polls.parser
 
+import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.Question
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.apps.polls.dto.common.Mention
 import mu.KLogging
 
 class InputParser {
@@ -15,7 +16,7 @@ class InputParser {
 
     fun parsePoll(userInput: UsersInput): PollDto? {
         // TODO currently not supporting char " in the strings
-        val inputs = userInput.input
+        val inputs = userInput.text
             .substringAfter("/poll", "")
             .substringBeforeLast("\"")
             .split(*delimiters)
@@ -39,17 +40,17 @@ class InputParser {
     /**
      * Preserves compatibility with existing database schema by using index as the button ID.
      */
-    private fun parseButtons(buttons: List<String>): List<WireMessage.Composite.Button> {
+    private fun parseButtons(buttons: List<String>): List<Option> {
         return buttons.mapIndexed { index, text ->
-            WireMessage.Composite.Button(text, index.toString())
+            Option(text, index)
         }
     }
 
-    private fun shiftMentions(usersInput: UsersInput): List<WireMessage.Text.Mention> {
-        val delimiterIndex = usersInput.input.indexOfFirst { delimitersSet.contains(it) }
+    private fun shiftMentions(usersInput: UsersInput): List<Mention> {
+        val delimiterIndex = usersInput.text.indexOfFirst { delimitersSet.contains(it) }
         if (delimiterIndex == -1) return emptyList()
-        val emptyCharsInQuestion = usersInput.input
-            .substringAfter(usersInput.input[delimiterIndex])
+        val emptyCharsInQuestion = usersInput.text
+            .substringAfter(usersInput.text[delimiterIndex])
             .takeWhile { it == ' ' }
             .count()
 

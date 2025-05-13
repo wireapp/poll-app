@@ -89,15 +89,15 @@ class StatsFormattingService(
         return stats
             .map { (option, votingUsers) ->
                 VotingOption(
-                    if (votingUsers ==
+                    style = if (votingUsers ==
                         mostPopularOptionVoteCount
                     ) {
                         "**"
                     } else {
                         "*"
                     },
-                    option.second,
-                    votingUsers
+                    option = option.second,
+                    votingUsers = votingUsers
                 )
             }.let { votes ->
                 votes.joinToString(newLine) { it.toString(maximumSize) }

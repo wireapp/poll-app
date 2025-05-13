@@ -1,12 +1,12 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
+import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.app.confirmVote
 import com.wire.apps.polls.dto.app.newPoll
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.whenNull
@@ -27,9 +27,9 @@ class PollService(
 
     suspend fun createPoll(
         manager: WireApplicationManager,
-        conversationId: QualifiedId,
         usersInput: UsersInput
     ) {
+        val conversationId = usersInput.conversationId
         val poll = factory
             .forUserInput(usersInput)
             .whenNull {
@@ -50,8 +50,8 @@ class PollService(
         val pollId = repository.savePoll(
             poll = poll,
             pollId = message.id.toString(),
-            userId = usersInput.userId?.id.toString(),
-            userDomain = usersInput.userId?.domain.toString(),
+            userId = usersInput.sender.id.toString(),
+            userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
@@ -68,7 +68,7 @@ class PollService(
         conversationId: QualifiedId,
         usersInput: UsersInput
     ) {
-        usersInput.input.startsWith("/poll").whenTrue {
+        usersInput.text.startsWith("/poll").whenTrue {
             logger.info { "Command started with /poll, sending usage to user." }
             userCommunicationService.reactionToWrongCommand(manager, conversationId)
         }
@@ -79,7 +79,7 @@ class PollService(
      */
     suspend fun pollAction(
         manager: WireApplicationManager,
-        pollAction: WireMessage.ButtonAction,
+        pollAction: PollAction,
         conversationId: QualifiedId
     ) {
         logger.info { "User voted" }
@@ -87,9 +87,9 @@ class PollService(
         logger.info { "Vote registered." }
 
         val message = confirmVote(
-            pollId = pollAction.referencedMessageId,
+            pollId = pollAction.pollId,
             conversationId = conversationId,
-            offset = pollAction.buttonId.toInt()
+            offset = pollAction.optionId
         )
         proxySenderService.send(
             manager = manager,

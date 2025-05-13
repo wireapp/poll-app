@@ -103,7 +103,7 @@ data class Message(
      * Avoid printing out the token by mistake if object is printed.
      */
     override fun toString(): String =
-        "Message(botId='$botId', userId=$userId, conversationId=$conversationId, type='$type', " +
+        "Message(botId='$botId', sender=$userId, conversationId=$conversationId, type='$type', " +
             "messageId=$messageId, text=$text, refMessageId=$refMessageId, reaction=$reaction, " +
             "image=$image, handle=$handle, locale=$locale, poll=$poll, mimeType=$mimeType)"
 }
@@ -112,7 +112,7 @@ data class Message(
 {
   "botId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "type": "string",
-  "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "sender": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
   "handle": "string",
   "locale": "string",
   "token": "string",
@@ -124,7 +124,7 @@ data class Message(
     "data": "string",
     "mentions": [
       {
-        "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+        "sender": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
         "offset": 0,
         "length": 0
       }
@@ -155,7 +155,7 @@ data class Message(
       "string"
     ],
     "offset": 0,
-    "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+    "sender": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
   },
   "call": {
     "version": "string",

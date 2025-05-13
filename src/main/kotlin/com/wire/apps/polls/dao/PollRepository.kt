@@ -1,9 +1,10 @@
 package com.wire.apps.polls.dao
 
+import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.Question
+import com.wire.apps.polls.dto.common.Mention
 import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
 import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.SortOrder
@@ -14,7 +15,6 @@ import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import pw.forst.exposed.insertOrUpdate
 import pw.forst.katlib.mapToSet
-import java.util.UUID
 
 /**
  * Simple repository for handling database transactions on one place.
@@ -44,8 +44,8 @@ class PollRepository {
 
         Mentions.batchInsert(poll.question.mentions) {
             this[Mentions.pollId] = pollId
-            this[Mentions.userId] = it.userId?.id.toString()
-            this[Mentions.domain] = it.userId?.domain.toString()
+            this[Mentions.userId] = it.userId
+            this[Mentions.domain] = it.userDomain
             this[Mentions.offset] = it.offset
             this[Mentions.length] = it.length
         }
@@ -54,8 +54,8 @@ class PollRepository {
             poll.options
         ) {
             this[PollOptions.pollId] = pollId
-            this[PollOptions.optionOrder] = it.id.toInt()
-            this[PollOptions.optionContent] = it.text
+            this[PollOptions.optionOrder] = it.optionOrder
+            this[PollOptions.optionContent] = it.content
         }
         pollId
     }
@@ -87,12 +87,12 @@ class PollRepository {
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
      */
-    suspend fun vote(pollAction: WireMessage.ButtonAction) =
+    suspend fun vote(pollAction: PollAction) =
         newSuspendedTransaction {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
-                it[pollId] = pollAction.referencedMessageId
-                it[pollOption] = pollAction.buttonId.toInt()
-                it[userId] = pollAction.sender?.id.toString()
+                it[pollId] = pollAction.pollId
+                it[pollOption] = pollAction.optionId
+                it[userId] = pollAction.userId.id.toString()
             }
         }
 
@@ -105,15 +105,15 @@ class PollRepository {
         newSuspendedTransaction {
             PollOptions
                 .join(
-                    Votes,
-                    JoinType.LEFT,
+                    otherTable = Votes,
+                    joinType = JoinType.LEFT,
                     additionalConstraint = {
                         (Votes.pollId eq PollOptions.pollId) and
                             (Votes.pollOption eq PollOptions.optionOrder)
                     }
                 ).slice(PollOptions.optionOrder, PollOptions.optionContent, Votes.userId)
                 .select { PollOptions.pollId eq pollId }
-                // left join so userId can be null
+                // left join so sender can be null
                 .groupBy({
                     it[PollOptions.optionOrder] to it[PollOptions.optionContent]
                 }, { it.getOrNull(Votes.userId) })

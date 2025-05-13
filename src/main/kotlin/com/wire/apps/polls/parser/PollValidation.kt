@@ -1,12 +1,12 @@
 package com.wire.apps.polls.parser
 
+import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.Question
-import com.wire.integrations.jvm.model.WireMessage
 import mu.KLogging
 
 private typealias QuestionRule = (Question) -> String?
-private typealias OptionRule = (WireMessage.Composite.Button) -> String?
+private typealias OptionRule = (Option) -> String?
 private typealias PollRule = (PollDto) -> String?
 
 /**
@@ -22,7 +22,7 @@ class PollValidation {
 
     private val optionRules =
         listOf<OptionRule> { option ->
-            if (option.text.isNotBlank()) null else "The option must not be empty!"
+            if (option.content.isNotBlank()) null else "The option must not be empty!"
         }
 
     private val pollRules =

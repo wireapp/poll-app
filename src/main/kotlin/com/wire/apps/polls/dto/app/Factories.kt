@@ -1,5 +1,9 @@
 package com.wire.apps.polls.dto.app
 
+import com.wire.apps.polls.dto.Option
+import com.wire.apps.polls.dto.common.Mention
+import com.wire.apps.polls.dto.common.mapToWireButtons
+import com.wire.apps.polls.dto.common.mapToWireMentions
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import java.util.UUID
@@ -10,12 +14,12 @@ import java.util.UUID
 fun newPoll(
     conversationId: QualifiedId,
     body: String,
-    buttons: List<WireMessage.Composite.Button>
+    buttons: List<Option>
 ): WireMessage.Composite =
     WireMessage.Composite.create(
         conversationId = conversationId,
         text = body,
-        buttonList = buttons
+        buttonList = mapToWireButtons(buttons)
     )
 
 /**
@@ -39,12 +43,12 @@ fun confirmVote(
 fun statsMessage(
     conversationId: QualifiedId,
     text: String,
-    mentions: List<WireMessage.Text.Mention>
+    mentions: List<Mention>
 ) = WireMessage.Text(
     id = UUID.randomUUID(),
     conversationId = conversationId,
     text = text,
-    mentions = mentions
+    mentions = mapToWireMentions(mentions)
 )
 
 /**

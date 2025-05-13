@@ -1,7 +1,7 @@
 package com.wire.apps.polls.dto
 
+import com.wire.apps.polls.dto.common.Mention
 import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
 
 /**
  * Wrapper for the text received by this app. Should be used as a container for all user texts in the app.
@@ -12,16 +12,20 @@ data class UsersInput(
     /**
      * Id of the user who wrote this.
      */
-    val userId: QualifiedId,
+    val sender: QualifiedId,
+    /**
+     * Id of the conversation where user wrote message.
+     */
+    val conversationId: QualifiedId,
     /**
      * User's text, not logged.
      */
-    val input: String,
+    val text: String,
     /**
      * Mentions
      */
-    val mentions: List<WireMessage.Text.Mention>
+    val mentions: List<Mention>
 ) {
     // TODO modify this in the future - because we do not want to print decrypted users text to the log
-    override fun toString(): String = "User: $userId wrote $input"
+    override fun toString(): String = "User: $sender wrote $text"
 }
