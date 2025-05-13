@@ -37,7 +37,12 @@ fun Routing.events() {
             override suspend fun onNewButtonActionSuspending(
                 wireMessage: WireMessage.ButtonAction
             ) {
-                handler.handleButtonAction(manager, wireMessage)
+                val pollAction = mapToPollAction(wireMessage)
+                handler.handleButtonAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = wireMessage.conversationId
+                )
             }
         }
     )

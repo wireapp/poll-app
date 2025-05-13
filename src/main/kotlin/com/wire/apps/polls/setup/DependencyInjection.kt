@@ -45,12 +45,12 @@ fun DI.MainBuilder.configureContainer() {
     bind<PollService>() with
         singleton {
             PollService(
-                instance(),
-                instance(),
-                instance(),
-                instance(),
-                instance(),
-                instance()
+                factory = instance(),
+                proxySenderService = instance(),
+                repository = instance(),
+                conversationService = instance(),
+                userCommunicationService = instance(),
+                statsFormattingService = instance()
             )
         }
 

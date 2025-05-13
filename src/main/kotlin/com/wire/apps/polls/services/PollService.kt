@@ -34,7 +34,11 @@ class PollService(
             .forUserInput(usersInput)
             .whenNull {
                 logger.warn { "It was not possible to create poll." }
-                pollNotParsedFallback(manager, conversationId, usersInput)
+                pollNotParsedFallback(
+                    manager = manager,
+                    conversationId = conversationId,
+                    usersInput = usersInput
+                )
             } ?: return
 
         val message = newPoll(
@@ -52,7 +56,11 @@ class PollService(
         )
         logger.info { "Poll successfully created with id: $pollId" }
 
-        proxySenderService.send(manager, message, conversationId)
+        proxySenderService.send(
+            manager = manager,
+            message = message,
+            conversationId = conversationId
+        )
     }
 
     private suspend fun pollNotParsedFallback(
@@ -83,8 +91,16 @@ class PollService(
             conversationId = conversationId,
             offset = pollAction.buttonId.toInt()
         )
-        proxySenderService.send(manager, message, conversationId)
-        sendStatsIfAllVoted(manager, pollAction.referencedMessageId, conversationId)
+        proxySenderService.send(
+            manager = manager,
+            message = message,
+            conversationId = conversationId
+        )
+        sendStatsIfAllVoted(
+            manager = manager,
+            pollId = pollAction.pollId,
+            conversationId = conversationId
+        )
     }
 
     /**
@@ -102,7 +118,12 @@ class PollService(
 
         if (votedSize == conversationMembersCount) {
             logger.info { "All users voted, sending statistics to the conversation." }
-            sendStats(manager, pollId, conversationId, conversationMembersCount)
+            sendStats(
+                manager = manager,
+                pollId = pollId,
+                conversationId = conversationId,
+                conversationMembers = conversationMembersCount
+            )
         } else {
             logger.info {
                 "Users voted: $votedSize, members of conversation: $conversationMembersCount"
@@ -126,11 +147,19 @@ class PollService(
 
         logger.debug { "Conversation members: $conversationMembersCount" }
         val stats = statsFormattingService
-            .formatStats(pollId, conversationId, conversationMembersCount)
+            .formatStats(
+                pollId = pollId,
+                conversationId = conversationId,
+                conversationMembers = conversationMembersCount
+            )
             .whenNull { logger.warn { "It was not possible to format stats for poll $pollId" } }
             ?: return
 
-        proxySenderService.send(manager, stats, conversationId)
+        proxySenderService.send(
+            manager = manager,
+            message = stats,
+            conversationId = conversationId
+        )
     }
 
     /**
@@ -147,6 +176,10 @@ class PollService(
             logger.info { "No polls found for conversation $conversationId" }
         } ?: return
         // todo send message to user that no polls were created
-        sendStats(manager, latest, conversationId)
+        sendStats(
+            manager = manager,
+            pollId = latest,
+            conversationId = conversationId
+        )
     }
 }

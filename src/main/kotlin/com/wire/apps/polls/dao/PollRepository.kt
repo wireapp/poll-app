@@ -68,11 +68,9 @@ class PollRepository {
                     { it[Polls.body] },
                     {
                         if (it.getOrNull(Mentions.userId) != null) {
-                            WireMessage.Text.Mention(
-                                userId = QualifiedId(
-                                    UUID.fromString(it[Mentions.userId]),
-                                    it[Mentions.domain]
-                                ),
+                            Mention(
+                                userId = it[Mentions.userId],
+                                userDomain = it[Mentions.domain],
                                 offset = it[Mentions.offset],
                                 length = it[Mentions.length]
                             )
