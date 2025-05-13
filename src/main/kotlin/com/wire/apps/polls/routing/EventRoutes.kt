@@ -1,7 +1,7 @@
 package com.wire.apps.polls.routing
 
-import com.wire.apps.polls.dto.common.mapToPollAction
-import com.wire.apps.polls.dto.common.mapToUsersInput
+import com.wire.apps.polls.dto.PollAction.Companion.fromWire
+import com.wire.apps.polls.dto.UsersInput.Companion.fromWire
 import com.wire.apps.polls.services.MessagesHandlingService
 import com.wire.integrations.jvm.WireAppSdk
 import com.wire.integrations.jvm.WireEventsHandlerSuspending
@@ -32,17 +32,17 @@ fun Routing.events() {
                 handler.handleConversationJoin(manager, conversation.id)
             }
 
-            override suspend fun onMessage(wireMessage: WireMessage.Text) {
-                val usersInput = mapToUsersInput(wireMessage)
+            override suspend fun onMessage(message: WireMessage.Text) {
+                val usersInput = fromWire(message)
                 handler.handleText(manager, usersInput)
             }
 
-            override suspend fun onButtonAction(wireMessage: WireMessage.ButtonAction) {
-                val pollAction = mapToPollAction(wireMessage)
+            override suspend fun onButtonAction(message: WireMessage.ButtonAction) {
+                val pollAction = fromWire(message)
                 handler.handleButtonAction(
                     manager = manager,
                     pollAction = pollAction,
-                    conversationId = wireMessage.conversationId
+                    conversationId = message.conversationId
                 )
             }
         }

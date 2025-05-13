@@ -2,6 +2,8 @@ package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.integrations.jvm.model.WireMessage
+import io.ktor.features.BadRequestException
 
 /**
  * Wrapper for the text received by this app. Should be used as a container for all user texts in the app.
@@ -28,4 +30,21 @@ data class UsersInput(
 ) {
     // TODO modify this in the future - because we do not want to print decrypted users text to the log
     override fun toString(): String = "User: $sender wrote $text"
+
+    companion object {
+        fun fromWire(wireMessage: WireMessage.Text): UsersInput? {
+            val sender = wireMessage.sender
+            sender ?: throw BadRequestException("Sender must be set for text messages.")
+            val conversationId = wireMessage.conversationId
+            val text = wireMessage.text ?: return null
+            val mentions = Mention.fromWireList(wireMessage.mentions)
+
+            return UsersInput(
+                sender = sender,
+                conversationId = conversationId,
+                text = text,
+                mentions = mentions
+            )
+        }
+    }
 }

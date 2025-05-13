@@ -2,8 +2,8 @@ package com.wire.apps.polls.dto.app
 
 import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.common.Mention
-import com.wire.apps.polls.dto.common.mapToWireButtons
-import com.wire.apps.polls.dto.common.mapToWireMentions
+import com.wire.apps.polls.dto.common.toWireMention
+import com.wire.apps.polls.dto.toWireButton
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import java.util.UUID
@@ -19,7 +19,7 @@ fun newPoll(
     WireMessage.Composite.create(
         conversationId = conversationId,
         text = body,
-        buttonList = mapToWireButtons(buttons)
+        buttonList = buttons.map { it.toWireButton() }
     )
 
 /**
@@ -48,7 +48,7 @@ fun statsMessage(
     id = UUID.randomUUID(),
     conversationId = conversationId,
     text = text,
-    mentions = mapToWireMentions(mentions)
+    mentions = mentions.map { it.toWireMention() }
 )
 
 /**
