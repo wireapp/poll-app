@@ -1,7 +1,6 @@
 package com.wire.apps.polls.services
 
 import com.wire.integrations.jvm.exception.WireException
-import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
@@ -18,15 +17,11 @@ class ProxySenderService {
      */
     suspend fun send(
         manager: WireApplicationManager,
-        message: WireMessage,
-        conversationId: QualifiedId
+        message: WireMessage
     ) {
         logger.debug { "Sending: ${createJson(message)}" }
         try {
-            manager.sendMessageSuspending(
-                conversationId = conversationId,
-                message = message
-            )
+            manager.sendMessageSuspending(message)
         } catch (e: WireException.EntityNotFound) {
             logger.error { "It was not possible to send a message. ${e.message}" }
         }

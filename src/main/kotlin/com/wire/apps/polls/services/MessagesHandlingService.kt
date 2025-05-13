@@ -4,7 +4,6 @@ import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
-import kotlinx.coroutines.runBlocking
 import mu.KLogging
 
 /**
@@ -19,11 +18,11 @@ class MessagesHandlingService(
     /**
      * Welcomes the user by listing available commands.
      */
-    fun handleConversationJoin(
+    suspend fun handleConversationJoin(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        runBlocking { userCommunicationService.sayHello(manager, conversationId) }
+        userCommunicationService.sayHello(manager, conversationId)
     }
 
     /**

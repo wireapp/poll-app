@@ -77,8 +77,7 @@ class UserCommunicationService(
     private suspend fun WireMessage.Text.send(manager: WireApplicationManager) {
         proxySenderService.send(
             manager = manager,
-            message = this,
-            conversationId = conversationId
+            message = this
         )
     }
 }

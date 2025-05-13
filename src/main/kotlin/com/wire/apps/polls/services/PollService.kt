@@ -58,8 +58,7 @@ class PollService(
 
         proxySenderService.send(
             manager = manager,
-            message = message,
-            conversationId = conversationId
+            message = message
         )
     }
 
@@ -93,8 +92,7 @@ class PollService(
         )
         proxySenderService.send(
             manager = manager,
-            message = message,
-            conversationId = conversationId
+            message = message
         )
         sendStatsIfAllVoted(
             manager = manager,
@@ -157,8 +155,7 @@ class PollService(
 
         proxySenderService.send(
             manager = manager,
-            message = stats,
-            conversationId = conversationId
+            message = stats
         )
     }
 
