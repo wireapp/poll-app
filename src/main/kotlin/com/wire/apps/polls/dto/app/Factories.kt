@@ -14,13 +14,21 @@ import java.util.UUID
 fun newPoll(
     conversationId: QualifiedId,
     body: String,
-    buttons: List<Option>
-): WireMessage.Composite =
-    WireMessage.Composite.create(
+    buttons: List<Option>,
+    mentions: List<Mention>
+): WireMessage.Composite {
+    val text = WireMessage.Text(
+        id = UUID.randomUUID(),
         conversationId = conversationId,
         text = body,
-        buttonList = buttons.map { it.toWireButton() }
+        mentions = mentions.map { it.toWireMention() }
     )
+    return WireMessage.Composite(
+        id = UUID.randomUUID(),
+        conversationId = conversationId,
+        items = listOf(text) + buttons.map { it.toWireButton() }
+    )
+}
 
 /**
  * Creates message for vote confirmation.
