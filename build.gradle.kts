@@ -9,10 +9,10 @@ plugins {
     id("net.nemerosa.versioning") version "3.1.0"
 }
 
-group = "com.wire.bots.polls"
+group = "com.wire.apps.polls"
 version = versioning.info?.tag ?: versioning.info?.lastTag ?: "development"
 
-val mClass = "com.wire.bots.polls.PollBotKt"
+val mClass = "com.wire.apps.polls.PollAppKt"
 
 application {
     mainClass.set(mClass)
@@ -23,6 +23,7 @@ repositories {
 }
 
 dependencies {
+    implementation("com.wire", "wire-apps-jvm-sdk", "0.0.5")
     // stdlib
     implementation(kotlin("stdlib-jdk8"))
     // extension functions

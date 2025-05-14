@@ -5,7 +5,7 @@ db:
 	docker-compose up -d db
 
 up:
-	docker-compose up -d db && docker-compose up bot
+	docker-compose up -d db && docker-compose up app
 
 docker-run:
 	docker run --rm -p 8080:8080 quay.io/wire/poll-bot

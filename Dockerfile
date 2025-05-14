@@ -1,6 +1,6 @@
 FROM adoptopenjdk/openjdk11:alpine AS build
-LABEL description="Wire Poll Bot"
-LABEL project="wire-bots:polls"
+LABEL description="Wire Poll App"
+LABEL project="wire-apps:polls"
 
 ENV PROJECT_ROOT /src
 WORKDIR $PROJECT_ROOT

@@ -7,7 +7,7 @@
 
     <appender name="prod" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
-            <layout class="com.wire.bots.polls.setup.logging.JsonLoggingLayout"/>
+            <layout class="com.wire.apps.polls.setup.logging.JsonLoggingLayout"/>
         </encoder>
     </appender>
 

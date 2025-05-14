@@ -1,13 +1,12 @@
-version: '3.8'
 services:
-  bot:
+  app:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         - release_version=docker-compose
     image: lukaswire/polls
-    container_name: poll-bot
+    container_name: poll-app
     env_file: .env
     ports:
       - 8080:8080
@@ -16,12 +15,12 @@ services:
 
   db:
     image: postgres:13
-    container_name: poll-bot-db
+    container_name: poll-app-db
     env_file: .env
     ports:
       - 5432:5432
     volumes:
-      - poll-bot-db:/var/lib/postgresql/data/
+      - poll-app-db:/var/lib/postgresql/data/
 
 volumes:
-  poll-bot-db:
+  poll-app-db:
