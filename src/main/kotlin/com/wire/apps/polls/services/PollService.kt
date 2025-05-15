@@ -44,7 +44,8 @@ class PollService(
         val message = newPoll(
             conversationId = conversationId,
             body = poll.question.body,
-            buttons = poll.options
+            buttons = poll.options,
+            mentions = poll.question.mentions
         )
 
         val pollId = repository.savePoll(
