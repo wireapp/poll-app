@@ -2,7 +2,6 @@ package com.wire.apps.polls.utils
 
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
-import java.util.concurrent.TimeUnit
 
 /**
  * Registers exception in the prometheus metrics.
@@ -17,21 +16,6 @@ fun MeterRegistry.countException(
     )
     val tags = (baseTags + additionalTags).toTags()
     counter("exceptions", tags).increment()
-}
-
-/**
- * Register http call.
- *
- */
-fun MeterRegistry.httpCall(requestMetric: RequestMetric) {
-    val duration = requestMetric.responseTime - requestMetric.requestTime
-    val tags = mapOf(
-        "method" to requestMetric.method,
-        "url" to requestMetric.url,
-        "response_code" to requestMetric.responseCode.toString()
-    ).toTags()
-
-    timer("http_calls", tags).record(duration, TimeUnit.MILLISECONDS)
 }
 
 /**

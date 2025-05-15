@@ -2,8 +2,8 @@ package com.wire.apps.polls.dao
 
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollDto
-import com.wire.apps.polls.dto.Question
 import com.wire.apps.polls.dto.common.Mention
+import com.wire.apps.polls.dto.common.Text
 import com.wire.integrations.jvm.model.QualifiedId
 import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
@@ -39,7 +39,7 @@ class PollRepository {
             it[this.domain] = userDomain
             it[this.isActive] = true
             it[this.conversationId] = conversationId
-            it[this.body] = poll.question.body
+            it[this.body] = poll.question.data
         }
 
         Mentions.batchInsert(poll.question.mentions) {
@@ -79,7 +79,7 @@ class PollRepository {
                         }
                     }
                 ).map { (pollBody, mentions) ->
-                    Question(body = pollBody, mentions = mentions.filterNotNull())
+                    Text(data = pollBody, mentions = mentions.filterNotNull())
                 }.singleOrNull()
         }
 

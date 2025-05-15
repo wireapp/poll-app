@@ -21,13 +21,6 @@ class ClientRequestMetric(
 ) {
     class Config {
         internal var metricHandler: RequestMetricHandler = {}
-
-        /**
-         * Set [RequestMetricHandler] called at the end of the request.
-         */
-        fun onResponse(block: RequestMetricHandler) {
-            metricHandler = block
-        }
     }
 
     companion object Feature : HttpClientFeature<Config, ClientRequestMetric>, KLogging() {

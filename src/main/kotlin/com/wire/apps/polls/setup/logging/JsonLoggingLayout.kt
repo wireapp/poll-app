@@ -29,24 +29,12 @@ class JsonLoggingLayout : LayoutBase<ILoggingEvent>() {
             "thread_name" to event.threadName
         )
 
-        finalMap.includeMdc(event, INFRA_REQUEST)
-        finalMap.includeMdc(event, APP_REQUEST)
-        finalMap.includeMdc(event, USER_ID)
-
         // if this was an exception, include necessary data
         if (event.throwableProxy != null) {
             finalMap["exception"] = exception(event.throwableProxy)
         }
 
         return createJson(finalMap) + CoreConstants.LINE_SEPARATOR
-    }
-
-    private fun MutableMap<String, Any>.includeMdc(
-        event: ILoggingEvent,
-        mdcKey: String,
-        mapKey: String = mdcKey
-    ) {
-        event.mdcPropertyMap[mdcKey]?.also { mdcValue -> this[mapKey] = mdcValue }
     }
 
     private fun exception(proxy: IThrowableProxy) =

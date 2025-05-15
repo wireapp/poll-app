@@ -1,9 +1,7 @@
-package com.wire.apps.polls.dto.app
+package com.wire.apps.polls.dto
 
-import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.toWireMention
-import com.wire.apps.polls.dto.toWireButton
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import java.util.UUID
