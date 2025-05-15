@@ -10,7 +10,6 @@ import io.ktor.application.Application
 import io.ktor.application.install
 import io.ktor.features.ContentNegotiation
 import io.ktor.features.DefaultHeaders
-import io.ktor.features.CallId
 import io.ktor.jackson.jackson
 import io.ktor.metrics.micrometer.MicrometerMetrics
 import io.ktor.routing.routing
@@ -20,7 +19,6 @@ import org.flywaydb.core.Flyway
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
 import java.text.DateFormat
-import java.util.UUID
 
 private val installationLogger = createLogger("ApplicationSetup")
 
@@ -97,12 +95,6 @@ fun Application.installFrameworks() {
     }
 
     install(DefaultHeaders)
-
-    install(CallId) {
-        generate {
-            UUID.randomUUID().toString()
-        }
-    }
 
     registerExceptionHandlers()
 
