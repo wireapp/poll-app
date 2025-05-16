@@ -4,7 +4,6 @@ import com.wire.apps.polls.dto.conf.DatabaseConfiguration
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_PASSWORD
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_URL
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_USER
-import com.wire.apps.polls.setup.EnvConfigVariables.SERVICE_TOKEN
 import com.wire.apps.polls.utils.createLogger
 import org.kodein.di.DI
 import org.kodein.di.bind
@@ -43,10 +42,6 @@ fun DI.MainBuilder.bindConfiguration() {
             password = getEnvOrLogDefault(DB_PASSWORD, "super-secret-wire-pwd"),
             url = getEnvOrLogDefault(DB_URL, "jdbc:postgresql://localhost:5432/poll-app")
         )
-    }
-
-    bind<String>("proxy-auth") with singleton {
-        getEnvOrLogDefault(SERVICE_TOKEN, "local-token")
     }
 
     bind<String>("version") with singleton {

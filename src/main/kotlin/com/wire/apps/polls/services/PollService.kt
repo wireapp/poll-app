@@ -3,8 +3,8 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.app.confirmVote
-import com.wire.apps.polls.dto.app.newPoll
+import com.wire.apps.polls.dto.confirmVote
+import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -43,7 +43,7 @@ class PollService(
 
         val message = newPoll(
             conversationId = conversationId,
-            body = poll.question.body,
+            body = poll.question.data,
             buttons = poll.options,
             mentions = poll.question.mentions
         )

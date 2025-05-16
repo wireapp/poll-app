@@ -31,34 +31,22 @@ dependencies {
 
     // Ktor server dependencies
     val ktorVersion = "1.6.3"
-    implementation("io.ktor", "ktor-server-core", ktorVersion)
     implementation("io.ktor", "ktor-server-netty", ktorVersion)
     implementation("io.ktor", "ktor-jackson", ktorVersion)
-    implementation("io.ktor", "ktor-websockets", ktorVersion)
-    // explicitly set the reflect library to same version as the kotlin
-    implementation("org.jetbrains.kotlin", "kotlin-reflect", "1.5.0")
-    // Ktor client dependencies
-    implementation("io.ktor", "ktor-client-json", ktorVersion)
-    implementation("io.ktor", "ktor-client-jackson", ktorVersion) {
-        exclude("org.jetbrains.kotlin", "kotlin-reflect")
-    }
-    implementation("io.ktor", "ktor-client-apache", ktorVersion)
-    implementation("io.ktor", "ktor-client-logging-jvm", ktorVersion)
 
     // Prometheus metrics
     implementation("io.ktor", "ktor-metrics-micrometer", ktorVersion)
     implementation("io.micrometer", "micrometer-registry-prometheus", "1.6.6")
 
     // logging
+    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
     implementation("io.github.microutils", "kotlin-logging", "2.0.6")
     // if-else in logback.xml
     implementation("org.codehaus.janino", "janino", "3.1.2")
     implementation("ch.qos.logback", "logback-classic", "1.2.3")
 
     // DI
-    val kodeinVersion = "7.5.0"
-    implementation("org.kodein.di", "kodein-di-jvm", kodeinVersion)
-    implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", kodeinVersion)
+    implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", "7.5.0")
 
     // database
     implementation("org.postgresql", "postgresql", "42.2.20")

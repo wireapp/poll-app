@@ -4,7 +4,6 @@ import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.parser.InputParser
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.parser.PollValidation
-import com.wire.apps.polls.services.AuthService
 import com.wire.apps.polls.services.ConversationService
 import com.wire.apps.polls.services.MessagesHandlingService
 import com.wire.apps.polls.services.PollService
@@ -12,7 +11,6 @@ import com.wire.apps.polls.services.ProxySenderService
 import com.wire.apps.polls.services.StatsFormattingService
 import com.wire.apps.polls.services.UserCommunicationService
 import com.wire.apps.polls.utils.createLogger
-import io.ktor.client.HttpClient
 import io.micrometer.prometheus.PrometheusConfig
 import io.micrometer.prometheus.PrometheusMeterRegistry
 import mu.KLogger
@@ -23,8 +21,6 @@ import org.kodein.di.singleton
 
 fun DI.MainBuilder.configureContainer() {
     bind<PollValidation>() with singleton { PollValidation() }
-
-    bind<HttpClient>() with singleton { createHttpClient(instance()) }
 
     bind<ProxySenderService>() with singleton { ProxySenderService() }
 
@@ -61,10 +57,6 @@ fun DI.MainBuilder.configureContainer() {
 
     bind<MessagesHandlingService>() with
         singleton { MessagesHandlingService(instance(), instance()) }
-
-    bind<AuthService>() with singleton {
-        AuthService(proxyToken = instance("proxy-auth"))
-    }
 
     bind<StatsFormattingService>() with singleton { StatsFormattingService(instance()) }
 
