@@ -27,14 +27,6 @@ fun Application.registerExceptionHandlers() {
             call.errorResponse(HttpStatusCode.InternalServerError, cause.message)
             registry.countException(cause)
         }
-
-        exception<RomanUnavailableException> { cause ->
-            logger.error(cause) {
-                "Error in communication with Roman. Status: ${cause.status}, body: ${cause.body}."
-            }
-            call.errorResponse(HttpStatusCode.ServiceUnavailable, cause.message)
-            registry.countException(cause)
-        }
     }
 }
 

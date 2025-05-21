@@ -1,6 +1,6 @@
 package com.wire.apps.polls.services
 
-import com.wire.apps.polls.dto.app.textMessage
+import com.wire.apps.polls.dto.textMessage
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager

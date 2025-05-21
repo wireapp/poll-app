@@ -2,9 +2,9 @@ package com.wire.apps.polls.parser
 
 import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.PollDto
-import com.wire.apps.polls.dto.Question
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.common.Mention
+import com.wire.apps.polls.dto.common.Text
 import mu.KLogging
 
 class InputParser {
@@ -29,8 +29,8 @@ class InputParser {
         }
 
         return PollDto(
-            question = Question(
-                body = inputs.first(),
+            question = Text(
+                data = inputs.first(),
                 mentions = shiftMentions(userInput)
             ),
             options = parseButtons(inputs.takeLast(inputs.size - 1))

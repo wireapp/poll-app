@@ -14,8 +14,7 @@ Basic usage
 * `/poll version` prints the current version of the poll app
 
 ## Technologies used
-* HTTP Server - [Ktor](https://ktor.io/)
-* HTTP Client - [Apache](https://ktor.io/clients/http-client/engines.html) under [Ktor](https://ktor.io/)
+* HTTP Server for Prometheus - [Ktor](https://ktor.io/)
 * Dependency Injection - [Kodein](https://github.com/Kodein-Framework/Kodein-DI)
 * Build system - [Gradle](https://gradle.org/)
 * Communication with [Wire Applications JVM SDK](https://github.com/wireapp/wire-apps-jvm-sdk)
@@ -62,15 +61,6 @@ Configuration is currently being loaded from the environment variables.
      */
     const val DB_URL = "DB_URL"
 
-    /**
-     * Token which is used for the auth of proxy.
-     */
-    const val SERVICE_TOKEN = "SERVICE_TOKEN"
-
-    /**
-     * Domain used for sending the messages from the app to proxy eg. "https://proxy.services.zinfra.io/api"
-     */
-    const val PROXY_DOMAIN = "PROXY_DOMAIN"
 ```
 
 Via the system variables - see [complete list](src/main/kotlin/com/wire/apps/polls/setup/EnvConfigVariables.kt).
@@ -88,8 +78,7 @@ POSTGRES_DB=
 DB_USER=
 DB_PASSWORD=
 DB_URL=
-SERVICE_TOKEN=
-PROXY_DOMAIN=
+
 ```
 
 Such configuration can look for example like that:
@@ -104,7 +93,5 @@ POSTGRES_DB=poll-app
 DB_USER=wire-poll-app
 DB_PASSWORD=super-secret-wire-pwd
 DB_URL=jdbc:postgresql://db:5432/poll-app
-SERVICE_TOKEN=x6jsd5vets967dsA01dz1cOl
-APP_KEY=eyJhbGciOiJIUzM4NCJ9.......
-PROXY_DOMAIN=https://proxy.services.zinfra.io/api
+
 ```

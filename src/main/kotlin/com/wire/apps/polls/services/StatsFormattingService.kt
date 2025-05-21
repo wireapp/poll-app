@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.app.statsMessage
+import com.wire.apps.polls.dto.statsMessage
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import mu.KLogging
@@ -40,7 +40,7 @@ class StatsFormattingService(
             return null
         }
 
-        val title = prepareTitle(pollQuestion.body)
+        val title = prepareTitle(pollQuestion.data)
         val options = formatVotes(stats, conversationMembers)
         return statsMessage(
             conversationId = conversationId,
