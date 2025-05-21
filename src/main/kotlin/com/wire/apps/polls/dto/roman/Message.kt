@@ -69,7 +69,7 @@ data class Message(
 ) {
     data class Text(
         val data: String,
-        val mentions: List<WireMessage.Text.Mention>?
+        val mentions: List<WireMessage.Mention>?
     ) {
         override fun toString(): String = "Text(mentions=$mentions)"
     }
