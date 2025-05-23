@@ -5,11 +5,13 @@ services:
       dockerfile: Dockerfile
       args:
         - release_version=docker-compose
-    image: lukaswire/polls
+    image: com.wire/poll-app
     container_name: poll-app
     env_file: .env
     ports:
       - 8080:8080
+    volumes:
+      - poll-app:/app
     depends_on:
       - db
 
@@ -24,3 +26,4 @@ services:
 
 volumes:
   poll-app-db:
+  poll-app:
