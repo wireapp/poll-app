@@ -3,7 +3,7 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 plugins {
     kotlin("jvm") version "2.1.21"
     application
-    distribution
+    id("com.gradleup.shadow") version "9.0.0-beta6"
     id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("net.nemerosa.versioning") version "3.1.0"
@@ -12,10 +12,8 @@ plugins {
 group = "com.wire.apps.polls"
 version = versioning.info?.tag ?: versioning.info?.lastTag ?: "development"
 
-val mClass = "com.wire.apps.polls.PollAppKt"
-
 application {
-    mainClass.set(mClass)
+    mainClass.set("com.wire.apps.polls.PollAppKt")
 }
 
 repositories {
@@ -23,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.wire", "wire-apps-jvm-sdk", "0.0.5")
+    implementation("com.wire", "wire-apps-jvm-sdk", "0.0.7")
     // stdlib
     implementation(kotlin("stdlib-jdk8"))
     // extension functions
@@ -86,28 +84,20 @@ kotlin {
     jvmToolchain(17)
 }
 
-tasks.distTar {
-    archiveFileName.set("app.tar")
+tasks.withType<ProcessResources> {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 tasks.test {
     useJUnitPlatform()
 }
 
-tasks.register<Jar>("fatJar") {
-    manifest {
-        attributes["Main-Class"] = mClass
+tasks {
+    named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
+        mergeServiceFiles()
+        archiveBaseName = "poll-app"
     }
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveFileName.set("polls.jar")
-    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
-    from(sourceSets.main.get().output)
-}
-
-tasks.register("resolveDependencies") {
-    doLast {
-        buildscript.configurations.forEach { if (it.isCanBeResolved) it.resolve() }
-        configurations.compileClasspath.get().resolve()
-        configurations.testCompileClasspath.get().resolve()
+    build {
+        dependsOn(shadowJar)
     }
 }

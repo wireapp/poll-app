@@ -15,8 +15,7 @@ fun newPoll(
     buttons: List<Option>,
     mentions: List<Mention>
 ): WireMessage.Composite {
-    val text = WireMessage.Text(
-        id = UUID.randomUUID(),
+    val text = WireMessage.Text.create(
         conversationId = conversationId,
         text = body,
         mentions = mentions.map { it.toWireMention() }
@@ -24,6 +23,7 @@ fun newPoll(
     return WireMessage.Composite(
         id = UUID.randomUUID(),
         conversationId = conversationId,
+        sender = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString()),
         items = listOf(text) + buttons.map { it.toWireButton() }
     )
 }
@@ -39,6 +39,7 @@ fun confirmVote(
     WireMessage.ButtonActionConfirmation(
         id = UUID.randomUUID(),
         conversationId = conversationId,
+        sender = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString()),
         referencedMessageId = pollId,
         buttonId = offset.toString()
     )
@@ -50,8 +51,7 @@ fun statsMessage(
     conversationId: QualifiedId,
     text: String,
     mentions: List<Mention>
-) = WireMessage.Text(
-    id = UUID.randomUUID(),
+) = WireMessage.Text.create(
     conversationId = conversationId,
     text = text,
     mentions = mentions.map { it.toWireMention() }

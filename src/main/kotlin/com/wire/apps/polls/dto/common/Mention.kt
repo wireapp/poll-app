@@ -11,7 +11,7 @@ data class Mention(
     val length: Int
 ) {
     companion object {
-        private fun fromWire(mention: WireMessage.Text.Mention): Mention =
+        private fun fromWire(mention: WireMessage.Mention): Mention =
             Mention(
                 userId = mention.userId.id.toString(),
                 userDomain = mention.userId.domain,
@@ -19,13 +19,13 @@ data class Mention(
                 length = mention.length
             )
 
-        fun fromWireList(mentions: List<WireMessage.Text.Mention>): List<Mention> =
+        fun fromWireList(mentions: List<WireMessage.Mention>): List<Mention> =
             mentions.map { fromWire(it) }
     }
 }
 
-fun Mention.toWireMention(): WireMessage.Text.Mention =
-    WireMessage.Text.Mention(
+fun Mention.toWireMention(): WireMessage.Mention =
+    WireMessage.Mention(
         userId = QualifiedId(
             UUID.fromString(this.userId),
             this.userDomain
