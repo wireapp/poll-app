@@ -3,7 +3,7 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 plugins {
     kotlin("jvm") version "2.1.21"
     application
-    id("com.gradleup.shadow") version "9.0.0-beta6"
+    id("com.gradleup.shadow") version "9.0.0-beta13"
     id("org.jlleitschuh.gradle.ktlint") version "12.2.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("net.nemerosa.versioning") version "3.1.0"
