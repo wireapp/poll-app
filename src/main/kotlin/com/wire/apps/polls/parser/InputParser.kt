@@ -46,6 +46,10 @@ class InputParser {
         }
     }
 
+    /**
+     * In the command issued by user, mention offset includes "/poll" prefix and whitespaces.
+     * These are not needed in the actual poll representation. We align them in poll question.
+     */
     private fun shiftMentions(usersInput: UsersInput): List<Mention> {
         val delimiterIndex = usersInput.text.indexOfFirst { delimitersSet.contains(it) }
         if (delimiterIndex == -1) return emptyList()
