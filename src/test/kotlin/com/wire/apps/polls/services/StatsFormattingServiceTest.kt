@@ -17,7 +17,7 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
 import pw.forst.katlib.newLine
-import utils.Stub
+import com.wire.apps.polls.utils.Stub
 import java.util.UUID
 
 class StatsFormattingServiceTest : FunSpec({

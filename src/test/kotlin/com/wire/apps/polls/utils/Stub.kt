@@ -1,4 +1,4 @@
-package utils
+package com.wire.apps.polls.utils
 
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.common.Mention
