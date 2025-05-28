@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import utils.Stub
+import com.wire.apps.polls.utils.Stub
 import kotlin.test.Ignore
 import kotlin.test.assertEquals
 

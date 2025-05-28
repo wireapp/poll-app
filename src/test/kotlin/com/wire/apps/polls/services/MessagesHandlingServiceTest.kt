@@ -20,7 +20,7 @@ import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
-import utils.Stub
+import com.wire.apps.polls.utils.Stub
 import kotlin.test.Ignore
 
 class MessagesHandlingServiceTest {
