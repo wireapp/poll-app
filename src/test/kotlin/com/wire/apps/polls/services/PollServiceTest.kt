@@ -1,40 +1,42 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.Option
-import com.wire.apps.polls.dto.PollDto
-import com.wire.apps.polls.dto.common.Text
-import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.parser.PollFactory
+import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
+import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.confirmVerified
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
-import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Nested
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
-import java.util.UUID
+import kotlin.test.Ignore
 
 class PollServiceTest {
-    val factory = mockk<PollFactory>()
-    val proxySenderService = mockk<ProxySenderService>(relaxed = true)
     val repository = mockk<PollRepository>(relaxed = true)
     val conversationService = mockk<ConversationService>()
+    val manager = mockk<WireApplicationManager>()
+    val proxySenderService = mockk<ProxySenderService> {
+        coEvery { send(manager, any()) } just Runs
+    }
     val userCommunicationService = mockk<UserCommunicationService>()
     val statsFormattingService = mockk<StatsFormattingService>()
-    val manager = mockk<WireApplicationManager>()
 
     val testModule = DI.Module("testModule") {
-        bind<PollFactory>(overrides = true) with singleton { factory }
         bind<ProxySenderService>(overrides = true) with singleton { proxySenderService }
         bind<PollRepository>(overrides = true) with singleton { repository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
@@ -49,44 +51,195 @@ class PollServiceTest {
 
     val pollService by di.instance<PollService>()
 
-    @Test
-    fun `createPoll creates and sends poll with valid input`() =
-        runTest {
-            val usersInput = Stub.userInput("/poll \"question\" \"answer\"")
-            val pollDto = PollDto(Text("question", emptyList()), listOf(Option("answer", 0)))
-            every { factory.forUserInput(usersInput) } returns pollDto
-            val message = mockk<WireMessage.Composite> {
-                every { id } returns UUID.fromString("41b876e9-5387-463a-ab4d-555e1f603d41")
-                every { id.toString() } returns "41b876e9-5387-463a-ab4d-555e1f603d41"
+    @Nested
+    inner class CreatePollTest {
+        @Test
+        fun `when input is valid, then save the poll and send it`() =
+            runTest {
+                val usersInput = Stub.userInput("/poll \"Question\" \"Answer\"")
+
+                pollService.createPoll(manager, usersInput)
+
+                coVerify {
+                    repository.savePoll(
+                        poll = any(),
+                        pollId = any(),
+                        userId = usersInput.sender.id.toString(),
+                        userDomain = usersInput.sender.domain,
+                        conversationId = any()
+                    )
+                    proxySenderService.send(manager, any())
+                }
+                confirmVerified(repository, proxySenderService)
             }
-            coEvery { repository.savePoll(any(), any(), any(), any(), any()) } returns message.id.toString()
-            mockkStatic(::newPoll)
+
+        @Test
+        fun `when input is invalid, then send usage and terminate flow`() =
+            runTest {
+                val usersInput = Stub.userInput("/poll \"question without options\"")
+                coEvery {
+                    userCommunicationService.reactionToWrongCommand(manager, any())
+                } just Runs
+                val pollServiceSpy = spyk(pollService, recordPrivateCalls = true)
+
+                pollServiceSpy.createPoll(manager, usersInput)
+
+                coVerify { userCommunicationService.reactionToWrongCommand(manager, any()) }
+                verify {
+                    pollServiceSpy["pollNotParsedFallback"](manager, any<QualifiedId>(), usersInput)
+                }
+                coVerify(exactly = 0) {
+                    repository.savePoll(
+                        poll = any(),
+                        pollId = any(),
+                        userId = any(),
+                        userDomain = any(),
+                        conversationId = any()
+                    )
+                    proxySenderService.send(manager, any())
+                }
+                confirmVerified(repository, proxySenderService, userCommunicationService)
+            }
+    }
+
+    @Nested
+    inner class PollActionTest {
+        private val pollAction = PollAction(
+            pollId = POLL_ID,
+            optionId = 0,
+            userId = Stub.id()
+        )
+
+        @BeforeEach
+        fun `set up group size`() {
             every {
-                newPoll(
-                    conversationId = usersInput.conversationId,
-                    body = pollDto.question.data,
-                    buttons = pollDto.options,
-                    mentions = pollDto.question.mentions
-                )
-            } returns message
-
-            pollService.createPoll(manager, usersInput)
-
-            verify { factory.forUserInput(usersInput) }
-            verify { newPoll(
-                conversationId = usersInput.conversationId,
-                body = pollDto.question.data,
-                buttons = pollDto.options,
-                mentions = pollDto.question.mentions
-            ) }
-            coVerify {
-                repository.savePoll(
-                    poll = pollDto,
-                    pollId = message.id.toString(),
-                    userId = usersInput.sender.id.toString(),
-                    userDomain = usersInput.sender.domain,
-                    conversationId = usersInput.conversationId.id.toString()
-                )
-                proxySenderService.send(manager, message) }
+                conversationService.getNumberOfConversationMembers(manager, CONVERSATION_ID)
+            } returns GROUP_SIZE
         }
+
+        @Test
+        fun `when someone voted, then register vote and send confirmation`() =
+            runTest {
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                coVerify(exactly = 1) {
+                    repository.vote(pollAction)
+                    proxySenderService.send(
+                        manager,
+                        ofType(WireMessage.ButtonActionConfirmation::class)
+                    )
+                }
+            }
+
+        @Test
+        fun `when everyone in the conversation voted, then send the stats`() =
+            runTest {
+                coEvery { repository.votingUsers(any()).size } returns GROUP_SIZE
+                coEvery {
+                    statsFormattingService.formatStats(any(), any(), any())
+                } returns WireMessage.Text.create(CONVERSATION_ID, "stats for test poll")
+
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                coVerify {
+                    proxySenderService.send(
+                        manager,
+                        ofType(WireMessage.Text::class)
+                    )
+                }
+            }
+
+        @Test
+        fun `when it is not the last vote, then don't send stats`() =
+            runTest {
+                coEvery { repository.votingUsers(any()).size } returns 1
+
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                coVerify(exactly = 0) {
+                    proxySenderService.send(
+                        manager,
+                        ofType(WireMessage.Text::class)
+                    )
+                }
+            }
+    }
+
+    @Nested
+    inner class SendStatsTest {
+        @Test
+        fun `when stats formatting is successful, then send stats`() =
+            runTest {
+                val statsMessage = WireMessage.Text.create(
+                    CONVERSATION_ID,
+                    "stats for test poll"
+                )
+                coEvery {
+                    statsFormattingService.formatStats(
+                        pollId = any(),
+                        conversationId = any(),
+                        conversationMembers = any()
+                    )
+                } returns statsMessage
+
+                pollService.sendStats(
+                    manager = manager,
+                    pollId = POLL_ID,
+                    conversationId = CONVERSATION_ID,
+                    conversationMembers = GROUP_SIZE
+                )
+
+                coVerify {
+                    proxySenderService.send(
+                        manager,
+                        statsMessage
+                    )
+                }
+            }
+
+        @Ignore("inform user that poll was not found")
+        @Test
+        fun `when stats formatting fails, then inform user that it failed`() =
+            runTest {
+                coEvery {
+                    statsFormattingService.formatStats(
+                        pollId = any(),
+                        conversationId = any(),
+                        conversationMembers = any()
+                    )
+                } returns null
+
+                pollService.sendStats(
+                    manager = manager,
+                    pollId = POLL_ID,
+                    conversationId = CONVERSATION_ID,
+                    conversationMembers = GROUP_SIZE
+                )
+
+                coVerify {
+                    proxySenderService.send(
+                        manager,
+                        ofType(WireMessage.Text::class)
+                    )
+                }
+            }
+    }
+
+    companion object {
+        private val CONVERSATION_ID = Stub.id()
+        private const val POLL_ID = "test-poll-id"
+        private const val GROUP_SIZE = 5
+    }
 }
