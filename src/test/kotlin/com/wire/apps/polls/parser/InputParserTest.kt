@@ -2,14 +2,17 @@ package com.wire.apps.polls.parser
 
 import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.PollDto
+import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import com.wire.apps.polls.utils.Stub
+import io.kotest.matchers.collections.shouldContainAllIgnoringFields
+import io.kotest.matchers.nulls.shouldBeNull
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import kotlin.test.Ignore
-import kotlin.test.assertEquals
 
 class InputParserTest {
     private val inputParser = InputParser()
@@ -19,7 +22,7 @@ class InputParserTest {
     fun `returns null when input is empty`(command: String) {
         val userInput = Stub.userInput(command)
 
-        assertNull(inputParser.parsePoll(userInput))
+        inputParser.parsePoll(userInput).shouldBeNull()
     }
 
     @ParameterizedTest
@@ -39,7 +42,7 @@ class InputParserTest {
             )
         )
 
-        assertEquals(expected, inputParser.parsePoll(userInput))
+        expected.shouldBe(inputParser.parsePoll(userInput))
     }
 
     @Test
@@ -57,9 +60,14 @@ class InputParserTest {
 
         val result = inputParser.parsePoll(userInput)?.question
 
-        assertEquals(2, result?.mentions?.size)
-        assertEquals(result?.data?.indexOf(user1), result?.mentions?.get(0)?.offset)
-        assertEquals(result?.data?.indexOf(user2), result?.mentions?.get(1)?.offset)
+        result.shouldNotBeNull()
+        result.mentions.shouldContainAllIgnoringFields(
+            listOf(
+                Stub.mention(result.data, user1),
+                Stub.mention(result.data, user2)
+            ),
+            Mention::userId
+        )
     }
 
     @Ignore("parser should inform that the quotes were incorrect")
@@ -70,7 +78,7 @@ class InputParserTest {
             "/poll \"a\" \"b\" \"c",
             "/poll “a“ “b“ c",
             "/poll “a“ “b“ “c",
-            "/poll “a“ “b“ c“",
+            "/poll “a“ “b“ c“"
         ]
     )
     fun `informs user that quotes are missing`(command: String) {
@@ -78,6 +86,6 @@ class InputParserTest {
 
         val result = inputParser.parsePoll(userInput)
 
-        assertNull(result)
+        result.shouldBeNull()
     }
 }
