@@ -22,9 +22,7 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 import kotlin.test.Ignore
 
-class StatsFormattingServiceTest
-{
-
+class StatsFormattingServiceTest {
     val pollRepository = mockk<PollRepository>()
 
     // Create a test Kodein module that overrides the PollRepository binding
