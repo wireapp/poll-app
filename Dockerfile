@@ -1,23 +1,47 @@
-FROM gradle:8.7-jdk17 AS build
+FROM adoptopenjdk/openjdk11:alpine AS build
 LABEL description="Wire Poll App"
 LABEL project="wire-apps:polls"
 
-WORKDIR /setup
+ENV PROJECT_ROOT /src
+WORKDIR $PROJECT_ROOT
 
-COPY . .
+# Copy gradle settings
+COPY build.gradle.kts settings.gradle.kts gradle.properties gradlew $PROJECT_ROOT/
+# Make sure gradlew is executable
+RUN chmod +x gradlew
+# Copy gradle specification
+COPY gradle $PROJECT_ROOT/gradle
+# Download gradle
+RUN ./gradlew --version
+# download and cache dependencies
+RUN ./gradlew resolveDependencies --no-daemon
 
-RUN gradle shadowJar
+# Copy project and build
+COPY . $PROJECT_ROOT
+RUN ./gradlew distTar --no-daemon
 
 # Runtime
-FROM eclipse-temurin:17-jre
+FROM adoptopenjdk/openjdk11:alpine-jre
 
-WORKDIR /app
+ENV APP_ROOT /app
+WORKDIR $APP_ROOT
 
-# Copy the fat jar from the build stage
-COPY --from=build /setup/build/libs/poll-app*.jar /app/app.jar
+# Obtain built from the base
+COPY --from=build /src/build/distributions/app.tar $APP_ROOT/
 
-ENV JSON_LOGGING=true
+# Extract executables
+RUN mkdir $APP_ROOT/run
+RUN tar -xvf app.tar --strip-components=1 -C $APP_ROOT/run
 
-# Run the application
+# ------------------- Wire common -----------------
+# create version file
+ARG release_version=development
+ENV RELEASE_FILE_PATH=$APP_ROOT/run/release.txt
+RUN echo $release_version > $RELEASE_FILE_PATH
+# enable json logging
+# TODO enable this once we fully migrate to JSON logging everywhere
+# ENV JSON_LOGGING=true
+# /------------------ Wire common -----------------
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["/bin/sh", "-c", "/app/run/bin/polls"]

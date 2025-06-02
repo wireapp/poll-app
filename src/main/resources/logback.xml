@@ -6,7 +6,9 @@
     </appender>
 
     <appender name="prod" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+            <layout class="com.wire.apps.polls.setup.logging.JsonLoggingLayout"/>
+        </encoder>
     </appender>
 
 
