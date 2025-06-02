@@ -45,37 +45,37 @@ class StatsFormattingServiceTest {
     @Test
     fun `formatStats returns null when poll doesn't exist`() =
         runTest {
-            // Arrange
+            // arrange
             coEvery { pollRepository.getPollQuestion(testPollId) } returns null
             coEvery { pollRepository.stats(testPollId) } returns emptyMap()
 
-            // Act
+            // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
                 conversationMembers = null
             )
 
-            // Assert
+            // assert
             result.shouldBeNull()
         }
 
     @Test
     fun `formatStats returns null when stats are empty`() =
         runTest {
-            // Arrange
+            // arrange
             val pollQuestion = Text(data = "What's your favorite color?", mentions = emptyList())
             coEvery { pollRepository.getPollQuestion(testPollId) } returns pollQuestion
             coEvery { pollRepository.stats(testPollId) } returns emptyMap()
 
-            // Act
+            // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
                 conversationMembers = null
             )
 
-            // Assert
+            // assert
             result.shouldBeNull()
         }
 
@@ -83,7 +83,7 @@ class StatsFormattingServiceTest {
     @Test
     fun `formatStats properly formats poll results based on max votes`() =
         runTest {
-            // Arrange
+            // arrange
             val pollQuestion = Text(data = "What's your favorite color?", mentions = emptyList())
             val stats = mapOf(
                 Pair(1, "Red") to 3,
@@ -94,14 +94,14 @@ class StatsFormattingServiceTest {
             coEvery { pollRepository.getPollQuestion(testPollId) } returns pollQuestion
             coEvery { pollRepository.stats(testPollId) } returns stats
 
-            // Act
+            // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
                 conversationMembers = null
             )
 
-            // Assert
+            // assert
             result.shouldNotBeNull()
             result.text.shouldBe(
                 "**Results** for poll *\"What's your favorite color?\"*$newLine" +
@@ -114,7 +114,7 @@ class StatsFormattingServiceTest {
     @Test
     fun `formatStats handles mentions correctly`() =
         runTest {
-            // Arrange
+            // arrange
             val userId1 = Stub.id()
             val userId2 = Stub.id()
             val userName1 = "@messi"
@@ -136,14 +136,14 @@ class StatsFormattingServiceTest {
             coEvery { pollRepository.getPollQuestion(testPollId) } returns pollQuestion
             coEvery { pollRepository.stats(testPollId) } returns stats
 
-            // Act
+            // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
                 conversationMembers = null
             )
 
-            // Assert
+            // assert
             result.shouldNotBeNull()
 
             val resultText = result.text as String
@@ -164,7 +164,7 @@ class StatsFormattingServiceTest {
     @Test
     fun `formatStats respects conversation members limit`() =
         runTest {
-            // Arrange
+            // arrange
             val pollQuestion = Text(data = "Do you like cookies?", mentions = emptyList())
             val stats = mapOf(
                 Pair(1, "Yes") to 2,
@@ -174,14 +174,14 @@ class StatsFormattingServiceTest {
             coEvery { pollRepository.getPollQuestion(testPollId) } returns pollQuestion
             coEvery { pollRepository.stats(testPollId) } returns stats
 
-            // Act
+            // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
                 conversationMembers = 3
             )
 
-            // Assert
+            // assert
             result.shouldNotBeNull()
             result.text.shouldBe(
                 "**Results** for poll *\"Do you like cookies?\"*$newLine" +

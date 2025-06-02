@@ -56,10 +56,13 @@ class PollServiceTest {
         @Test
         fun `when input is valid, then save the poll and send it`() =
             runTest {
+                // arrange
                 val usersInput = Stub.userInput("/poll \"Question\" \"Answer\"")
 
+                // act
                 pollService.createPoll(manager, usersInput)
 
+                // assert
                 coVerify {
                     repository.savePoll(
                         poll = any(),
@@ -76,14 +79,17 @@ class PollServiceTest {
         @Test
         fun `when input is invalid, then send usage and terminate flow`() =
             runTest {
+                // arrange
                 val usersInput = Stub.userInput("/poll \"question without options\"")
                 coEvery {
                     userCommunicationService.reactionToWrongCommand(manager, any())
                 } just Runs
                 val pollServiceSpy = spyk(pollService, recordPrivateCalls = true)
 
+                // act
                 pollServiceSpy.createPoll(manager, usersInput)
 
+                // assert
                 coVerify { userCommunicationService.reactionToWrongCommand(manager, any()) }
                 verify {
                     pollServiceSpy["pollNotParsedFallback"](manager, any<QualifiedId>(), usersInput)
@@ -112,6 +118,7 @@ class PollServiceTest {
 
         @BeforeEach
         fun `set up group size`() {
+            // arrange
             every {
                 conversationService.getNumberOfConversationMembers(manager, CONVERSATION_ID)
             } returns GROUP_SIZE
@@ -120,12 +127,14 @@ class PollServiceTest {
         @Test
         fun `when someone voted, then register vote and send confirmation`() =
             runTest {
+                // act
                 pollService.pollAction(
                     manager = manager,
                     pollAction = pollAction,
                     conversationId = CONVERSATION_ID
                 )
 
+                // assert
                 coVerify(exactly = 1) {
                     repository.vote(pollAction)
                     proxySenderService.send(
@@ -138,17 +147,24 @@ class PollServiceTest {
         @Test
         fun `when everyone in the conversation voted, then send the stats`() =
             runTest {
+                // arrange
                 coEvery { repository.votingUsers(any()).size } returns GROUP_SIZE
                 coEvery {
-                    statsFormattingService.formatStats(any(), any(), any())
+                    statsFormattingService.formatStats(
+                        pollId = any(),
+                        conversationId = any(),
+                        conversationMembers = any()
+                    )
                 } returns WireMessage.Text.create(CONVERSATION_ID, "stats for test poll")
 
+                // act
                 pollService.pollAction(
                     manager = manager,
                     pollAction = pollAction,
                     conversationId = CONVERSATION_ID
                 )
 
+                // assert
                 coVerify {
                     proxySenderService.send(
                         manager,
@@ -160,14 +176,17 @@ class PollServiceTest {
         @Test
         fun `when it is not the last vote, then don't send stats`() =
             runTest {
+                // arrange
                 coEvery { repository.votingUsers(any()).size } returns 1
 
+                // act
                 pollService.pollAction(
                     manager = manager,
                     pollAction = pollAction,
                     conversationId = CONVERSATION_ID
                 )
 
+                // assert
                 coVerify(exactly = 0) {
                     proxySenderService.send(
                         manager,
@@ -182,6 +201,7 @@ class PollServiceTest {
         @Test
         fun `when stats formatting is successful, then send stats`() =
             runTest {
+                // arrange
                 val statsMessage = WireMessage.Text.create(
                     CONVERSATION_ID,
                     "stats for test poll"
@@ -194,6 +214,7 @@ class PollServiceTest {
                     )
                 } returns statsMessage
 
+                // act
                 pollService.sendStats(
                     manager = manager,
                     pollId = POLL_ID,
@@ -201,6 +222,7 @@ class PollServiceTest {
                     conversationMembers = GROUP_SIZE
                 )
 
+                // assert
                 coVerify {
                     proxySenderService.send(
                         manager,
@@ -213,6 +235,7 @@ class PollServiceTest {
         @Test
         fun `when stats formatting fails, then inform user that it failed`() =
             runTest {
+                // arrange
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
@@ -221,6 +244,7 @@ class PollServiceTest {
                     )
                 } returns null
 
+                // act
                 pollService.sendStats(
                     manager = manager,
                     pollId = POLL_ID,
@@ -228,6 +252,7 @@ class PollServiceTest {
                     conversationMembers = GROUP_SIZE
                 )
 
+                // assert
                 coVerify {
                     proxySenderService.send(
                         manager,
