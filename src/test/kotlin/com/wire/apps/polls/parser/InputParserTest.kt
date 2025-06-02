@@ -20,9 +20,14 @@ class InputParserTest {
     @ParameterizedTest
     @ValueSource(strings = ["/poll", "/poll \"\"", "/poll \" \""])
     fun `returns null when input is empty`(command: String) {
+        // arrange
         val userInput = Stub.userInput(command)
 
-        inputParser.parsePoll(userInput).shouldBeNull()
+        // act
+        val result = inputParser.parsePoll(userInput)
+
+        // assert
+        result.shouldBeNull()
     }
 
     @ParameterizedTest
@@ -33,6 +38,7 @@ class InputParserTest {
         ]
     )
     fun `parses input with question and options`(command: String) {
+        // arrange
         val userInput = Stub.userInput(command)
         val expected = PollDto(
             Text("Question", emptyList()),
@@ -42,11 +48,16 @@ class InputParserTest {
             )
         )
 
-        expected.shouldBe(inputParser.parsePoll(userInput))
+        // act
+        val result = inputParser.parsePoll(userInput)
+
+        // assert
+        expected.shouldBe(result)
     }
 
     @Test
     fun `adds and shifts mentions`() {
+        // arrange
         val user1 = "@user1"
         val user2 = "@user2"
         val command = "/poll \"$user1 is a $user2?\" \"yes\" \"no\""
@@ -58,8 +69,10 @@ class InputParserTest {
             )
         )
 
+        // act
         val result = inputParser.parsePoll(userInput)?.question
 
+        // assert
         result.shouldNotBeNull()
         result.mentions.shouldContainAllIgnoringFields(
             listOf(
@@ -82,10 +95,13 @@ class InputParserTest {
         ]
     )
     fun `informs user that quotes are missing`(command: String) {
+        // arrange
         val userInput = Stub.userInput(command)
 
+        // act
         val result = inputParser.parsePoll(userInput)
 
+        // assert
         result.shouldBeNull()
     }
 }
