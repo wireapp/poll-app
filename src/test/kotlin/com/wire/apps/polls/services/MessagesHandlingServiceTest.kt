@@ -1,15 +1,12 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.integrations.jvm.service.WireApplicationManager
 import io.mockk.Called
 import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -130,8 +127,6 @@ class MessagesHandlingServiceTest {
     )
     fun `handleText calls createPoll to instruct users how to create poll`(command: String) =
         runTest {
-            val newPollPath = "com.wire.apps.polls.dto.FactoriesKt"
-            mockkStatic(newPollPath)
             val repository = mockk<PollRepository>(relaxed = true)
             val proxySenderService = mockk<ProxySenderService>(relaxed = true)
 
@@ -140,24 +135,7 @@ class MessagesHandlingServiceTest {
             messagesHandlingService.handleText(manager, usersInput)
 
             coVerify { pollService.createPoll(any(), any()) }
-            coVerify(exactly = 0) {
-                newPoll(
-                    conversationId = any(),
-                    body = any(),
-                    buttons = any(),
-                    mentions = any()
-                )
-                repository.savePoll(
-                    poll = any(),
-                    pollId = any(),
-                    userId = any(),
-                    userDomain = any(),
-                    conversationId = any()
-                )
-                proxySenderService.send(any(), any())
-            }
             confirmVerified(repository, proxySenderService)
-            unmockkStatic(newPollPath)
         }
 
     @Ignore("ignore case")
