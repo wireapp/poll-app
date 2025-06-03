@@ -36,6 +36,7 @@ class StatsFormattingService(
 
         val stats = repository.stats(pollId)
         stats.ifEmpty { logger.info { "There are no data for given pollId." } }
+        // todo return earlier as you know the poll does not exist if pollQuestion is null.
         if (pollQuestion == null || stats.isEmpty()) {
             return null
         }
