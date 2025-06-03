@@ -37,7 +37,7 @@ dependencies {
     implementation("io.micrometer", "micrometer-registry-prometheus", "1.6.6")
 
     // logging
-    implementation("net.logstash.logback:logstash-logback-encoder:8.1")
+    implementation("net.logstash.logback", "logstash-logback-encoder", "8.1")
     implementation("io.github.microutils", "kotlin-logging", "2.0.6")
     // if-else in logback.xml
     implementation("org.codehaus.janino", "janino", "3.1.2")
@@ -61,12 +61,10 @@ dependencies {
 
     // testing
     testImplementation(kotlin("test"))
-    testImplementation("io.kotest:kotest-runner-junit5:5.8.1")
-    testImplementation("io.kotest:kotest-assertions-core:5.8.1")
-    testImplementation("io.kotest:kotest-property:5.8.1")
-    testImplementation("io.mockk:mockk:1.13.3")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.10.0")
+    testImplementation("io.kotest", "kotest-assertions-core", "5.8.1")
+    testImplementation("io.mockk", "mockk", "1.13.3")
+    testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-test", "1.7.3")
+    testImplementation("org.junit.jupiter", "junit-jupiter-params", "5.10.0")
 }
 
 ktlint {
