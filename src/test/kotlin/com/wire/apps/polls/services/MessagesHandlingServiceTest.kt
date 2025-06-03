@@ -36,6 +36,11 @@ class MessagesHandlingServiceTest {
 
     val messagesHandlingService by di.instance<MessagesHandlingService>()
 
+    @AfterEach
+    fun `confirm that only specified functions were called`() {
+        confirmVerified(userCommunicationService, pollService)
+    }
+
     @Test
     fun `handleText terminates when usersInput is null`() =
         runTest {
@@ -186,9 +191,4 @@ class MessagesHandlingServiceTest {
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }
             verify { pollService wasNot Called }
         }
-
-    @AfterEach
-    fun `confirm that only specified functions were called`() {
-        confirmVerified(userCommunicationService, pollService)
-    }
 }
