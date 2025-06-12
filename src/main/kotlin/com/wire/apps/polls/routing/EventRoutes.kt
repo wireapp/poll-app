@@ -23,7 +23,7 @@ fun Routing.events() {
         applicationId = UUID.randomUUID(),
         apiToken = "myApiToken",
         apiHost = "https://nginz-https.chala.wire.link",
-        cryptographyStoragePassword = "myDummyPassword",
+        cryptographyStoragePassword = "myDummyPasswordmyDummyPassword01",
         wireEventsHandler = object : WireEventsHandlerSuspending() {
             override suspend fun onConversationJoin(
                 conversation: ConversationData,

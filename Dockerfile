@@ -6,7 +6,7 @@ WORKDIR /setup
 
 COPY . .
 
-RUN gradle shadowJar
+RUN gradle shadowJar --no-daemon
 
 # Runtime
 FROM eclipse-temurin:17-jre
