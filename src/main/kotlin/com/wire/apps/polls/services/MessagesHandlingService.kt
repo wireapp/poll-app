@@ -54,6 +54,7 @@ class MessagesHandlingService(
 
         val conversationId = usersInput.conversationId
         val trimmed = usersInput.text.trim()
+            .lowercase()
 
         when {
             // stats request

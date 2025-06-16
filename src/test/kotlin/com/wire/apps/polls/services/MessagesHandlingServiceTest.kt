@@ -161,7 +161,6 @@ class MessagesHandlingServiceTest {
             coVerify { pollService.createPoll(any(), any()) }
         }
 
-    @Ignore("ignore case")
     @Test
     fun `handleText ignores case when matching command`() =
         runTest {
