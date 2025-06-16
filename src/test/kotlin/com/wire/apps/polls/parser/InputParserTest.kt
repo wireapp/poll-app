@@ -12,7 +12,6 @@ import io.kotest.matchers.collections.shouldContainAllIgnoringFields
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import kotlin.test.Ignore
 
 class InputParserTest {
     private val inputParser = InputParser()
@@ -83,7 +82,6 @@ class InputParserTest {
         )
     }
 
-    @Ignore("parser should inform that the quotes were incorrect")
     @ParameterizedTest
     @ValueSource(
         strings = [

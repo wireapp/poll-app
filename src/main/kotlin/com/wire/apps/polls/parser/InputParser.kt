@@ -15,15 +15,17 @@ class InputParser {
     }
 
     fun parsePoll(userInput: UsersInput): PollDto? {
-        // TODO currently not supporting char " in the strings
-        val inputs = userInput.text
-            .substringAfter("/poll", "")
-            .substringBeforeLast("\"")
-            .split(*delimiters)
-            .filter { it.isNotBlank() }
-            .map { it.trim() }
+        val arguments = userInput.text.substringAfter("/poll", "")
+        val quote = String(delimiters)
+        val inQuotes = "[$quote](.*?)[$quote]".toRegex()
 
-        if (inputs.isEmpty()) {
+        val inputs = inQuotes.findAll(arguments)
+            .map { it.groupValues[1] }
+            .filter { it.isNotBlank() }.toList()
+
+        val inverseMatch = inQuotes.replace(arguments, "")
+
+        if (inputs.isEmpty() || inverseMatch.trim().isNotBlank()) {
             logger.warn { "Given user input does not contain valid poll." }
             return null
         }
