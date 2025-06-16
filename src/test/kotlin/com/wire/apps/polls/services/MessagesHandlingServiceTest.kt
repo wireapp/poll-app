@@ -140,7 +140,6 @@ class MessagesHandlingServiceTest {
             verify { userCommunicationService wasNot Called }
         }
 
-    @Ignore("Should enter createPoll and invoke pollNotParsedFallback to send usage")
     @ParameterizedTest
     @ValueSource(
         strings = [
