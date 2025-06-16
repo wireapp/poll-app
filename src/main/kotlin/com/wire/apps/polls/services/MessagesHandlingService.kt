@@ -53,7 +53,8 @@ class MessagesHandlingService(
         }
 
         val conversationId = usersInput.conversationId
-        val trimmed = usersInput.text.trim()
+        val trimmed = usersInput.text
+            .trim().replace("\\s+".toRegex(), " ")
             .lowercase()
 
         when {

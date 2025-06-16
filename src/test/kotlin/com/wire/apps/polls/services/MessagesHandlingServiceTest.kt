@@ -17,7 +17,6 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
 import com.wire.apps.polls.utils.Stub
-import kotlin.test.Ignore
 
 class MessagesHandlingServiceTest {
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
@@ -175,7 +174,6 @@ class MessagesHandlingServiceTest {
             verify { pollService wasNot Called }
         }
 
-    @Ignore("ignore whitespaces")
     @Test
     fun `handleText ignores additional whitespaces`() =
         runTest {
