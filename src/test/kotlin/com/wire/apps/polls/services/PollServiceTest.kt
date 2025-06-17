@@ -24,7 +24,6 @@ import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
-import kotlin.test.Ignore
 
 class PollServiceTest {
     val repository = mockk<PollRepository>(relaxed = true)
@@ -231,7 +230,6 @@ class PollServiceTest {
                 }
             }
 
-        @Ignore("inform user that poll was not found")
         @Test
         fun `when stats formatting fails, then inform user that it failed`() =
             runTest {

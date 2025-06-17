@@ -32,26 +32,25 @@ class StatsFormattingService(
     ): WireMessage.Text? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
-        }
+        } ?: return null
 
         val stats = repository.stats(pollId)
-        stats.ifEmpty { logger.info { "There are no data for given pollId." } }
-        // todo return earlier as you know the poll does not exist if pollQuestion is null.
-        if (pollQuestion == null || stats.isEmpty()) {
-            return null
+        return if (stats.isEmpty()) {
+            logger.info { "There are no data for given pollId." }
+            null
+        } else {
+            val title = prepareTitle(pollQuestion.data)
+            val options = formatVotes(stats, conversationMembers)
+            statsMessage(
+                conversationId = conversationId,
+                text = "$title$newLine$options",
+                mentions = pollQuestion.mentions.map {
+                    it.copy(
+                        offset = it.offset + TITLE_PREFIX.length
+                    )
+                }
+            )
         }
-
-        val title = prepareTitle(pollQuestion.data)
-        val options = formatVotes(stats, conversationMembers)
-        return statsMessage(
-            conversationId = conversationId,
-            text = "$title$newLine$options",
-            mentions = pollQuestion.mentions.map {
-                it.copy(
-                    offset = it.offset + TITLE_PREFIX.length
-                )
-            }
-        )
     }
 
     /**
