@@ -171,7 +171,8 @@ class PollService(
         val latest = repository.getCurrentPoll(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
         }.orEmpty()
-        val conversationSize = conversationService.getNumberOfConversationMembers(manager, conversationId)
+        val conversationSize = conversationService
+            .getNumberOfConversationMembers(manager, conversationId)
 
         sendStats(
             manager = manager,
