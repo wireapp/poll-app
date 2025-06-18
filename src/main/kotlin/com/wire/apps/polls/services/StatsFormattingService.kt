@@ -28,7 +28,7 @@ class StatsFormattingService(
     suspend fun formatStats(
         pollId: String,
         conversationId: QualifiedId,
-        conversationMembers: Int?
+        conversationMembers: Int
     ): WireMessage.Text? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
@@ -75,14 +75,14 @@ class StatsFormattingService(
      */
     private fun formatVotes(
         stats: Map<Pair<Int, String>, Int>,
-        conversationMembers: Int?
+        conversationMembers: Int
     ): String {
         // we can use assert as the result size is checked
         val mostPopularOptionVoteCount =
             requireNotNull(stats.values.maxOrNull()) { "There were no stats!" }
 
         val maximumSize = min(
-            conversationMembers ?: Integer.MAX_VALUE,
+            conversationMembers,
             mostPopularOptionVoteCount + MAX_VOTE_PLACEHOLDER_COUNT
         )
 

@@ -138,19 +138,15 @@ class PollService(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
-        conversationMembers: Int? = null
+        conversationMembers: Int
     ) {
         logger.debug { "Sending stats for poll $pollId" }
-        val conversationMembersCount =
-            conversationMembers ?: conversationService
-                .getNumberOfConversationMembers(manager, conversationId)
-
-        logger.debug { "Conversation members: $conversationMembersCount" }
+        logger.debug { "Conversation members: $conversationMembers" }
         val stats = statsFormattingService
             .formatStats(
                 pollId = pollId,
                 conversationId = conversationId,
-                conversationMembers = conversationMembersCount
+                conversationMembers = conversationMembers
             ) ?: textMessage(
             conversationId = conversationId,
             text = "No data for poll. Please create a new one."
@@ -175,10 +171,13 @@ class PollService(
         val latest = repository.getCurrentPoll(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
         }.orEmpty()
+        val conversationSize = conversationService.getNumberOfConversationMembers(manager, conversationId)
+
         sendStats(
             manager = manager,
             pollId = latest,
-            conversationId = conversationId
+            conversationId = conversationId,
+            conversationMembers = conversationSize
         )
     }
 }
