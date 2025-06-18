@@ -36,7 +36,7 @@ class StatsFormattingService(
 
         val stats = repository.stats(pollId)
         return if (stats.isEmpty()) {
-            logger.info { "There are no data for given pollId." }
+            logger.info { "There are no data for given poll $pollId." }
             null
         } else {
             val title = prepareTitle(pollQuestion.data)
