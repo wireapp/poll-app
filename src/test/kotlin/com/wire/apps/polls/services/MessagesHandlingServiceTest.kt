@@ -17,7 +17,6 @@ import org.kodein.di.bind
 import org.kodein.di.instance
 import org.kodein.di.singleton
 import com.wire.apps.polls.utils.Stub
-import kotlin.test.Ignore
 
 class MessagesHandlingServiceTest {
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
@@ -140,7 +139,6 @@ class MessagesHandlingServiceTest {
             verify { userCommunicationService wasNot Called }
         }
 
-    @Ignore("Should enter createPoll and invoke pollNotParsedFallback to send usage")
     @ParameterizedTest
     @ValueSource(
         strings = [
@@ -162,7 +160,6 @@ class MessagesHandlingServiceTest {
             coVerify { pollService.createPoll(any(), any()) }
         }
 
-    @Ignore("ignore case")
     @Test
     fun `handleText ignores case when matching command`() =
         runTest {
@@ -177,7 +174,6 @@ class MessagesHandlingServiceTest {
             verify { pollService wasNot Called }
         }
 
-    @Ignore("ignore whitespaces")
     @Test
     fun `handleText ignores additional whitespaces`() =
         runTest {

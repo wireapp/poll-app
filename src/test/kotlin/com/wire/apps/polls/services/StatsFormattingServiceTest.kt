@@ -20,7 +20,6 @@ import com.wire.apps.polls.utils.Stub
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
 import java.util.UUID
-import kotlin.test.Ignore
 
 class StatsFormattingServiceTest {
     val pollRepository = mockk<PollRepository>()
@@ -41,6 +40,7 @@ class StatsFormattingServiceTest {
 
     val testPollId = "test-poll-id"
     val testConversationId = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString())
+    val testGroupSize = 5
 
     @Test
     fun `formatStats returns null when poll doesn't exist`() =
@@ -53,7 +53,7 @@ class StatsFormattingServiceTest {
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
-                conversationMembers = null
+                conversationMembers = testGroupSize
             )
 
             // assert
@@ -72,14 +72,13 @@ class StatsFormattingServiceTest {
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
-                conversationMembers = null
+                conversationMembers = testGroupSize
             )
 
             // assert
             result.shouldBeNull()
         }
 
-    @Ignore("conversation's size should be always available")
     @Test
     fun `formatStats properly formats poll results based on max votes`() =
         runTest {
@@ -98,16 +97,16 @@ class StatsFormattingServiceTest {
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
-                conversationMembers = null
+                conversationMembers = testGroupSize
             )
 
             // assert
             result.shouldNotBeNull()
             result.text.shouldBe(
                 "**Results** for poll *\"What's your favorite color?\"*$newLine" +
-                    "🟢🟢🟢 **Red** (3)$newLine" +
-                    "🟢⚪⚪ *Blue* (1)$newLine" +
-                    "⚪⚪⚪ *Green* (0)"
+                    "🟢🟢🟢⚪⚪ **Red** (3)$newLine" +
+                    "🟢⚪⚪⚪⚪ *Blue* (1)$newLine" +
+                    "⚪⚪⚪⚪⚪ *Green* (0)"
             )
         }
 
@@ -140,13 +139,13 @@ class StatsFormattingServiceTest {
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
                 conversationId = testConversationId,
-                conversationMembers = null
+                conversationMembers = testGroupSize
             )
 
             // assert
             result.shouldNotBeNull()
 
-            val resultText = result.text as String
+            val resultText = result.text
             result.mentions shouldContainExactly listOf(
                 Stub.mention(
                     text = resultText,

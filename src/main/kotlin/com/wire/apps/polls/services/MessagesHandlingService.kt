@@ -53,19 +53,21 @@ class MessagesHandlingService(
         }
 
         val conversationId = usersInput.conversationId
-        val trimmed = usersInput.text.trim()
+        val trimmed = usersInput.text
+            .trim().replace("\\s+".toRegex(), " ")
+            .lowercase()
 
         when {
             // stats request
-            trimmed.startsWith("/poll stats") -> {
+            trimmed == "/poll stats" -> {
                 pollService.sendStatsForLatest(manager, conversationId)
             }
             // send version when asked
-            trimmed.startsWith("/poll version") -> {
+            trimmed == "/poll version" -> {
                 userCommunicationService.sendVersion(manager, conversationId)
             }
             // send version when asked
-            trimmed.startsWith("/poll help") -> {
+            trimmed == "/poll help" -> {
                 userCommunicationService.sendHelp(manager, conversationId)
             }
             // poll request

@@ -5,6 +5,7 @@ import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.confirmVote
 import com.wire.apps.polls.dto.newPoll
+import com.wire.apps.polls.dto.textMessage
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -137,22 +138,19 @@ class PollService(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
-        conversationMembers: Int? = null
+        conversationMembers: Int
     ) {
         logger.debug { "Sending stats for poll $pollId" }
-        val conversationMembersCount =
-            conversationMembers ?: conversationService
-                .getNumberOfConversationMembers(manager, conversationId)
-
-        logger.debug { "Conversation members: $conversationMembersCount" }
+        logger.debug { "Conversation members: $conversationMembers" }
         val stats = statsFormattingService
             .formatStats(
                 pollId = pollId,
                 conversationId = conversationId,
-                conversationMembers = conversationMembersCount
-            )
-            .whenNull { logger.warn { "It was not possible to format stats for poll $pollId" } }
-            ?: return
+                conversationMembers = conversationMembers
+            ) ?: textMessage(
+            conversationId = conversationId,
+            text = "No data for poll. Please create a new one."
+        )
 
         proxySenderService.send(
             manager = manager,
@@ -172,12 +170,15 @@ class PollService(
 
         val latest = repository.getCurrentPoll(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
-        } ?: return
-        // todo send message to user that no polls were created
+        }.orEmpty()
+        val conversationSize = conversationService
+            .getNumberOfConversationMembers(manager, conversationId)
+
         sendStats(
             manager = manager,
             pollId = latest,
-            conversationId = conversationId
+            conversationId = conversationId,
+            conversationMembers = conversationSize
         )
     }
 }

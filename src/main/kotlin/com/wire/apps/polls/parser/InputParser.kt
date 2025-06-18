@@ -14,26 +14,36 @@ class InputParser {
         val delimitersSet = delimiters.toSet()
     }
 
+    /**
+     * Parses a poll from user input in the format: /poll "Question" "Option 1" "Option 2" ...
+     *
+     * To validate the input:
+     * - `pollOptionRegex` extracts all quoted strings.
+     * - `inverseMatch` verifies whether after extraction,
+     *      there is anything left apart from whitespaces.
+     */
     fun parsePoll(userInput: UsersInput): PollDto? {
-        // TODO currently not supporting char " in the strings
-        val inputs = userInput.text
-            .substringAfter("/poll", "")
-            .substringBeforeLast("\"")
-            .split(*delimiters)
-            .filter { it.isNotBlank() }
-            .map { it.trim() }
+        val pollOptions = userInput.text.substringAfter("/poll", "")
+        val quote = String(delimiters)
+        val pollOptionRegex = "[$quote](.*?)[$quote]".toRegex()
 
-        if (inputs.isEmpty()) {
+        val parsedOptions = pollOptionRegex.findAll(pollOptions)
+            .map { it.groupValues[1] }
+            .filter { it.isNotBlank() }.toList()
+
+        val inverseMatch = pollOptionRegex.replace(pollOptions, "")
+
+        if (parsedOptions.isEmpty() || inverseMatch.isNotBlank()) {
             logger.warn { "Given user input does not contain valid poll." }
             return null
         }
 
         return PollDto(
             question = Text(
-                data = inputs.first(),
+                data = parsedOptions.first(),
                 mentions = shiftMentions(userInput)
             ),
-            options = parseButtons(inputs.takeLast(inputs.size - 1))
+            options = parseButtons(parsedOptions.takeLast(parsedOptions.size - 1))
         )
     }
 
