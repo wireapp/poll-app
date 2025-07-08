@@ -3,9 +3,6 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.confirmVote
-import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.dto.textMessage
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -14,11 +11,10 @@ import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
 
 /**
- * Service handling the polls. It communicates with the proxy via [proxySenderService].
+ * Service handling the polls.
  */
 class PollService(
     private val factory: PollFactory,
-    private val proxySenderService: ProxySenderService,
     private val repository: PollRepository,
     private val conversationService: ConversationService,
     private val userCommunicationService: UserCommunicationService,
@@ -42,26 +38,20 @@ class PollService(
                 )
             } ?: return
 
-        val message = newPoll(
+        val messageId = userCommunicationService.sendPoll(
+            manager = manager,
             conversationId = conversationId,
-            body = poll.question.data,
-            buttons = poll.options,
-            mentions = poll.question.mentions
+            poll = poll
         )
 
         val pollId = repository.savePoll(
             poll = poll,
-            pollId = message.id.toString(),
+            pollId = messageId,
             userId = usersInput.sender.id.toString(),
             userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
-
-        proxySenderService.send(
-            manager = manager,
-            message = message
-        )
     }
 
     private suspend fun pollNotParsedFallback(
@@ -71,7 +61,11 @@ class PollService(
     ) {
         usersInput.text.startsWith("/poll").whenTrue {
             logger.info { "Command started with /poll, sending usage to user." }
-            userCommunicationService.reactionToWrongCommand(manager, conversationId)
+            userCommunicationService.reactionToWrongCommand(
+                manager = manager,
+                conversationId = conversationId,
+                message = "I couldn't recognize your command."
+            )
         }
     }
 
@@ -87,16 +81,12 @@ class PollService(
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
-        val message = confirmVote(
-            pollId = pollAction.pollId,
-            conversationId = conversationId,
-            offset = pollAction.optionId
-        )
-        proxySenderService.send(
+        userCommunicationService.sendButtonConfirmation(
             manager = manager,
-            message = message
+            pollAction = pollAction,
+            conversationId = conversationId
         )
-        sendStatsIfAllVoted(
+        sendStatsOrUpdate(
             manager = manager,
             pollId = pollAction.pollId,
             conversationId = conversationId

@@ -42,7 +42,6 @@ fun DI.MainBuilder.configureContainer() {
         singleton {
             PollService(
                 factory = instance(),
-                proxySenderService = instance(),
                 repository = instance(),
                 conversationService = instance(),
                 userCommunicationService = instance(),

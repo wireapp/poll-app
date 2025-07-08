@@ -1,6 +1,7 @@
 package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Mention
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.common.toWireMention
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
@@ -48,13 +49,23 @@ fun confirmVote(
  * Creates stats (result of the poll) message.
  */
 fun statsMessage(
-    conversationId: QualifiedId,
-    text: String,
-    mentions: List<Mention>
+    text: Text,
+    conversationId: QualifiedId
 ) = WireMessage.Text.create(
     conversationId = conversationId,
-    text = text,
-    mentions = mentions.map { it.toWireMention() }
+    text = text.data,
+    mentions = text.mentions.map { it.toWireMention() }
+)
+
+fun updateStatsMessage(
+    text: Text,
+    originalMessageId: String,
+    conversationId: QualifiedId
+) = WireMessage.TextEdited.create(
+    originalMessageId = UUID.fromString(originalMessageId),
+    conversationId = conversationId,
+    text = text.data,
+    mentions = text.mentions.map { it.toWireMention() }
 )
 
 /**
