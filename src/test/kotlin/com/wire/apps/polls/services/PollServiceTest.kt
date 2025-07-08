@@ -2,6 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
 import com.wire.integrations.jvm.model.QualifiedId
@@ -27,16 +28,16 @@ import org.kodein.di.singleton
 
 class PollServiceTest {
     val repository = mockk<PollRepository>(relaxed = true)
-    val conversationService = mockk<ConversationService>()
     val manager = mockk<WireApplicationManager>()
-    val proxySenderService = mockk<ProxySenderService> {
-        coEvery { send(manager, any()) } just Runs
+    val conversationService = mockk<ConversationService> {
+        coEvery {
+            getNumberOfConversationMembers(manager, CONVERSATION_ID)
+        } returns GROUP_SIZE
     }
-    val userCommunicationService = mockk<UserCommunicationService>()
+    val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
     val statsFormattingService = mockk<StatsFormattingService>()
 
     val testModule = DI.Module("testModule") {
-        bind<ProxySenderService>(overrides = true) with singleton { proxySenderService }
         bind<PollRepository>(overrides = true) with singleton { repository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
@@ -116,11 +117,11 @@ class PollServiceTest {
         )
 
         @BeforeEach
-        fun `set up group size`() {
+        fun `set up`() {
             // arrange
-            every {
-                conversationService.getNumberOfConversationMembers(manager, CONVERSATION_ID)
-            } returns GROUP_SIZE
+            coEvery {
+                statsFormattingService.formatStats(POLL_ID, GROUP_SIZE)
+            } answers { Text("stats for poll") }
         }
 
         @Test
@@ -136,25 +137,29 @@ class PollServiceTest {
                 // assert
                 coVerify(exactly = 1) {
                     repository.vote(pollAction)
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.ButtonActionConfirmation::class)
+                    userCommunicationService.sendButtonConfirmation(
+                        manager = manager,
+                        pollAction = pollAction,
+                        conversationId = CONVERSATION_ID
                     )
                 }
             }
 
         @Test
-        fun `when everyone in the conversation voted, then send the stats`() =
+        fun `when it is first vote, then send stats message`() =
             runTest {
                 // arrange
-                coEvery { repository.votingUsers(any()).size } returns GROUP_SIZE
                 coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationId = any(),
-                        conversationMembers = any()
-                    )
-                } returns WireMessage.Text.create(CONVERSATION_ID, "stats for test poll")
+                    repository.getStatsMessage(POLL_ID)
+                } returns null andThen "stats message id"
+                coEvery {
+                    statsFormattingService.formatStats(any(), any())
+                } returns Text("poll stats")
+                val pollActionOther = PollAction(
+                    pollId = POLL_ID,
+                    optionId = 1,
+                    userId = Stub.id()
+                )
 
                 // act
                 pollService.pollAction(
@@ -162,21 +167,26 @@ class PollServiceTest {
                     pollAction = pollAction,
                     conversationId = CONVERSATION_ID
                 )
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollActionOther,
+                    conversationId = CONVERSATION_ID
+                )
 
-                // assert
-                coVerify {
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.Text::class)
+                coVerify(exactly = 1) {
+                    userCommunicationService.sendStats(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        text = any()
                     )
                 }
             }
 
         @Test
-        fun `when it is not the last vote, then don't send stats`() =
+        fun `when someone voted on ongoing poll, then update the results`() =
             runTest {
                 // arrange
-                coEvery { repository.votingUsers(any()).size } returns 1
+                coEvery { repository.votingUsers(any()).size } returns 2
 
                 // act
                 pollService.pollAction(
@@ -186,10 +196,12 @@ class PollServiceTest {
                 )
 
                 // assert
-                coVerify(exactly = 0) {
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.Text::class)
+                coVerify(exactly = 1) {
+                    userCommunicationService.sendUpdatedStats(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        statsMessageId = any(),
+                        text = any()
                     )
                 }
             }
