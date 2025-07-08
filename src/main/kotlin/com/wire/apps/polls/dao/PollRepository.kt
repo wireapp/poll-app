@@ -4,15 +4,14 @@ import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
-import com.wire.integrations.jvm.model.QualifiedId
 import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.update
 import pw.forst.exposed.insertOrUpdate
 import pw.forst.katlib.mapToSet
 
@@ -37,7 +36,7 @@ class PollRepository {
             it[this.id] = pollId
             it[this.ownerId] = userId
             it[this.domain] = userDomain
-            it[this.isActive] = true
+            it[this.isActive] = false
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
         }
@@ -120,6 +119,23 @@ class PollRepository {
                 .mapValues { (_, votingUsers) -> votingUsers.count { !it.isNullOrBlank() } }
         }
 
+    suspend fun setStatsMessage(
+        pollId: String,
+        statsMessageId: String
+    ) = newSuspendedTransaction {
+        Polls.update({
+            Polls.id eq pollId
+        }) { it[this.statsMessageId] = statsMessageId }
+    }
+
+    suspend fun getStatsMessage(pollId: String) =
+        newSuspendedTransaction {
+            Polls
+                .select { Polls.id eq pollId }
+                .mapToSet { it[Polls.statsMessageId] }
+                .singleOrNull()
+        }
+
     /**
      * Returns set of user ids that voted in the poll with given pollId.
      */
@@ -129,22 +145,5 @@ class PollRepository {
                 .slice(Votes.userId)
                 .select { Votes.pollId eq pollId }
                 .mapToSet { it[Votes.userId] }
-        }
-
-    /**
-     * Allows users to view stats without specifying a poll.
-     */
-    suspend fun getCurrentPoll(conversationId: QualifiedId) =
-        newSuspendedTransaction {
-            Polls
-                .slice(Polls.id)
-                // it must be for single conversation
-                .select { Polls.conversationId eq conversationId.id.toString() }
-                // such as latest is on top
-                .orderBy(Polls.created to SortOrder.DESC)
-                // select just one
-                .limit(1)
-                .singleOrNull()
-                ?.get(Polls.id)
         }
 }

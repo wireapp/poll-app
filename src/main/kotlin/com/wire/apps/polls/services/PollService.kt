@@ -96,7 +96,7 @@ class PollService(
     /**
      * Provides users with immediate confirmation that voting is complete.
      */
-    private suspend fun sendStatsIfAllVoted(
+    internal suspend fun sendStatsOrUpdate(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId
@@ -105,70 +105,38 @@ class PollService(
             .getNumberOfConversationMembers(manager, conversationId)
 
         val votedSize = repository.votingUsers(pollId).size
-
-        if (votedSize == conversationMembersCount) {
-            logger.info { "All users voted, sending statistics to the conversation." }
-            sendStats(
-                manager = manager,
-                pollId = pollId,
-                conversationId = conversationId,
-                conversationMembers = conversationMembersCount
-            )
-        } else {
-            logger.info {
-                "Users voted: $votedSize, members of conversation: $conversationMembersCount"
-            }
-        }
-    }
-
-    /**
-     * Reveal the results to the user.
-     */
-    suspend fun sendStats(
-        manager: WireApplicationManager,
-        pollId: String,
-        conversationId: QualifiedId,
-        conversationMembers: Int
-    ) {
-        logger.debug { "Sending stats for poll $pollId" }
-        logger.debug { "Conversation members: $conversationMembers" }
         val stats = statsFormattingService
             .formatStats(
                 pollId = pollId,
+                conversationMembers = conversationMembersCount
+            ) ?: return userCommunicationService.reactionToWrongCommand(
+            manager = manager,
+            conversationId = conversationId,
+            message = "No data for poll. Please create a new one."
+        )
+
+        logger.info {
+            "Users voted: $votedSize, members of conversation: $conversationMembersCount"
+        }
+
+        val statsMessageId = repository.getStatsMessage(pollId)
+
+        if (statsMessageId == null) {
+            logger.debug { "Sending stats for poll $pollId" }
+            val statsMessageId = userCommunicationService.sendStats(
+                manager = manager,
                 conversationId = conversationId,
-                conversationMembers = conversationMembers
-            ) ?: textMessage(
-            conversationId = conversationId,
-            text = "No data for poll. Please create a new one."
-        )
-
-        proxySenderService.send(
-            manager = manager,
-            message = stats
-        )
-    }
-
-    /**
-     * Displays intermediate results while voting is ongoing,
-     * and brings final results to the front once the poll is over for easy access.
-     */
-    suspend fun sendStatsForLatest(
-        manager: WireApplicationManager,
-        conversationId: QualifiedId
-    ) {
-        logger.debug { "Sending latest stats" }
-
-        val latest = repository.getCurrentPoll(conversationId).whenNull {
-            logger.info { "No polls found for conversation $conversationId" }
-        }.orEmpty()
-        val conversationSize = conversationService
-            .getNumberOfConversationMembers(manager, conversationId)
-
-        sendStats(
-            manager = manager,
-            pollId = latest,
-            conversationId = conversationId,
-            conversationMembers = conversationSize
-        )
+                text = stats
+            )
+            repository.setStatsMessage(pollId, statsMessageId)
+        } else {
+            logger.debug { "Updating stats for poll $pollId" }
+            userCommunicationService.sendUpdatedStats(
+                manager = manager,
+                conversationId = conversationId,
+                text = stats,
+                statsMessageId = statsMessageId
+            )
+        }
     }
 }
