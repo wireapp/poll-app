@@ -41,21 +41,6 @@ class MessagesHandlingServiceTest {
     }
 
     @Test
-    fun `handleText calls sendStatsForLatest when user inputs poll stats`() =
-        runTest {
-            // arrange
-            val usersInput = Stub.userInput("/poll stats")
-
-            // act
-            messagesHandlingService.handleText(manager, usersInput)
-
-            // assert
-            coVerify(exactly = 1) { pollService.sendStatsForLatest(any(), any()) }
-            coVerify(exactly = 0) { pollService.createPoll(any(), any()) }
-            verify { userCommunicationService wasNot Called }
-        }
-
-    @Test
     fun `handleText calls createPoll when user input starts will poll`() =
         runTest {
             // arrange

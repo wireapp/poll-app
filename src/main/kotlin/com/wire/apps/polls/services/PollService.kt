@@ -170,30 +170,6 @@ class PollService(
     }
 
     /**
-     * Displays intermediate results while voting is ongoing,
-     * and brings final results to the front once the poll is over for easy access.
-     */
-    suspend fun sendStatsForLatest(
-        manager: WireApplicationManager,
-        conversationId: QualifiedId
-    ) {
-        logger.debug { "Sending latest stats in conversation $conversationId" }
-
-        val latest = repository.getCurrentPoll(conversationId).whenNull {
-            logger.info { "No polls found for conversation $conversationId" }
-        }.orEmpty()
-        val conversationSize = conversationService
-            .getNumberOfConversationMembers(manager, conversationId)
-
-        sendStats(
-            manager = manager,
-            pollId = latest,
-            conversationId = conversationId,
-            conversationMembers = conversationSize
-        )
-    }
-
-    /**
      * Displays visual representation with percentage of user who cast a votes to conversation size.
      */
     private suspend fun sendParticipation(

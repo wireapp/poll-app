@@ -53,10 +53,6 @@ class MessagesHandlingService(
             .lowercase()
 
         when {
-            // stats request
-            trimmed == "/poll stats" -> {
-                pollService.sendStatsForLatest(manager, conversationId)
-            }
             // send version when asked
             trimmed == "/poll version" -> {
                 userCommunicationService.sendVersion(manager, conversationId)

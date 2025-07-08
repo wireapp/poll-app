@@ -4,10 +4,8 @@ import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
-import com.wire.integrations.jvm.model.QualifiedId
 import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
@@ -131,23 +129,6 @@ class PollRepository {
                 .slice(Votes.userId)
                 .select { Votes.pollId eq pollId }
                 .mapToSet { it[Votes.userId] }
-        }
-
-    /**
-     * Allows users to view stats without specifying a poll.
-     */
-    suspend fun getCurrentPoll(conversationId: QualifiedId) =
-        newSuspendedTransaction {
-            Polls
-                .slice(Polls.id)
-                // it must be for single conversation
-                .select { Polls.conversationId eq conversationId.id.toString() }
-                // such as latest is on top
-                .orderBy(Polls.created to SortOrder.DESC)
-                // select just one
-                .limit(1)
-                .singleOrNull()
-                ?.get(Polls.id)
         }
 
     suspend fun setParticipationId(
