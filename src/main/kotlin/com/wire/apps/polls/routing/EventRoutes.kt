@@ -32,17 +32,17 @@ fun Routing.events() {
                 handler.handleConversationJoin(manager, conversation.id)
             }
 
-            override suspend fun onMessage(message: WireMessage.Text) {
-                val usersInput = fromWire(message)
+            override suspend fun onMessage(wireMessage: WireMessage.Text) {
+                val usersInput = fromWire(wireMessage)
                 handler.handleText(manager, usersInput)
             }
 
-            override suspend fun onButtonAction(message: WireMessage.ButtonAction) {
-                val pollAction = fromWire(message)
+            override suspend fun onButtonAction(wireMessage: WireMessage.ButtonAction) {
+                val pollAction = fromWire(wireMessage)
                 handler.handleButtonAction(
                     manager = manager,
                     pollAction = pollAction,
-                    conversationId = message.conversationId
+                    conversationId = wireMessage.conversationId
                 )
             }
         }
