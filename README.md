@@ -9,7 +9,6 @@ Previous [Poll Bot](https://github.com/wireapp/poll-bot/) implementation was bas
 ## Commands
 Basic usage 
 * `/poll "Question" "Option 1" "Option 2"` will create poll
-* `/poll stats` will send result of the **latest** poll in the conversation
 * `/poll help` to show help
 * `/poll version` prints the current version of the poll app
 
