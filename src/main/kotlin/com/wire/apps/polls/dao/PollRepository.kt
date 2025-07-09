@@ -36,7 +36,7 @@ class PollRepository {
             it[this.id] = pollId
             it[this.ownerId] = userId
             it[this.domain] = userDomain
-            it[this.isActive] = false
+            it[this.isActive] = true
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
         }
