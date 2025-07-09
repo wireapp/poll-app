@@ -62,7 +62,7 @@ fun updateStatsMessage(
     originalMessageId: String,
     conversationId: QualifiedId
 ) = WireMessage.TextEdited.create(
-    originalMessageId = UUID.fromString(originalMessageId),
+    replacingMessageId = UUID.fromString(originalMessageId),
     conversationId = conversationId,
     text = text.data,
     mentions = text.mentions.map { it.toWireMention() }
