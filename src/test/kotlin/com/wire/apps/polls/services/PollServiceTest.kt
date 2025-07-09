@@ -96,11 +96,13 @@ class PollServiceTest {
                 pollServiceSpy.createPoll(manager, usersInput)
 
                 // assert
-                coVerify { userCommunicationService.reactionToWrongCommand(
-                    manager = manager,
-                    conversationId = any(),
-                    message = any()
-                ) }
+                coVerify {
+                    userCommunicationService.reactionToWrongCommand(
+                        manager = manager,
+                        conversationId = any(),
+                        message = any()
+                    )
+                }
                 verify {
                     pollServiceSpy["pollNotParsedFallback"](manager, any<QualifiedId>(), usersInput)
                 }
@@ -239,7 +241,7 @@ class PollServiceTest {
                 pollService.sendStatsOrUpdate(
                     manager = manager,
                     pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID,
+                    conversationId = CONVERSATION_ID
                 )
 
                 // assert
@@ -267,7 +269,7 @@ class PollServiceTest {
                 pollService.sendStatsOrUpdate(
                     manager = manager,
                     pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID,
+                    conversationId = CONVERSATION_ID
                 )
 
                 // assert

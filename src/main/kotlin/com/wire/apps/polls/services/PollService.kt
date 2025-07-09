@@ -3,6 +3,7 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -101,42 +102,84 @@ class PollService(
         pollId: String,
         conversationId: QualifiedId
     ) {
-        val conversationMembersCount = conversationService
-            .getNumberOfConversationMembers(manager, conversationId)
-
-        val votedSize = repository.votingUsers(pollId).size
-        val stats = statsFormattingService
-            .formatStats(
-                pollId = pollId,
-                conversationMembers = conversationMembersCount
-            ) ?: return userCommunicationService.reactionToWrongCommand(
+        val stats = generatePollStats(
+            manager = manager,
+            conversationId = conversationId,
+            pollId = pollId
+        ) ?: return userCommunicationService.reactionToWrongCommand(
             manager = manager,
             conversationId = conversationId,
             message = "No data for poll. Please create a new one."
         )
+        val statsMessageId = repository.getStatsMessage(pollId)
+
+        if (statsMessageId == null) {
+            sendStats(
+                manager = manager,
+                pollId = pollId,
+                stats = stats,
+                conversationId = conversationId
+            )
+        } else {
+            updateStats(
+                manager = manager,
+                pollId = pollId,
+                stats = stats,
+                conversationId = conversationId,
+                statsMessageId = statsMessageId
+            )
+        }
+    }
+
+    private suspend fun generatePollStats(
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        pollId: String
+    ): Text? {
+        val conversationMembersCount = conversationService
+            .getNumberOfConversationMembers(manager, conversationId)
+        val votedSize = repository.votingUsers(pollId).size
 
         logger.info {
             "Users voted: $votedSize, members of conversation: $conversationMembersCount"
         }
 
-        val statsMessageId = repository.getStatsMessage(pollId)
+        return statsFormattingService
+            .formatStats(
+                pollId = pollId,
+                conversationMembers = conversationMembersCount
+            )
+    }
 
-        if (statsMessageId == null) {
-            logger.debug { "Sending stats for poll $pollId" }
-            val statsMessageId = userCommunicationService.sendStats(
-                manager = manager,
-                conversationId = conversationId,
-                text = stats
-            )
-            repository.setStatsMessage(pollId, statsMessageId)
-        } else {
-            logger.debug { "Updating stats for poll $pollId" }
-            userCommunicationService.sendUpdatedStats(
-                manager = manager,
-                conversationId = conversationId,
-                text = stats,
-                statsMessageId = statsMessageId
-            )
-        }
+    private suspend fun sendStats(
+        manager: WireApplicationManager,
+        pollId: String,
+        stats: Text,
+        conversationId: QualifiedId
+    ) {
+        logger.debug { "Sending stats for poll $pollId" }
+        val statsMessageId = userCommunicationService.sendStats(
+            manager = manager,
+            conversationId = conversationId,
+            text = stats
+        )
+        repository.setStatsMessage(pollId, statsMessageId)
+    }
+
+    private suspend fun updateStats(
+        manager: WireApplicationManager,
+        pollId: String,
+        stats: Text,
+        conversationId: QualifiedId,
+        statsMessageId: String
+    ) {
+        logger.debug { "Updating stats for poll $pollId" }
+        val newStatsMessageId = userCommunicationService.sendUpdatedStats(
+            manager = manager,
+            conversationId = conversationId,
+            text = stats,
+            statsMessageId = statsMessageId
+        )
+        repository.setStatsMessage(pollId, newStatsMessageId)
     }
 }

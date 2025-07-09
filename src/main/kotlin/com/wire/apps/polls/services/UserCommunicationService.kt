@@ -126,12 +126,16 @@ class UserCommunicationService(
         conversationId: QualifiedId,
         text: Text,
         statsMessageId: String
-    ) {
-        updateStatsMessage(
+    ): String {
+        val updatedStats = updateStatsMessage(
             text = text,
             originalMessageId = statsMessageId,
             conversationId = conversationId
-        ).send(manager)
+        )
+
+        updatedStats.send(manager)
+
+        return updatedStats.id.toString()
     }
 
     private suspend fun WireMessage.send(manager: WireApplicationManager) {
