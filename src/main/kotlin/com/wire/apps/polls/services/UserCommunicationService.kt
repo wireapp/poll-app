@@ -1,5 +1,11 @@
 package com.wire.apps.polls.services
 
+import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollDto
+import com.wire.apps.polls.dto.common.Text
+import com.wire.apps.polls.dto.confirmVote
+import com.wire.apps.polls.dto.newPoll
+import com.wire.apps.polls.dto.statsMessage
 import com.wire.apps.polls.dto.textMessage
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
@@ -37,11 +43,21 @@ class UserCommunicationService(
     /**
      * Fallback message in case of user providing invalid command.
      */
-    suspend fun reactionToWrongCommand(
+    suspend fun sendFallbackMessage(
         manager: WireApplicationManager,
-        conversationId: QualifiedId
+        conversationId: QualifiedId,
+        messageType: FallbackMessageType
     ) {
-        textMessage(conversationId, "I couldn't recognize your command. $USAGE").send(manager)
+        val message = when (messageType) {
+            FallbackMessageType.WRONG_COMMAND -> "I couldn't recognize your command. $USAGE"
+            FallbackMessageType.MISSING_DATA -> "No data for poll. Please create a new one. $USAGE"
+        }
+        textMessage(conversationId, message).send(manager)
+    }
+
+    enum class FallbackMessageType {
+        WRONG_COMMAND,
+        MISSING_DATA
     }
 
     /**
@@ -74,7 +90,47 @@ class UserCommunicationService(
         textMessage(conversationId, "My version is: *$version*").send(manager)
     }
 
-    private suspend fun WireMessage.Text.send(manager: WireApplicationManager) {
+    suspend fun sendPoll(
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        poll: PollDto
+    ): String {
+        val message = newPoll(
+            conversationId = conversationId,
+            body = poll.question.data,
+            buttons = poll.options,
+            mentions = poll.question.mentions
+        )
+        message.send(manager)
+
+        return message.id.toString()
+    }
+
+    suspend fun sendButtonConfirmation(
+        manager: WireApplicationManager,
+        pollAction: PollAction,
+        conversationId: QualifiedId
+    ) {
+        confirmVote(
+            pollId = pollAction.pollId,
+            conversationId = conversationId,
+            offset = pollAction.optionId
+        ).send(manager)
+    }
+
+    suspend fun sendStats(
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        text: Text
+    ): String {
+        val stats = statsMessage(conversationId, text)
+
+        stats.send(manager)
+
+        return stats.id.toString()
+    }
+
+    private suspend fun WireMessage.send(manager: WireApplicationManager) {
         proxySenderService.send(
             manager = manager,
             message = this

@@ -1,9 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.statsMessage
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.apps.polls.dto.common.Text
 import mu.KLogging
 import pw.forst.katlib.newLine
 import pw.forst.katlib.whenNull
@@ -27,9 +25,8 @@ class StatsFormattingService(
      */
     suspend fun formatStats(
         pollId: String,
-        conversationId: QualifiedId,
         conversationMembers: Int
-    ): WireMessage.Text? {
+    ): Text? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
         } ?: return null
@@ -41,9 +38,8 @@ class StatsFormattingService(
         } else {
             val title = prepareTitle(pollQuestion.data)
             val options = formatVotes(stats, conversationMembers)
-            statsMessage(
-                conversationId = conversationId,
-                text = "$title$newLine$options",
+            Text(
+                data = "$title$newLine$options",
                 mentions = pollQuestion.mentions.map {
                     it.copy(
                         offset = it.offset + TITLE_PREFIX.length

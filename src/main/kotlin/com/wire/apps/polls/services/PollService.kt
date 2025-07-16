@@ -3,10 +3,9 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.confirmVote
-import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.dto.textMessage
 import com.wire.apps.polls.parser.PollFactory
+import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
+import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
@@ -14,11 +13,10 @@ import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
 
 /**
- * Service handling the polls. It communicates with the proxy via [proxySenderService].
+ * Service handling the polls. It communicates with the user via [userCommunicationService].
  */
 class PollService(
     private val factory: PollFactory,
-    private val proxySenderService: ProxySenderService,
     private val repository: PollRepository,
     private val conversationService: ConversationService,
     private val userCommunicationService: UserCommunicationService,
@@ -42,26 +40,20 @@ class PollService(
                 )
             } ?: return
 
-        val message = newPoll(
+        val messageId = userCommunicationService.sendPoll(
+            manager = manager,
             conversationId = conversationId,
-            body = poll.question.data,
-            buttons = poll.options,
-            mentions = poll.question.mentions
+            poll = poll
         )
 
         val pollId = repository.savePoll(
             poll = poll,
-            pollId = message.id.toString(),
+            pollId = messageId,
             userId = usersInput.sender.id.toString(),
             userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
-
-        proxySenderService.send(
-            manager = manager,
-            message = message
-        )
     }
 
     private suspend fun pollNotParsedFallback(
@@ -71,7 +63,11 @@ class PollService(
     ) {
         usersInput.text.startsWith("/poll").whenTrue {
             logger.info { "Command started with /poll, sending usage to user." }
-            userCommunicationService.reactionToWrongCommand(manager, conversationId)
+            userCommunicationService.sendFallbackMessage(
+                manager = manager,
+                conversationId = conversationId,
+                messageType = WRONG_COMMAND
+            )
         }
     }
 
@@ -87,14 +83,10 @@ class PollService(
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
-        val message = confirmVote(
-            pollId = pollAction.pollId,
-            conversationId = conversationId,
-            offset = pollAction.optionId
-        )
-        proxySenderService.send(
+        userCommunicationService.sendButtonConfirmation(
             manager = manager,
-            message = message
+            pollAction = pollAction,
+            conversationId = conversationId
         )
         sendStatsIfAllVoted(
             manager = manager,
@@ -145,16 +137,20 @@ class PollService(
         val stats = statsFormattingService
             .formatStats(
                 pollId = pollId,
-                conversationId = conversationId,
                 conversationMembers = conversationMembers
-            ) ?: textMessage(
-            conversationId = conversationId,
-            text = "No data for poll. Please create a new one."
-        )
+            ).whenNull {
+                logger.error { "It was not possible send stats." }
+                userCommunicationService.sendFallbackMessage(
+                    manager = manager,
+                    conversationId = conversationId,
+                    messageType = MISSING_DATA
+                )
+            } ?: return
 
-        proxySenderService.send(
+        userCommunicationService.sendStats(
             manager = manager,
-            message = stats
+            conversationId = conversationId,
+            text = stats
         )
     }
 
