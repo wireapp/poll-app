@@ -2,6 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollParticipation
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
@@ -51,7 +52,7 @@ class PollServiceTest {
     @Nested
     inner class CreatePollTest {
         @Test
-        fun `when input is valid, then save the poll and send it`() =
+        fun `when input is valid, then save the poll and send it with initial participation`() =
             runTest {
                 // arrange
                 val usersInput = Stub.userInput("/poll \"Question\" \"Answer\"")
@@ -73,6 +74,14 @@ class PollServiceTest {
                         conversationId = usersInput.conversationId,
                         poll = any()
                     )
+                    userCommunicationService.sendOrUpdateParticipation(
+                        manager = manager,
+                        conversationId = usersInput.conversationId,
+                        participationMessageId = any(),
+                        pollParticipation = PollParticipation.initial()
+                    )
+                    repository.getParticipationId(any())
+                    repository.setParticipationId(any(), any())
                 }
                 confirmVerified(repository, userCommunicationService)
             }
@@ -208,6 +217,34 @@ class PollServiceTest {
                         manager = manager,
                         conversationId = CONVERSATION_ID,
                         text = any()
+                    )
+                }
+            }
+
+        @Test
+        fun `when someone voted, then update poll participation message`() =
+            runTest {
+                // arrange
+                val stubParticipationId = "participation id"
+                coEvery { repository.getParticipationId(POLL_ID) } returns stubParticipationId
+                coEvery { repository.votingUsers(any()).size } returns 1
+
+                // act
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                coVerify {
+                    userCommunicationService.sendOrUpdateParticipation(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        participationMessageId = stubParticipationId,
+                        pollParticipation = PollParticipation(
+                            votesCast = 1,
+                            totalMembers = GROUP_SIZE
+                        )
                     )
                 }
             }

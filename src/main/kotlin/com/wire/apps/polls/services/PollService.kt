@@ -2,6 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollParticipation
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
@@ -53,6 +54,8 @@ class PollService(
             userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
+        sendParticipation(manager = manager, conversationId = conversationId, pollId = pollId)
+
         logger.info { "Poll successfully created with id: $pollId" }
     }
 
@@ -88,10 +91,38 @@ class PollService(
             pollAction = pollAction,
             conversationId = conversationId
         )
-        sendStatsIfAllVoted(
+        afterVoteUpdate(
             manager = manager,
             pollId = pollAction.pollId,
             conversationId = conversationId
+        )
+    }
+
+    /**
+     * Voting triggers update of poll participation message,
+     * and if everyone voted, we send the stats.
+     */
+    private suspend fun afterVoteUpdate(
+        manager: WireApplicationManager,
+        pollId: String,
+        conversationId: QualifiedId
+    ) {
+        val conversationMembersCount = conversationService
+            .getNumberOfConversationMembers(manager, conversationId)
+        val votedSize = repository.votingUsers(pollId).size
+        val pollParticipation = PollParticipation(votedSize, conversationMembersCount)
+
+        sendParticipation(
+            manager = manager,
+            pollId = pollId,
+            conversationId = conversationId,
+            pollParticipation = pollParticipation
+        )
+        sendStatsIfAllVoted(
+            manager = manager,
+            pollId = pollId,
+            conversationId = conversationId,
+            pollParticipation = pollParticipation
         )
     }
 
@@ -101,25 +132,19 @@ class PollService(
     private suspend fun sendStatsIfAllVoted(
         manager: WireApplicationManager,
         pollId: String,
-        conversationId: QualifiedId
+        conversationId: QualifiedId,
+        pollParticipation: PollParticipation
     ) {
-        val conversationMembersCount = conversationService
-            .getNumberOfConversationMembers(manager, conversationId)
-
-        val votedSize = repository.votingUsers(pollId).size
-
-        if (votedSize == conversationMembersCount) {
+        if (pollParticipation.everyoneVoted()) {
             logger.info { "All users voted, sending statistics to the conversation." }
             sendStats(
                 manager = manager,
                 pollId = pollId,
                 conversationId = conversationId,
-                conversationMembers = conversationMembersCount
+                conversationMembers = pollParticipation.totalMembers
             )
         } else {
-            logger.info {
-                "Users voted: $votedSize, members of conversation: $conversationMembersCount"
-            }
+            logger.info { pollParticipation.toString() }
         }
     }
 
@@ -176,5 +201,21 @@ class PollService(
             conversationId = conversationId,
             conversationMembers = conversationSize
         )
+    }
+
+    suspend fun sendParticipation(
+        manager: WireApplicationManager,
+        pollId: String,
+        conversationId: QualifiedId,
+        pollParticipation: PollParticipation = PollParticipation.initial()
+    ) {
+        val participationMessageId = repository.getParticipationId(pollId)
+        val newParticipationMessageId = userCommunicationService.sendOrUpdateParticipation(
+            manager = manager,
+            conversationId = conversationId,
+            participationMessageId = participationMessageId,
+            pollParticipation = pollParticipation
+        )
+        repository.setParticipationId(pollId, newParticipationMessageId)
     }
 }

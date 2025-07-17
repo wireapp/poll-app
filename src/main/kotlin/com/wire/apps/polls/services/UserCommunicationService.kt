@@ -2,11 +2,14 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollDto
+import com.wire.apps.polls.dto.PollParticipation
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.confirmVote
 import com.wire.apps.polls.dto.newPoll
+import com.wire.apps.polls.dto.newVoteCount
 import com.wire.apps.polls.dto.statsMessage
 import com.wire.apps.polls.dto.textMessage
+import com.wire.apps.polls.dto.updateVoteCount
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -128,6 +131,27 @@ class UserCommunicationService(
         stats.send(manager)
 
         return stats.id.toString()
+    }
+
+    suspend fun sendOrUpdateParticipation(
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        participationMessageId: String?,
+        pollParticipation: PollParticipation
+    ): String {
+        val wireMessage = if (participationMessageId == null) {
+            newVoteCount(conversationId)
+        } else {
+            updateVoteCount(
+                conversationId = conversationId,
+                voteCountMessageId = participationMessageId,
+                pollParticipation = pollParticipation
+            )
+        }
+
+        wireMessage.send(manager)
+
+        return wireMessage.id.toString()
     }
 
     private suspend fun WireMessage.send(manager: WireApplicationManager) {
