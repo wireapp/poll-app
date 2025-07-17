@@ -1,7 +1,9 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
+import com.wire.apps.polls.dto.PollParticipation
 import com.wire.apps.polls.dto.common.Text
+import com.wire.apps.polls.services.VotingCount.update
 import com.wire.apps.polls.setup.configureContainer
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -16,7 +18,10 @@ import org.kodein.di.singleton
 import pw.forst.katlib.newLine
 import com.wire.apps.polls.utils.Stub
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class StatsFormattingServiceTest {
     val pollRepository = mockk<PollRepository>()
@@ -179,4 +184,68 @@ class StatsFormattingServiceTest {
                     "🟢⚪⚪ *No* (1)"
             )
         }
+
+    @Nested
+    inner class ParticipationFormattingTest {
+        @Test
+        fun `when in initial stage, then bar should be empty with 0 percent`() {
+            // act
+            val votingCount = VotingCount.new()
+
+            // assert
+            votingCount.shouldBe(
+                "⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪ 0%"
+            )
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        fun `when n user voted out of ten, then bar should have n green dots`(n: Int) {
+            // arrange
+            val totalMembers = 10
+            val pollParticipation = PollParticipation(n, totalMembers)
+
+            // act
+            val votingCount = pollParticipation.update()
+
+            // assert
+            votingCount.shouldBe(
+                "🟢".repeat(n) + "⚪".repeat(totalMembers - n) + " ${n}0%"
+            )
+        }
+
+        @Test
+        fun `when n user voted out of 473, then bar should have correct percentage`() {
+            // arrange
+            val votesCast = listOf(
+                23,
+                36,
+                118,
+                212,
+                237,
+                355,
+                473
+            )
+            val totalMembers = 473
+
+            // act
+            val results = votesCast.map { voted ->
+                PollParticipation(voted, totalMembers).update()
+            }
+
+            // assert
+            val expected = listOf(
+                "⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪ 5%",
+                "🟢⚪⚪⚪⚪⚪⚪⚪⚪⚪ 8%",
+                "🟢🟢⚪⚪⚪⚪⚪⚪⚪⚪ 25%",
+                "🟢🟢🟢🟢⚪⚪⚪⚪⚪⚪ 45%",
+                "🟢🟢🟢🟢🟢⚪⚪⚪⚪⚪ 50%",
+                "🟢🟢🟢🟢🟢🟢🟢🟢⚪⚪ 75%",
+                "🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 100%"
+            )
+            expected.forEachIndexed { index, testCase ->
+                results[index].shouldBe(expected[index])
+            }
+        }
+    }
 }
