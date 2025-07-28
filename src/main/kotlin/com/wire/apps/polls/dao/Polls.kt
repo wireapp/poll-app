@@ -29,6 +29,8 @@ object Polls : Table("polls") {
      */
     val domain: Column<String> = varchar("domain", DOMAIN_LENGTH)
 
+    val statsMessageId: Column<String?> = varchar("stats_message_id", UUID_LENGTH).nullable()
+
     /**
      * Determines whether is the pool active and whether new votes should be accepted.
      */

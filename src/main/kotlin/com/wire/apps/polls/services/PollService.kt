@@ -3,9 +3,7 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.confirmVote
-import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.dto.textMessage
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -14,11 +12,10 @@ import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
 
 /**
- * Service handling the polls. It communicates with the proxy via [proxySenderService].
+ * Service handling the polls.
  */
 class PollService(
     private val factory: PollFactory,
-    private val proxySenderService: ProxySenderService,
     private val repository: PollRepository,
     private val conversationService: ConversationService,
     private val userCommunicationService: UserCommunicationService,
@@ -42,26 +39,20 @@ class PollService(
                 )
             } ?: return
 
-        val message = newPoll(
+        val messageId = userCommunicationService.sendPoll(
+            manager = manager,
             conversationId = conversationId,
-            body = poll.question.data,
-            buttons = poll.options,
-            mentions = poll.question.mentions
+            poll = poll
         )
 
         val pollId = repository.savePoll(
             poll = poll,
-            pollId = message.id.toString(),
+            pollId = messageId,
             userId = usersInput.sender.id.toString(),
             userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
         logger.info { "Poll successfully created with id: $pollId" }
-
-        proxySenderService.send(
-            manager = manager,
-            message = message
-        )
     }
 
     private suspend fun pollNotParsedFallback(
@@ -71,7 +62,11 @@ class PollService(
     ) {
         usersInput.text.startsWith("/poll").whenTrue {
             logger.info { "Command started with /poll, sending usage to user." }
-            userCommunicationService.reactionToWrongCommand(manager, conversationId)
+            userCommunicationService.reactionToWrongCommand(
+                manager = manager,
+                conversationId = conversationId,
+                message = "I couldn't recognize your command."
+            )
         }
     }
 
@@ -87,16 +82,12 @@ class PollService(
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
-        val message = confirmVote(
-            pollId = pollAction.pollId,
-            conversationId = conversationId,
-            offset = pollAction.optionId
-        )
-        proxySenderService.send(
+        userCommunicationService.sendButtonConfirmation(
             manager = manager,
-            message = message
+            pollAction = pollAction,
+            conversationId = conversationId
         )
-        sendStatsIfAllVoted(
+        sendStatsOrUpdate(
             manager = manager,
             pollId = pollAction.pollId,
             conversationId = conversationId
@@ -106,79 +97,89 @@ class PollService(
     /**
      * Provides users with immediate confirmation that voting is complete.
      */
-    private suspend fun sendStatsIfAllVoted(
+    internal suspend fun sendStatsOrUpdate(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId
     ) {
-        val conversationMembersCount = conversationService
-            .getNumberOfConversationMembers(manager, conversationId)
+        val stats = generatePollStats(
+            manager = manager,
+            conversationId = conversationId,
+            pollId = pollId
+        ) ?: return userCommunicationService.reactionToWrongCommand(
+            manager = manager,
+            conversationId = conversationId,
+            message = "No data for poll. Please create a new one."
+        )
+        val statsMessageId = repository.getStatsMessage(pollId)
 
-        val votedSize = repository.votingUsers(pollId).size
-
-        if (votedSize == conversationMembersCount) {
-            logger.info { "All users voted, sending statistics to the conversation." }
+        if (statsMessageId == null) {
             sendStats(
                 manager = manager,
                 pollId = pollId,
-                conversationId = conversationId,
-                conversationMembers = conversationMembersCount
+                stats = stats,
+                conversationId = conversationId
             )
         } else {
-            logger.info {
-                "Users voted: $votedSize, members of conversation: $conversationMembersCount"
-            }
+            updateStats(
+                manager = manager,
+                pollId = pollId,
+                stats = stats,
+                conversationId = conversationId,
+                statsMessageId = statsMessageId
+            )
         }
     }
 
-    /**
-     * Reveal the results to the user.
-     */
-    suspend fun sendStats(
+    private suspend fun generatePollStats(
         manager: WireApplicationManager,
-        pollId: String,
         conversationId: QualifiedId,
-        conversationMembers: Int
-    ) {
-        logger.debug { "Sending stats for poll $pollId" }
-        logger.debug { "Conversation members: $conversationMembers" }
-        val stats = statsFormattingService
+        pollId: String
+    ): Text? {
+        val conversationMembersCount = conversationService
+            .getNumberOfConversationMembers(manager, conversationId)
+        val votedSize = repository.votingUsers(pollId).size
+
+        logger.info {
+            "Users voted: $votedSize, members of conversation: $conversationMembersCount"
+        }
+
+        return statsFormattingService
             .formatStats(
                 pollId = pollId,
-                conversationId = conversationId,
-                conversationMembers = conversationMembers
-            ) ?: textMessage(
-            conversationId = conversationId,
-            text = "No data for poll. Please create a new one."
-        )
-
-        proxySenderService.send(
-            manager = manager,
-            message = stats
-        )
+                conversationMembers = conversationMembersCount
+            )
     }
 
-    /**
-     * Displays intermediate results while voting is ongoing,
-     * and brings final results to the front once the poll is over for easy access.
-     */
-    suspend fun sendStatsForLatest(
+    private suspend fun sendStats(
         manager: WireApplicationManager,
+        pollId: String,
+        stats: Text,
         conversationId: QualifiedId
     ) {
-        logger.debug { "Sending latest stats" }
-
-        val latest = repository.getCurrentPoll(conversationId).whenNull {
-            logger.info { "No polls found for conversation $conversationId" }
-        }.orEmpty()
-        val conversationSize = conversationService
-            .getNumberOfConversationMembers(manager, conversationId)
-
-        sendStats(
+        logger.debug { "Sending stats for poll $pollId" }
+        val statsMessageId = userCommunicationService.sendStats(
             manager = manager,
-            pollId = latest,
             conversationId = conversationId,
-            conversationMembers = conversationSize
+            text = stats
         )
+        repository.setStatsMessage(pollId, statsMessageId)
+    }
+
+    private suspend fun updateStats(
+        manager: WireApplicationManager,
+        pollId: String,
+        stats: Text,
+        conversationId: QualifiedId,
+        statsMessageId: String
+    ) {
+        logger.debug { "Updating stats for poll $pollId" }
+        val newStatsMessageId = userCommunicationService.sendUpdatedStats(
+            manager = manager,
+            conversationId = conversationId,
+            text = stats,
+            statsMessageId = statsMessageId
+        )
+        repository.setStatsMessage(pollId, newStatsMessageId)
     }
 }
