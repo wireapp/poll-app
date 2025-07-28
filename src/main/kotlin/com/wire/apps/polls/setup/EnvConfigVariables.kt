@@ -21,4 +21,12 @@ object EnvConfigVariables {
      * `jdbc:postgresql://localhost:5432/app-database`
      */
     const val DB_URL = "DB_URL"
+
+    /**
+     * SDK
+     */
+    const val SDK_APP_ID = "SDK_APP_ID"
+    const val SDK_APP_TOKEN = "SDK_APP_TOKEN"
+    const val API_HOST_URL = "API_HOST_URL"
+    const val CRYPTO_PASSWORD = "CRYPTO_PASSWORD"
 }

@@ -1,13 +1,13 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.statsMessage
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.apps.polls.dto.PollParticipation
+import com.wire.apps.polls.dto.common.Text
 import mu.KLogging
 import pw.forst.katlib.newLine
 import pw.forst.katlib.whenNull
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 class StatsFormattingService(
     private val repository: PollRepository
@@ -27,9 +27,8 @@ class StatsFormattingService(
      */
     suspend fun formatStats(
         pollId: String,
-        conversationId: QualifiedId,
         conversationMembers: Int
-    ): WireMessage.Text? {
+    ): Text? {
         val pollQuestion = repository.getPollQuestion(pollId).whenNull {
             logger.warn { "No poll $pollId exists." }
         } ?: return null
@@ -41,9 +40,8 @@ class StatsFormattingService(
         } else {
             val title = prepareTitle(pollQuestion.data)
             val options = formatVotes(stats, conversationMembers)
-            statsMessage(
-                conversationId = conversationId,
-                text = "$title$newLine$options",
+            Text(
+                data = "$title$newLine$options",
                 mentions = pollQuestion.mentions.map {
                     it.copy(
                         offset = it.offset + TITLE_PREFIX.length
@@ -107,6 +105,20 @@ class StatsFormattingService(
     private fun prepareTitle(body: String) = "$TITLE_PREFIX${body}\"*"
 }
 
+private class Bar(val voted: Int, val outOf: Int) {
+    private companion object {
+        const val NOT_VOTE = "⚪"
+        const val VOTE = "🟢"
+    }
+
+    override fun toString(): String {
+        val missingVotes = (0 until outOf - voted).joinToString("") { NOT_VOTE }
+        val votes = (0 until voted).joinToString("") { VOTE }
+
+        return votes + missingVotes
+    }
+}
+
 /**
  * Class used for formatting voting objects.
  */
@@ -115,14 +127,26 @@ private data class VotingOption(
     val option: String,
     val votingUsers: Int
 ) {
-    private companion object {
-        const val NOT_VOTE = "⚪"
-        const val VOTE = "🟢"
+    fun toString(max: Int): String {
+        val bar = Bar(votingUsers, max)
+
+        return "$bar $style$option$style ($votingUsers)"
+    }
+}
+
+object VotingCount {
+    const val BLOCKS = 10
+    const val PERCENTAGE_FACTOR = 100
+
+    fun new(): String {
+        return PollParticipation.initial().update()
     }
 
-    fun toString(max: Int): String {
-        val missingVotes = (0 until max - votingUsers).joinToString("") { NOT_VOTE }
-        val votes = (0 until votingUsers).joinToString("") { VOTE }
-        return "$votes$missingVotes $style$option$style ($votingUsers)"
+    fun PollParticipation.update(): String {
+        val percent = if (totalMembers > 0) votesCast.toDouble() / totalMembers else 0.0
+        val bar = Bar((percent * BLOCKS).roundToInt(), BLOCKS)
+        val percentDisplay = (percent * PERCENTAGE_FACTOR).roundToInt()
+
+        return "$bar $percentDisplay%"
     }
 }

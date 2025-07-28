@@ -1,7 +1,10 @@
 package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Mention
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.common.toWireMention
+import com.wire.apps.polls.services.VotingCount
+import com.wire.apps.polls.services.VotingCount.update
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import java.util.UUID
@@ -28,6 +31,22 @@ fun newPoll(
     )
 }
 
+fun newVoteCount(conversationId: QualifiedId) =
+    WireMessage.Text.create(
+        conversationId = conversationId,
+        text = VotingCount.new()
+    )
+
+fun updateVoteCount(
+    conversationId: QualifiedId,
+    voteCountMessageId: String,
+    pollParticipation: PollParticipation
+) = WireMessage.TextEdited.create(
+    replacingMessageId = UUID.fromString(voteCountMessageId),
+    conversationId = conversationId,
+    text = pollParticipation.update()
+)
+
 /**
  * Creates message for vote confirmation.
  */
@@ -49,12 +68,11 @@ fun confirmVote(
  */
 fun statsMessage(
     conversationId: QualifiedId,
-    text: String,
-    mentions: List<Mention>
+    text: Text
 ) = WireMessage.Text.create(
     conversationId = conversationId,
-    text = text,
-    mentions = mentions.map { it.toWireMention() }
+    text = text.data,
+    mentions = text.mentions.map { it.toWireMention() }
 )
 
 /**
