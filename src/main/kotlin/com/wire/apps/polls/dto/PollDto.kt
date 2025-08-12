@@ -13,8 +13,8 @@ data class Option(
     val optionOrder: Int
 )
 
-fun Option.toWireButton(): WireMessage.Composite.Button =
-    WireMessage.Composite.Button(
+fun Option.toWireButton(): WireMessage.Button =
+    WireMessage.Button(
         text = this.content,
         id = this.optionOrder.toString()
     )
