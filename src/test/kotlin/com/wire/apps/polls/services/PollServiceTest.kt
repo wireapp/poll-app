@@ -149,7 +149,7 @@ class PollServiceTest {
         }
 
         @Test
-        fun `when someone voted, then register vote and send confirmation`() =
+        fun `when someone voted, then register vote`() =
             runTest {
                 // act
                 pollService.pollAction(
