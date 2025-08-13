@@ -42,7 +42,8 @@ object Polls : Table("polls") {
     /**
      * ID of a message storing how many users voted out of group size
      */
-    val participationId: Column<String?> = varchar("participation_id", UUID_LENGTH).nullable()
+    val participationMessageId: Column<String?> =
+        varchar("participation_message_id", UUID_LENGTH).nullable()
 
     /**
      * Timestamp when was this poll created.

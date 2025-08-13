@@ -1,1 +1,1 @@
-alter table polls add column participation_id varchar(36);
+alter table polls add column participation_message_id varchar(36);

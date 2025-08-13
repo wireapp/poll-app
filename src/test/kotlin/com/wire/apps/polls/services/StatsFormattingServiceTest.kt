@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.PollParticipation
+import com.wire.apps.polls.dto.VoteCount
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.services.VotingCount.update
 import com.wire.apps.polls.setup.configureContainer
@@ -203,10 +203,10 @@ class StatsFormattingServiceTest {
         fun `when n user voted out of ten, then bar should have n green dots`(n: Int) {
             // arrange
             val totalMembers = 10
-            val pollParticipation = PollParticipation(n, totalMembers)
+            val voteCount = VoteCount(n, totalMembers)
 
             // act
-            val votingCount = pollParticipation.update()
+            val votingCount = voteCount.update()
 
             // assert
             votingCount.shouldBe(
@@ -230,7 +230,7 @@ class StatsFormattingServiceTest {
 
             // act
             val results = votesCast.map { voted ->
-                PollParticipation(voted, totalMembers).update()
+                VoteCount(voted, totalMembers).update()
             }
 
             // assert

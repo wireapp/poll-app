@@ -41,7 +41,7 @@ class PollRepository {
             it[this.isActive] = true
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
-            it[this.participationId] = null
+            it[this.participationMessageId] = null
         }
 
         Mentions.batchInsert(poll.question.mentions) {
@@ -156,14 +156,13 @@ class PollRepository {
     ) = newSuspendedTransaction {
         Polls.update({
             Polls.id eq pollId
-        }) { it[this.participationId] = participationMessageId }
+        }) { it[this.participationMessageId] = participationMessageId }
     }
 
     suspend fun getParticipationId(pollId: String) =
         newSuspendedTransaction {
             Polls
                 .select { Polls.id eq pollId }
-                .mapToSet { it[Polls.participationId] }
-                .singleOrNull()
+                .singleOrNull()?.get(Polls.participationMessageId)
         }
 }

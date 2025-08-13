@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
-import com.wire.apps.polls.dto.PollParticipation
+import com.wire.apps.polls.dto.VoteCount
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
@@ -78,7 +78,7 @@ class PollServiceTest {
                         manager = manager,
                         conversationId = usersInput.conversationId,
                         participationMessageId = any(),
-                        pollParticipation = PollParticipation.initial()
+                        voteCount = VoteCount.initial()
                     )
                     repository.getParticipationId(any())
                     repository.setParticipationId(any(), any())
@@ -241,7 +241,7 @@ class PollServiceTest {
                         manager = manager,
                         conversationId = CONVERSATION_ID,
                         participationMessageId = stubParticipationId,
-                        pollParticipation = PollParticipation(
+                        voteCount = VoteCount(
                             votesCast = 1,
                             totalMembers = GROUP_SIZE
                         )

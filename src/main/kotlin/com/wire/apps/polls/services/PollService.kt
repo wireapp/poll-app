@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
-import com.wire.apps.polls.dto.PollParticipation
+import com.wire.apps.polls.dto.VoteCount
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
@@ -110,19 +110,19 @@ class PollService(
         val conversationMembersCount = conversationService
             .getNumberOfConversationMembers(manager, conversationId)
         val votedSize = repository.votingUsers(pollId).size
-        val pollParticipation = PollParticipation(votedSize, conversationMembersCount)
+        val voteCount = VoteCount(votedSize, conversationMembersCount)
 
         sendParticipation(
             manager = manager,
             pollId = pollId,
             conversationId = conversationId,
-            pollParticipation = pollParticipation
+            voteCount = voteCount
         )
         sendStatsIfAllVoted(
             manager = manager,
             pollId = pollId,
             conversationId = conversationId,
-            pollParticipation = pollParticipation
+            voteCount = voteCount
         )
     }
 
@@ -133,18 +133,18 @@ class PollService(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
-        pollParticipation: PollParticipation
+        voteCount: VoteCount
     ) {
-        if (pollParticipation.everyoneVoted()) {
+        if (voteCount.everyoneVoted()) {
             logger.info { "All users voted, sending statistics to the conversation." }
             sendStats(
                 manager = manager,
                 pollId = pollId,
                 conversationId = conversationId,
-                conversationMembers = pollParticipation.totalMembers
+                conversationMembers = voteCount.totalMembers
             )
         } else {
-            logger.info { pollParticipation.toString() }
+            logger.info { voteCount.toString() }
         }
     }
 
@@ -207,14 +207,14 @@ class PollService(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
-        pollParticipation: PollParticipation = PollParticipation.initial()
+        voteCount: VoteCount = VoteCount.initial()
     ) {
         val participationMessageId = repository.getParticipationId(pollId)
         val newParticipationMessageId = userCommunicationService.sendOrUpdateParticipation(
             manager = manager,
             conversationId = conversationId,
             participationMessageId = participationMessageId,
-            pollParticipation = pollParticipation
+            voteCount = voteCount
         )
         repository.setParticipationId(pollId, newParticipationMessageId)
     }

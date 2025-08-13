@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.PollParticipation
+import com.wire.apps.polls.dto.VoteCount
 import com.wire.apps.polls.dto.common.Text
 import mu.KLogging
 import pw.forst.katlib.newLine
@@ -105,7 +105,7 @@ class StatsFormattingService(
     private fun prepareTitle(body: String) = "$TITLE_PREFIX${body}\"*"
 }
 
-private class Bar(val voted: Int, val outOf: Int) {
+private class VoteDisplay(val voted: Int, val outOf: Int) {
     private companion object {
         const val NOT_VOTE = "⚪"
         const val VOTE = "🟢"
@@ -128,9 +128,9 @@ private data class VotingOption(
     val votingUsers: Int
 ) {
     fun toString(max: Int): String {
-        val bar = Bar(votingUsers, max)
+        val voteDisplay = VoteDisplay(votingUsers, max)
 
-        return "$bar $style$option$style ($votingUsers)"
+        return "$voteDisplay $style$option$style ($votingUsers)"
     }
 }
 
@@ -139,14 +139,14 @@ object VotingCount {
     const val PERCENTAGE_FACTOR = 100
 
     fun new(): String {
-        return PollParticipation.initial().update()
+        return VoteCount.initial().update()
     }
 
-    fun PollParticipation.update(): String {
+    fun VoteCount.update(): String {
         val percent = if (totalMembers > 0) votesCast.toDouble() / totalMembers else 0.0
-        val bar = Bar((percent * BLOCKS).roundToInt(), BLOCKS)
+        val voteDisplay = VoteDisplay((percent * BLOCKS).roundToInt(), BLOCKS)
         val percentDisplay = (percent * PERCENTAGE_FACTOR).roundToInt()
 
-        return "$bar $percentDisplay%"
+        return "$voteDisplay $percentDisplay%"
     }
 }
