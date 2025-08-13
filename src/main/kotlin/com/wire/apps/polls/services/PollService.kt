@@ -54,7 +54,11 @@ class PollService(
             userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
-        sendParticipation(manager = manager, conversationId = conversationId, pollId = pollId)
+        sendParticipation(
+            manager = manager,
+            conversationId = conversationId,
+            pollId = pollId
+        )
 
         logger.info { "Poll successfully created with id: $pollId" }
     }
@@ -107,29 +111,8 @@ class PollService(
         val votedSize = repository.votingUsers(pollId).size
         val voteCount = VoteCount(votedSize, conversationMembersCount)
 
-        sendParticipation(
-            manager = manager,
-            pollId = pollId,
-            conversationId = conversationId,
-            voteCount = voteCount
-        )
-        sendStatsIfAllVoted(
-            manager = manager,
-            pollId = pollId,
-            conversationId = conversationId,
-            voteCount = voteCount
-        )
-    }
+        logger.info { voteCount.toString() }
 
-    /**
-     * Provides users with immediate confirmation that voting is complete.
-     */
-    private suspend fun sendStatsIfAllVoted(
-        manager: WireApplicationManager,
-        pollId: String,
-        conversationId: QualifiedId,
-        voteCount: VoteCount
-    ) {
         if (voteCount.everyoneVoted()) {
             logger.info { "All users voted, sending statistics to the conversation." }
             sendStats(
@@ -138,9 +121,13 @@ class PollService(
                 conversationId = conversationId,
                 conversationMembers = voteCount.totalMembers
             )
-        } else {
-            logger.info { voteCount.toString() }
         }
+        sendParticipation(
+            manager = manager,
+            pollId = pollId,
+            conversationId = conversationId,
+            voteCount = voteCount
+        )
     }
 
     /**
@@ -198,7 +185,10 @@ class PollService(
         )
     }
 
-    suspend fun sendParticipation(
+    /**
+     * Displays visual representation with percentage of user who cast a votes to conversation size.
+     */
+    private suspend fun sendParticipation(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
