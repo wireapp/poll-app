@@ -86,11 +86,6 @@ class PollService(
         repository.vote(pollAction)
         logger.info { "Vote registered." }
 
-        userCommunicationService.sendButtonConfirmation(
-            manager = manager,
-            pollAction = pollAction,
-            conversationId = conversationId
-        )
         afterVoteUpdate(
             manager = manager,
             pollId = pollAction.pollId,

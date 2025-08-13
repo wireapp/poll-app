@@ -161,11 +161,6 @@ class PollServiceTest {
                 // assert
                 coVerify(exactly = 1) {
                     repository.vote(pollAction)
-                    userCommunicationService.sendButtonConfirmation(
-                        manager = manager,
-                        pollAction = any(),
-                        conversationId = CONVERSATION_ID
-                    )
                 }
             }
 

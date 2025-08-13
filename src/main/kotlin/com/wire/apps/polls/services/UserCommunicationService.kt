@@ -1,10 +1,8 @@
 package com.wire.apps.polls.services
 
-import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.VoteCount
 import com.wire.apps.polls.dto.common.Text
-import com.wire.apps.polls.dto.confirmVote
 import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.dto.newVoteCount
 import com.wire.apps.polls.dto.statsMessage
@@ -107,18 +105,6 @@ class UserCommunicationService(
         message.send(manager)
 
         return message.id.toString()
-    }
-
-    suspend fun sendButtonConfirmation(
-        manager: WireApplicationManager,
-        pollAction: PollAction,
-        conversationId: QualifiedId
-    ) {
-        confirmVote(
-            pollId = pollAction.pollId,
-            conversationId = conversationId,
-            offset = pollAction.optionId
-        ).send(manager)
     }
 
     suspend fun sendStats(

@@ -48,22 +48,6 @@ fun updateVoteCount(
 )
 
 /**
- * Creates message for vote confirmation.
- */
-fun confirmVote(
-    pollId: String,
-    conversationId: QualifiedId,
-    offset: Int
-): WireMessage.ButtonActionConfirmation =
-    WireMessage.ButtonActionConfirmation(
-        id = UUID.randomUUID(),
-        conversationId = conversationId,
-        sender = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString()),
-        referencedMessageId = pollId,
-        buttonId = offset.toString()
-    )
-
-/**
  * Creates stats (result of the poll) message.
  */
 fun statsMessage(
