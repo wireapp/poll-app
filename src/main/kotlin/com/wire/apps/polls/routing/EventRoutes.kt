@@ -2,7 +2,7 @@ package com.wire.apps.polls.routing
 
 import com.wire.apps.polls.dto.PollAction.Companion.fromWire
 import com.wire.apps.polls.dto.UsersInput.Companion.fromWire
-import com.wire.apps.polls.dto.conf.SDKConfiguration
+import com.wire.apps.polls.setup.conf.SDKConfiguration
 import com.wire.apps.polls.services.MessagesHandlingService
 import com.wire.integrations.jvm.WireAppSdk
 import com.wire.integrations.jvm.WireEventsHandlerSuspending

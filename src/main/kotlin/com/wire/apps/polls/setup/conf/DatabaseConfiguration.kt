@@ -1,4 +1,4 @@
-package com.wire.apps.polls.dto.conf
+package com.wire.apps.polls.setup.conf
 
 /**
  * Simple configuration for the database connection.

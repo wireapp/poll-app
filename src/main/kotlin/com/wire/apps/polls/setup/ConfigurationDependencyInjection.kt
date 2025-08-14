@@ -1,7 +1,7 @@
 package com.wire.apps.polls.setup
 
-import com.wire.apps.polls.dto.conf.DatabaseConfiguration
-import com.wire.apps.polls.dto.conf.SDKConfiguration
+import com.wire.apps.polls.setup.conf.DatabaseConfiguration
+import com.wire.apps.polls.setup.conf.SDKConfiguration
 import com.wire.apps.polls.setup.EnvConfigVariables.API_HOST_URL
 import com.wire.apps.polls.setup.EnvConfigVariables.CRYPTO_PASSWORD
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_PASSWORD
