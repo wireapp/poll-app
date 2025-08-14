@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
-import com.wire.apps.polls.dto.VoteCount
+import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
@@ -109,24 +109,24 @@ class PollService(
         val conversationMembersCount = conversationService
             .getNumberOfConversationMembers(manager, conversationId)
         val votedSize = repository.votingUsers(pollId).size
-        val voteCount = VoteCount(votedSize, conversationMembersCount)
+        val voteCountProgress = PollVoteCountProgress(votedSize, conversationMembersCount)
 
-        logger.info { voteCount.toString() }
+        logger.info { voteCountProgress.logInfo() }
 
-        if (voteCount.everyoneVoted()) {
+        if (voteCountProgress.everyoneVoted()) {
             logger.info { "All users voted, sending statistics to the conversation." }
             sendStats(
                 manager = manager,
                 pollId = pollId,
                 conversationId = conversationId,
-                conversationMembers = voteCount.totalMembers
+                conversationMembers = voteCountProgress.totalMembers
             )
         }
         sendParticipation(
             manager = manager,
             pollId = pollId,
             conversationId = conversationId,
-            voteCount = voteCount
+            voteCountProgress = voteCountProgress
         )
     }
 
@@ -192,14 +192,14 @@ class PollService(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
-        voteCount: VoteCount = VoteCount.initial()
+        voteCountProgress: PollVoteCountProgress = PollVoteCountProgress.initial()
     ) {
         val participationMessageId = repository.getParticipationId(pollId)
         val newParticipationMessageId = userCommunicationService.sendOrUpdateParticipation(
             manager = manager,
             conversationId = conversationId,
             participationMessageId = participationMessageId,
-            voteCount = voteCount
+            voteCountProgress = voteCountProgress
         )
         repository.setParticipationId(pollId, newParticipationMessageId)
     }

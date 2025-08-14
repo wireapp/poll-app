@@ -32,17 +32,17 @@ fun newPoll(
 fun newVoteCount(conversationId: QualifiedId) =
     WireMessage.Text.create(
         conversationId = conversationId,
-        text = VoteCount.new()
+        text = PollVoteCountProgress.new()
     )
 
 fun updateVoteCount(
     conversationId: QualifiedId,
     voteCountMessageId: String,
-    voteCount: VoteCount
+    voteCountProgress: PollVoteCountProgress
 ) = WireMessage.TextEdited.create(
     replacingMessageId = UUID.fromString(voteCountMessageId),
     conversationId = conversationId,
-    text = voteCount.display()
+    text = voteCountProgress.display()
 )
 
 /**

@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.VoteCount
+import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.setup.configureContainer
 import io.kotest.matchers.collections.shouldContainExactly
@@ -189,7 +189,7 @@ class StatsFormattingServiceTest {
         @Test
         fun `when in initial stage, then bar should be empty with 0 percent`() {
             // act
-            val votingCount = VoteCount.new()
+            val votingCount = PollVoteCountProgress.new()
 
             // assert
             votingCount.shouldBe(
@@ -202,10 +202,10 @@ class StatsFormattingServiceTest {
         fun `when n user voted out of ten, then bar should have n green dots`(n: Int) {
             // arrange
             val totalMembers = 10
-            val voteCount = VoteCount(n, totalMembers)
+            val voteCountProgress = PollVoteCountProgress(n, totalMembers)
 
             // act
-            val votingCount = voteCount.display()
+            val votingCount = voteCountProgress.display()
 
             // assert
             votingCount.shouldBe(
@@ -229,7 +229,7 @@ class StatsFormattingServiceTest {
 
             // act
             val results = votesCast.map { voted ->
-                VoteCount(voted, totalMembers).display()
+                PollVoteCountProgress(voted, totalMembers).display()
             }
 
             // assert

@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dto.PollDto
-import com.wire.apps.polls.dto.VoteCount
+import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.dto.newVoteCount
@@ -123,7 +123,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId,
         participationMessageId: String?,
-        voteCount: VoteCount
+        voteCountProgress: PollVoteCountProgress
     ): String {
         val wireMessage = if (participationMessageId == null) {
             newVoteCount(conversationId)
@@ -131,7 +131,7 @@ class UserCommunicationService(
             updateVoteCount(
                 conversationId = conversationId,
                 voteCountMessageId = participationMessageId,
-                voteCount = voteCount
+                voteCountProgress = voteCountProgress
             )
         }
 
