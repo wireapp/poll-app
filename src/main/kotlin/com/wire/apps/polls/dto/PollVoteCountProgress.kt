@@ -28,7 +28,7 @@ data class PollVoteCountProgress(
 
     fun everyoneVoted() = (totalVoteCount == totalMembers)
 
-    override fun toString(): String {
-        return "Users voted: $votesCast, members of conversation: $totalMembers"
+    fun logInfo(): String {
+        return "Users voted: $totalVoteCount, members of conversation: $totalMembers"
     }
 }
