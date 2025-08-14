@@ -3,7 +3,6 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.VoteCount
 import com.wire.apps.polls.dto.common.Text
-import com.wire.apps.polls.services.VotingCount.update
 import com.wire.apps.polls.setup.configureContainer
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
@@ -190,7 +189,7 @@ class StatsFormattingServiceTest {
         @Test
         fun `when in initial stage, then bar should be empty with 0 percent`() {
             // act
-            val votingCount = VotingCount.new()
+            val votingCount = VoteCount.new()
 
             // assert
             votingCount.shouldBe(
@@ -206,7 +205,7 @@ class StatsFormattingServiceTest {
             val voteCount = VoteCount(n, totalMembers)
 
             // act
-            val votingCount = voteCount.update()
+            val votingCount = voteCount.display()
 
             // assert
             votingCount.shouldBe(
@@ -230,7 +229,7 @@ class StatsFormattingServiceTest {
 
             // act
             val results = votesCast.map { voted ->
-                VoteCount(voted, totalMembers).update()
+                VoteCount(voted, totalMembers).display()
             }
 
             // assert

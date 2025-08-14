@@ -3,8 +3,6 @@ package com.wire.apps.polls.dto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.common.toWireMention
-import com.wire.apps.polls.services.VotingCount
-import com.wire.apps.polls.services.VotingCount.update
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import java.util.UUID
@@ -34,7 +32,7 @@ fun newPoll(
 fun newVoteCount(conversationId: QualifiedId) =
     WireMessage.Text.create(
         conversationId = conversationId,
-        text = VotingCount.new()
+        text = VoteCount.new()
     )
 
 fun updateVoteCount(
@@ -44,7 +42,7 @@ fun updateVoteCount(
 ) = WireMessage.TextEdited.create(
     replacingMessageId = UUID.fromString(voteCountMessageId),
     conversationId = conversationId,
-    text = voteCount.update()
+    text = voteCount.display()
 )
 
 /**
