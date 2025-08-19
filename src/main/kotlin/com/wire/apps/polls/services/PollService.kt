@@ -2,6 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.parser.PollFactory
@@ -179,11 +180,14 @@ class PollService(
         voteCountProgress: PollVoteCountProgress = PollVoteCountProgress.initial()
     ) {
         val participationMessageId = repository.getParticipationId(pollId)
-        val newParticipationMessageId = userCommunicationService.sendOrUpdateParticipation(
-            manager = manager,
+        val pollOverview = PollOverviewDto(
             conversationId = conversationId,
+            voteCountProgress = voteCountProgress.display()
+        )
+        val newParticipationMessageId = userCommunicationService.sendOrUpdatePollOverview(
+            manager = manager,
             participationMessageId = participationMessageId,
-            voteCountProgress = voteCountProgress
+            pollOverview = pollOverview
         )
         repository.setParticipationId(pollId, newParticipationMessageId)
     }

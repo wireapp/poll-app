@@ -2,7 +2,9 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
+import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
@@ -55,7 +57,12 @@ class PollServiceTest {
         fun `when input is valid, then save the poll and send it with initial participation`() =
             runTest {
                 // arrange
-                val usersInput = Stub.userInput("/poll \"Question\" \"Answer\"")
+                val usersInput = UsersInput(
+                    sender = Stub.id(),
+                    conversationId = CONVERSATION_ID,
+                    text = "/poll \"Question\" \"Answer\"",
+                    mentions = emptyList()
+                )
 
                 // act
                 pollService.createPoll(manager, usersInput)
@@ -74,11 +81,12 @@ class PollServiceTest {
                         conversationId = usersInput.conversationId,
                         poll = any()
                     )
-                    userCommunicationService.sendOrUpdateParticipation(
+                    userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        conversationId = usersInput.conversationId,
                         participationMessageId = any(),
-                        voteCountProgress = PollVoteCountProgress.initial()
+                        pollOverview = PollOverviewDto(
+                            conversationId = CONVERSATION_ID
+                        )
                     )
                     repository.getParticipationId(any())
                     repository.setParticipationId(any(), any())
@@ -232,13 +240,15 @@ class PollServiceTest {
                 )
 
                 coVerify {
-                    userCommunicationService.sendOrUpdateParticipation(
+                    userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        conversationId = CONVERSATION_ID,
                         participationMessageId = stubParticipationId,
-                        voteCountProgress = PollVoteCountProgress(
-                            totalVoteCount = 1,
-                            totalMembers = GROUP_SIZE
+                        pollOverview = PollOverviewDto(
+                            conversationId = CONVERSATION_ID,
+                            voteCountProgress = PollVoteCountProgress(
+                                totalVoteCount = 1,
+                                totalMembers = GROUP_SIZE
+                            ).display()
                         )
                     )
                 }

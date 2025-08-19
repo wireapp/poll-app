@@ -29,22 +29,6 @@ fun newPoll(
     )
 }
 
-fun newVoteCount(conversationId: QualifiedId) =
-    WireMessage.Text.create(
-        conversationId = conversationId,
-        text = PollVoteCountProgress.new()
-    )
-
-fun updateVoteCount(
-    conversationId: QualifiedId,
-    voteCountMessageId: String,
-    voteCountProgress: PollVoteCountProgress
-) = WireMessage.TextEdited.create(
-    replacingMessageId = UUID.fromString(voteCountMessageId),
-    conversationId = conversationId,
-    text = voteCountProgress.display()
-)
-
 /**
  * Creates stats (result of the poll) message.
  */

@@ -1,13 +1,11 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dto.PollDto
-import com.wire.apps.polls.dto.PollVoteCountProgress
+import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.dto.newVoteCount
 import com.wire.apps.polls.dto.statsMessage
 import com.wire.apps.polls.dto.textMessage
-import com.wire.apps.polls.dto.updateVoteCount
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -119,19 +117,16 @@ class UserCommunicationService(
         return stats.id.toString()
     }
 
-    suspend fun sendOrUpdateParticipation(
+    suspend fun sendOrUpdatePollOverview(
         manager: WireApplicationManager,
-        conversationId: QualifiedId,
         participationMessageId: String?,
-        voteCountProgress: PollVoteCountProgress
+        pollOverview: PollOverviewDto
     ): String {
         val wireMessage = if (participationMessageId == null) {
-            newVoteCount(conversationId)
+            pollOverview.initial()
         } else {
-            updateVoteCount(
-                conversationId = conversationId,
-                voteCountMessageId = participationMessageId,
-                voteCountProgress = voteCountProgress
+            pollOverview.updateWithHiddenResults(
+                overviewMessageId = participationMessageId
             )
         }
 
