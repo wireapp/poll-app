@@ -34,7 +34,7 @@ class InputParser {
         val inverseMatch = pollOptionRegex.replace(pollOptions, "")
 
         if (parsedOptions.isEmpty() || inverseMatch.isNotBlank()) {
-            logger.warn { "Given user input does not contain valid poll." }
+            logger.warn { "Poll command in conversation ${userInput.conversationId} is not valid" }
             return null
         }
 

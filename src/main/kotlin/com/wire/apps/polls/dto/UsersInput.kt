@@ -27,8 +27,7 @@ data class UsersInput(
      */
     val mentions: List<Mention>
 ) {
-    // TODO modify this in the future - because we do not want to print decrypted users text to the log
-    override fun toString(): String = "User: $sender wrote $text"
+    override fun toString(): String = "User $sender sent message in conversation $conversationId"
 
     companion object {
         fun fromWire(wireMessage: WireMessage.Text): UsersInput? {

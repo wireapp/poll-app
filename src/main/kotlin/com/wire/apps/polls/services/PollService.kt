@@ -33,7 +33,10 @@ class PollService(
         val poll = factory
             .forUserInput(usersInput)
             .whenNull {
-                logger.warn { "It was not possible to create poll." }
+                logger.warn {
+                    "It was not possible to create poll " +
+                        "in conversation ${usersInput.conversationId}"
+                }
                 pollNotParsedFallback(
                     manager = manager,
                     conversationId = conversationId,
@@ -69,7 +72,9 @@ class PollService(
         usersInput: UsersInput
     ) {
         usersInput.text.startsWith("/poll").whenTrue {
-            logger.info { "Command started with /poll, sending usage to user." }
+            logger.info {
+                "Invalid command started with /poll, sending usage to conversation $conversationId"
+            }
             userCommunicationService.sendFallbackMessage(
                 manager = manager,
                 conversationId = conversationId,
@@ -86,9 +91,8 @@ class PollService(
         pollAction: PollAction,
         conversationId: QualifiedId
     ) {
-        logger.info { "User voted" }
+        logger.info { "User voted ${pollAction.userId} in poll ${pollAction.pollId}" }
         repository.vote(pollAction)
-        logger.info { "Vote registered." }
 
         afterVoteUpdate(
             manager = manager,
@@ -111,10 +115,12 @@ class PollService(
         val votedSize = repository.votingUsers(pollId).size
         val voteCountProgress = PollVoteCountProgress(votedSize, conversationMembersCount)
 
-        logger.info { voteCountProgress.logInfo() }
+        logger.info { "${voteCountProgress.logInfo()} in poll $pollId" }
 
         if (voteCountProgress.everyoneVoted()) {
-            logger.info { "All users voted, sending statistics to the conversation." }
+            logger.info {
+                "All users voted, sending statistics to the conversation $conversationId"
+            }
             sendStats(
                 manager = manager,
                 pollId = pollId,
@@ -139,14 +145,16 @@ class PollService(
         conversationId: QualifiedId,
         conversationMembers: Int
     ) {
-        logger.debug { "Sending stats for poll $pollId" }
-        logger.debug { "Conversation members: $conversationMembers" }
+        logger.debug {
+            "Sending stats for poll $pollId " +
+                "Conversation members: $conversationMembers"
+        }
         val stats = statsFormattingService
             .formatStats(
                 pollId = pollId,
                 conversationMembers = conversationMembers
             ).whenNull {
-                logger.error { "It was not possible send stats." }
+                logger.error { "It was not possible send stats for poll $pollId" }
                 userCommunicationService.sendFallbackMessage(
                     manager = manager,
                     conversationId = conversationId,
@@ -169,7 +177,7 @@ class PollService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        logger.debug { "Sending latest stats" }
+        logger.debug { "Sending latest stats in conversation $conversationId" }
 
         val latest = repository.getCurrentPoll(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
