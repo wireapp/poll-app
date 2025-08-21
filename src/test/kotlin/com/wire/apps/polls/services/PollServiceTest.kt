@@ -158,6 +158,7 @@ class PollServiceTest {
             every {
                 conversationService.getNumberOfConversationMembers(manager, CONVERSATION_ID)
             } returns GROUP_SIZE
+            coEvery { pollRepository.isPollMessage(POLL_ID) } returns true
         }
 
         @Test
@@ -177,10 +178,29 @@ class PollServiceTest {
             }
 
         @Test
-        fun `when everyone in the conversation voted, then send the stats`() =
+        fun `when everyone in the conversation voted, then results are set to visible`() =
             runTest {
                 // arrange
                 coEvery { pollRepository.votingUsers(any()).size } returns GROUP_SIZE
+
+                // act
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                // assert
+                coVerify {
+                    overviewRepository.showResults(POLL_ID)
+                }
+            }
+
+        @Test
+        fun `when results are set to visible, then poll overview should be updated with stats`() =
+            runTest {
+                // arrange
+                coEvery { overviewRepository.areResultsVisible(POLL_ID) } returns true
                 val statsMessage = Text("stats for test poll", emptyList())
                 coEvery {
                     statsFormattingService.formatStats(
@@ -275,6 +295,7 @@ class PollServiceTest {
         fun `when stats formatting is successful, then send stats`() =
             runTest {
                 // arrange
+                coEvery { overviewRepository.areResultsVisible(POLL_ID) } returns true
                 val statsMessage = Text(
                     "stats for test poll",
                     emptyList()
@@ -310,6 +331,7 @@ class PollServiceTest {
         fun `when stats formatting fails, then inform user that it failed`() =
             runTest {
                 // arrange
+                coEvery { overviewRepository.areResultsVisible(POLL_ID) } returns true
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
