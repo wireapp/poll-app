@@ -29,14 +29,14 @@ data class PollOverviewDto(
 
     fun update(
         overviewMessageId: String,
-        statsMessage: Text?
+        stats: Text?
     ): WireMessage.CompositeEdited =
-        if (statsMessage == null) {
+        if (stats == null) {
             logger.debug { "Updating statistics in conversation $conversationId" }
             refreshProgressBarOnly(overviewMessageId)
         } else {
             logger.debug { "Updating progress bar in conversation $conversationId" }
-            appendUpdatedResults(overviewMessageId, statsMessage)
+            appendUpdatedResults(overviewMessageId, stats)
         }
 
     private fun refreshProgressBarOnly(overviewMessageId: String) =
@@ -47,16 +47,44 @@ data class PollOverviewDto(
             buttonList = listOf(button)
         )
 
+    /**
+     * TODO replace below function with the commented out.
+     * Clients need to implement rendering of a Composite Items in any order and not only:
+     * One [Text]
+     * Followed by one or more [Button]s
+     *
+     * As defined in the protobuf definition:
+     * https://github.com/wireapp/generic-message-proto/blob/master/proto/messages.proto#L75-L86
+     */
     private fun appendUpdatedResults(
         overviewMessageId: String,
-        statsMessage: Text
+        stats: Text
     ) = WireMessage.CompositeEdited.create(
         replacingMessageId = UUID.fromString(overviewMessageId),
         conversationId = conversationId,
         text = voteCountProgress +
             newLine +
-            // TODO add mentions with correct offset
-            statsMessage.data,
+            stats.data,
         buttonList = emptyList()
     )
+//    private fun appendUpdatedResults(
+//        overviewMessageId: String,
+//        stats: Text
+//    ): WireMessage.CompositeEdited {
+//        val voteProgressMessage = WireMessage.Text.create(
+//            conversationId = conversationId,
+//            text = voteCountProgress + newLine
+//        )
+//        val statsMessage = statsMessage(
+//            conversationId = conversationId,
+//            text = stats
+//        )
+//        return WireMessage.CompositeEdited(
+//            replacingMessageId = UUID.fromString(overviewMessageId),
+//            conversationId = conversationId,
+//            id = UUID.randomUUID(),
+//            sender = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString()),
+//            newItems = listOf(voteProgressMessage, statsMessage)
+//        )
+//    }
 }

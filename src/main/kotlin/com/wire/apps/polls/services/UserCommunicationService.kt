@@ -118,7 +118,7 @@ class UserCommunicationService(
         } else {
             pollOverviewDto.update(
                 overviewMessageId = participationMessageId,
-                statsMessage = stats
+                stats = stats
             )
         }
 
