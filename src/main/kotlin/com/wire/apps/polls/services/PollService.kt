@@ -1,10 +1,12 @@
 package com.wire.apps.polls.services
 
+import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
@@ -19,7 +21,8 @@ import pw.forst.katlib.whenTrue
  */
 class PollService(
     private val factory: PollFactory,
-    private val repository: PollRepository,
+    private val pollRepository: PollRepository,
+    private val overviewRepository: OverviewRepository,
     private val conversationService: ConversationService,
     private val userCommunicationService: UserCommunicationService,
     private val statsFormattingService: StatsFormattingService
@@ -51,7 +54,7 @@ class PollService(
             poll = poll
         )
 
-        val pollId = repository.savePoll(
+        val pollId = pollRepository.savePoll(
             poll = poll,
             pollId = messageId,
             userId = usersInput.sender.id.toString(),
@@ -113,7 +116,7 @@ class PollService(
     ) {
         val conversationMembersCount = conversationService
             .getNumberOfConversationMembers(manager, conversationId)
-        val votedSize = repository.votingUsers(pollId).size
+        val votedSize = pollRepository.votingUsers(pollId).size
         val voteCountProgress = PollVoteCountProgress(votedSize, conversationMembersCount)
 
         logger.info { "${voteCountProgress.logInfo()} in poll $pollId" }
@@ -122,12 +125,7 @@ class PollService(
             logger.info {
                 "All users voted, sending statistics to the conversation $conversationId"
             }
-            sendStats(
-                manager = manager,
-                pollId = pollId,
-                conversationId = conversationId,
-                conversationMembers = voteCountProgress.totalMembers
-            )
+            overviewRepository.showResults(pollId)
         }
         sendParticipation(
             manager = manager,
@@ -137,58 +135,59 @@ class PollService(
         )
     }
 
-    /**
-     * Reveal the results to the user.
-     */
-    suspend fun sendStats(
+    suspend fun generateStats(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
         conversationMembers: Int
-    ) {
+    ): Text? {
+        logger.debug { "Verifying if stats are visible for poll $pollId" }
+        if (!overviewRepository.areResultsVisible(pollId)) return null
         logger.debug {
             "Sending stats for poll $pollId " +
                 "Conversation members: $conversationMembers"
         }
-        val stats = statsFormattingService
+        return statsFormattingService
             .formatStats(
                 pollId = pollId,
                 conversationMembers = conversationMembers
             ).whenNull {
-                logger.error { "It was not possible send stats for poll $pollId" }
+                logger.error { "It was not possible to send stats for poll $pollId" }
                 userCommunicationService.sendFallbackMessage(
                     manager = manager,
                     conversationId = conversationId,
                     messageType = MISSING_DATA
                 )
-            } ?: return
-
-        userCommunicationService.sendStats(
-            manager = manager,
-            conversationId = conversationId,
-            text = stats
-        )
+            }
     }
 
     /**
      * Displays visual representation with percentage of user who cast a votes to conversation size.
      */
-    private suspend fun sendParticipation(
+    internal suspend fun sendParticipation(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId,
         voteCountProgress: PollVoteCountProgress = PollVoteCountProgress.initial()
     ) {
-        val participationMessageId = repository.getParticipationId(pollId)
-        val pollOverview = PollOverviewDto(
+        val participationMessageId = overviewRepository.getParticipationId(pollId)
+
+        val statsMessage = generateStats(
+            manager = manager,
+            conversationId = conversationId,
+            pollId = pollId,
+            conversationMembers = voteCountProgress.totalMembers
+        )
+        val pollOverviewDto = PollOverviewDto(
             conversationId = conversationId,
             voteCountProgress = voteCountProgress.display()
         )
         val newParticipationMessageId = userCommunicationService.sendOrUpdatePollOverview(
             manager = manager,
             participationMessageId = participationMessageId,
-            pollOverview = pollOverview
+            pollOverviewDto = pollOverviewDto,
+            stats = statsMessage
         )
-        repository.setParticipationId(pollId, newParticipationMessageId)
+        overviewRepository.setParticipationId(pollId, newParticipationMessageId)
     }
 }

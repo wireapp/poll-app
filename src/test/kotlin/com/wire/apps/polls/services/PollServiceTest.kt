@@ -1,5 +1,6 @@
 package com.wire.apps.polls.services
 
+import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollOverviewDto
@@ -31,14 +32,16 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 
 class PollServiceTest {
-    val repository = mockk<PollRepository>(relaxed = true)
+    val pollRepository = mockk<PollRepository>(relaxed = true)
+    val overviewRepository = mockk<OverviewRepository>(relaxed = true)
     val conversationService = mockk<ConversationService>()
     val manager = mockk<WireApplicationManager>()
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
     val statsFormattingService = mockk<StatsFormattingService>()
 
     val testModule = DI.Module("testModule") {
-        bind<PollRepository>(overrides = true) with singleton { repository }
+        bind<PollRepository>(overrides = true) with singleton { pollRepository }
+        bind<OverviewRepository>(overrides = true) with singleton { overviewRepository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
         bind<StatsFormattingService>(overrides = true) with singleton { statsFormattingService }
@@ -69,7 +72,7 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    repository.savePoll(
+                    pollRepository.savePoll(
                         poll = any(),
                         pollId = any(),
                         userId = usersInput.sender.id.toString(),
@@ -84,14 +87,15 @@ class PollServiceTest {
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
                         participationMessageId = any(),
-                        pollOverview = PollOverviewDto(
-                            conversationId = CONVERSATION_ID
-                        )
+                        pollOverviewDto = PollOverviewDto(
+                            conversationId = CONVERSATION_ID,
+                        ),
+                        stats = null
                     )
-                    repository.getParticipationId(any())
-                    repository.setParticipationId(any(), any())
+                    overviewRepository.getParticipationId(any())
+                    overviewRepository.setParticipationId(any(), any())
                 }
-                confirmVerified(repository, userCommunicationService)
+                confirmVerified(pollRepository, userCommunicationService)
             }
 
         @Test
@@ -123,7 +127,7 @@ class PollServiceTest {
                     pollServiceSpy["pollNotParsedFallback"](manager, any<QualifiedId>(), usersInput)
                 }
                 coVerify(exactly = 0) {
-                    repository.savePoll(
+                    pollRepository.savePoll(
                         poll = any(),
                         pollId = any(),
                         userId = any(),
@@ -136,7 +140,7 @@ class PollServiceTest {
                         poll = any()
                     )
                 }
-                confirmVerified(repository, userCommunicationService)
+                confirmVerified(pollRepository, userCommunicationService)
             }
     }
 
@@ -168,7 +172,7 @@ class PollServiceTest {
 
                 // assert
                 coVerify(exactly = 1) {
-                    repository.vote(pollAction)
+                    pollRepository.vote(pollAction)
                 }
             }
 
@@ -176,13 +180,14 @@ class PollServiceTest {
         fun `when everyone in the conversation voted, then send the stats`() =
             runTest {
                 // arrange
-                coEvery { repository.votingUsers(any()).size } returns GROUP_SIZE
+                coEvery { pollRepository.votingUsers(any()).size } returns GROUP_SIZE
+                val statsMessage = Text("stats for test poll", emptyList())
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
                         conversationMembers = any()
                     )
-                } returns Text("stats for test poll", emptyList())
+                } returns statsMessage
 
                 // act
                 pollService.pollAction(
@@ -193,10 +198,13 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    userCommunicationService.sendStats(
+                    userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        conversationId = CONVERSATION_ID,
-                        text = any()
+                        participationMessageId = any(),
+                        pollOverviewDto = PollOverviewDto(
+                            conversationId = CONVERSATION_ID,
+                        ),
+                        stats = statsMessage
                     )
                 }
             }
@@ -205,7 +213,7 @@ class PollServiceTest {
         fun `when it is not the last vote, then don't send stats`() =
             runTest {
                 // arrange
-                coEvery { repository.votingUsers(any()).size } returns 1
+                coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
                 pollService.pollAction(
@@ -216,10 +224,13 @@ class PollServiceTest {
 
                 // assert
                 coVerify(exactly = 0) {
-                    userCommunicationService.sendStats(
+                    userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        conversationId = CONVERSATION_ID,
-                        text = any()
+                        participationMessageId = any(),
+                        pollOverviewDto = PollOverviewDto(
+                            conversationId = CONVERSATION_ID,
+                        ),
+                        stats = null
                     )
                 }
             }
@@ -229,8 +240,10 @@ class PollServiceTest {
             runTest {
                 // arrange
                 val stubParticipationId = "participation id"
-                coEvery { repository.getParticipationId(POLL_ID) } returns stubParticipationId
-                coEvery { repository.votingUsers(any()).size } returns 1
+                coEvery {
+                    overviewRepository.getParticipationId(POLL_ID)
+                } returns stubParticipationId
+                coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
                 pollService.pollAction(
@@ -243,13 +256,14 @@ class PollServiceTest {
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
                         participationMessageId = stubParticipationId,
-                        pollOverview = PollOverviewDto(
+                        pollOverviewDto = PollOverviewDto(
                             conversationId = CONVERSATION_ID,
                             voteCountProgress = PollVoteCountProgress(
                                 totalVoteCount = 1,
                                 totalMembers = GROUP_SIZE
-                            ).display()
-                        )
+                            ).display(),
+                        ),
+                        stats = null
                     )
                 }
             }
@@ -273,19 +287,21 @@ class PollServiceTest {
                 } returns statsMessage
 
                 // act
-                pollService.sendStats(
+                pollService.sendParticipation(
                     manager = manager,
                     pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID,
-                    conversationMembers = GROUP_SIZE
+                    conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify {
-                    userCommunicationService.sendStats(
+                    userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        conversationId = CONVERSATION_ID,
-                        text = statsMessage
+                        participationMessageId = any(),
+                        pollOverviewDto = PollOverviewDto(
+                            conversationId = CONVERSATION_ID,
+                        ),
+                        stats = statsMessage
                     )
                 }
             }
@@ -302,11 +318,10 @@ class PollServiceTest {
                 } returns null
 
                 // act
-                pollService.sendStats(
+                pollService.sendParticipation(
                     manager = manager,
                     pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID,
-                    conversationMembers = GROUP_SIZE
+                    conversationId = CONVERSATION_ID
                 )
 
                 // assert

@@ -4,7 +4,6 @@ import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.dto.statsMessage
 import com.wire.apps.polls.dto.textMessage
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
@@ -105,28 +104,21 @@ class UserCommunicationService(
         return message.id.toString()
     }
 
-    suspend fun sendStats(
-        manager: WireApplicationManager,
-        conversationId: QualifiedId,
-        text: Text
-    ): String {
-        val stats = statsMessage(conversationId, text)
-
-        stats.send(manager)
-
-        return stats.id.toString()
-    }
-
     suspend fun sendOrUpdatePollOverview(
         manager: WireApplicationManager,
         participationMessageId: String?,
-        pollOverview: PollOverviewDto
+        pollOverviewDto: PollOverviewDto,
+        stats: Text?
     ): String {
         val wireMessage = if (participationMessageId == null) {
-            pollOverview.initial()
+            logger.debug {
+                "Sending initial Poll overview for conversation ${pollOverviewDto.conversationId}"
+            }
+            pollOverviewDto.createInitialMessage()
         } else {
-            pollOverview.updateWithHiddenResults(
-                overviewMessageId = participationMessageId
+            pollOverviewDto.update(
+                overviewMessageId = participationMessageId,
+                statsMessage = stats
             )
         }
 

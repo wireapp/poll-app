@@ -1,5 +1,6 @@
 package com.wire.apps.polls.setup
 
+import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.parser.InputParser
 import com.wire.apps.polls.parser.PollFactory
@@ -38,11 +39,14 @@ fun DI.MainBuilder.configureContainer() {
 
     bind<PollRepository>() with singleton { PollRepository() }
 
+    bind<OverviewRepository>() with singleton { OverviewRepository() }
+
     bind<PollService>() with
         singleton {
             PollService(
                 factory = instance(),
-                repository = instance(),
+                overviewRepository = instance(),
+                pollRepository = instance(),
                 conversationService = instance(),
                 userCommunicationService = instance(),
                 statsFormattingService = instance()

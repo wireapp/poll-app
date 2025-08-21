@@ -40,12 +40,6 @@ object Polls : Table("polls") {
     val body: Column<String> = text("body", collate = null)
 
     /**
-     * ID of a message storing how many users voted out of group size
-     */
-    val participationMessageId: Column<String?> =
-        varchar("participation_message_id", UUID_LENGTH).nullable()
-
-    /**
      * Timestamp when was this poll created.
      */
     val created: Column<LocalDateTime> = datetime("time_stamp")

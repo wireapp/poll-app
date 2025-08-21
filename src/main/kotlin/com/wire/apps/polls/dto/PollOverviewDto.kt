@@ -4,24 +4,42 @@ import com.wire.apps.polls.dto.common.Text
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import java.util.UUID
+import mu.KLogging
 import pw.forst.katlib.newLine
 
 data class PollOverviewDto(
     val conversationId: QualifiedId,
     val voteCountProgress: String = PollVoteCountProgress.new()
 ) {
-    companion object {
-        private val button = WireMessage.Button(text = "show results")
+    companion object : KLogging() {
+        const val POLL_RESULTS_BUTTON = "show_results"
+
+        private val button = WireMessage.Button(
+            text = "show results",
+            id = POLL_RESULTS_BUTTON
+        )
     }
 
-    fun initial() =
+    fun createInitialMessage() =
         WireMessage.Composite.create(
             conversationId = conversationId,
             text = voteCountProgress,
             buttonList = listOf(button)
         )
 
-    fun updateWithHiddenResults(overviewMessageId: String) =
+    fun update(
+        overviewMessageId: String,
+        statsMessage: Text?
+    ): WireMessage.CompositeEdited =
+        if (statsMessage == null) {
+            logger.debug { "Updating statistics in conversation $conversationId" }
+            refreshProgressBarOnly(overviewMessageId)
+        } else {
+            logger.debug { "Updating progress bar in conversation $conversationId" }
+            appendUpdatedResults(overviewMessageId, statsMessage)
+        }
+
+    private fun refreshProgressBarOnly(overviewMessageId: String) =
         WireMessage.CompositeEdited.create(
             replacingMessageId = UUID.fromString(overviewMessageId),
             conversationId = conversationId,
@@ -29,15 +47,16 @@ data class PollOverviewDto(
             buttonList = listOf(button)
         )
 
-    fun updateWithOpenResults(
+    private fun appendUpdatedResults(
         overviewMessageId: String,
-        stats: Text
+        statsMessage: Text
     ) = WireMessage.CompositeEdited.create(
-        replacingMessageId = UUID.fromString(overviewMessageId),
-        conversationId = conversationId,
-        text = voteCountProgress +
-            newLine +
-            stats,
-        buttonList = emptyList()
-    )
+            replacingMessageId = UUID.fromString(overviewMessageId),
+            conversationId = conversationId,
+            text = voteCountProgress +
+                newLine +
+                // TODO add mentions with correct offset
+                statsMessage.data,
+            buttonList = emptyList()
+        )
 }

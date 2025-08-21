@@ -11,7 +11,6 @@ import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.update
 import pw.forst.exposed.insertOrUpdate
 import pw.forst.katlib.mapToSet
 
@@ -39,7 +38,12 @@ class PollRepository {
             it[this.isActive] = true
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
-            it[this.participationMessageId] = null
+        }
+
+        PollOverview.insert {
+            it[this.pollId] = pollId
+            it[this.id] = null
+            it[this.resultsVisible] = false
         }
 
         Mentions.batchInsert(poll.question.mentions) {
@@ -81,6 +85,13 @@ class PollRepository {
                 ).map { (pollBody, mentions) ->
                     Text(data = pollBody, mentions = mentions.filterNotNull())
                 }.singleOrNull()
+        }
+
+    suspend fun isPollMessage(pollId: String) =
+        newSuspendedTransaction {
+            Polls.select { Polls.id eq pollId }
+                .limit(1)
+                .any()
         }
 
     /**
@@ -129,21 +140,5 @@ class PollRepository {
                 .slice(Votes.userId)
                 .select { Votes.pollId eq pollId }
                 .mapToSet { it[Votes.userId] }
-        }
-
-    suspend fun setParticipationId(
-        pollId: String,
-        participationMessageId: String
-    ) = newSuspendedTransaction {
-        Polls.update({
-            Polls.id eq pollId
-        }) { it[this.participationMessageId] = participationMessageId }
-    }
-
-    suspend fun getParticipationId(pollId: String) =
-        newSuspendedTransaction {
-            Polls
-                .select { Polls.id eq pollId }
-                .singleOrNull()?.get(Polls.participationMessageId)
         }
 }
