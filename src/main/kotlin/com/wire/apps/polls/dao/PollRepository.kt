@@ -1,6 +1,6 @@
 package com.wire.apps.polls.dao
 
-import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.ButtonAction.PollAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text

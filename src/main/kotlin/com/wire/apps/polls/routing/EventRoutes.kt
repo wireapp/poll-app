@@ -1,6 +1,6 @@
 package com.wire.apps.polls.routing
 
-import com.wire.apps.polls.dto.PollAction.Companion.fromWire
+import com.wire.apps.polls.dto.ButtonAction.Companion.fromWire
 import com.wire.apps.polls.dto.UsersInput.Companion.fromWire
 import com.wire.apps.polls.setup.conf.SDKConfiguration
 import com.wire.apps.polls.services.MessagesHandlingService
@@ -40,10 +40,11 @@ fun Routing.events() {
             }
 
             override suspend fun onButtonAction(wireMessage: WireMessage.ButtonAction) {
-                val pollAction = fromWire(wireMessage)
+                val buttonAction = fromWire(wireMessage) ?: return
+
                 handler.handleButtonAction(
                     manager = manager,
-                    pollAction = pollAction,
+                    buttonAction = buttonAction,
                     conversationId = wireMessage.conversationId
                 )
             }

@@ -12,11 +12,11 @@ data class PollOverviewDto(
     val voteCountProgress: String = PollVoteCountProgress.new()
 ) {
     companion object : KLogging() {
-        const val POLL_RESULTS_BUTTON = "show_results"
+        const val RESULTS_BUTTON_PREFIX = "show_results"
 
         private val button = WireMessage.Button(
             text = "show results",
-            id = POLL_RESULTS_BUTTON
+            id = RESULTS_BUTTON_PREFIX
         )
     }
 
@@ -51,12 +51,12 @@ data class PollOverviewDto(
         overviewMessageId: String,
         statsMessage: Text
     ) = WireMessage.CompositeEdited.create(
-            replacingMessageId = UUID.fromString(overviewMessageId),
-            conversationId = conversationId,
-            text = voteCountProgress +
-                newLine +
-                // TODO add mentions with correct offset
-                statsMessage.data,
-            buttonList = emptyList()
-        )
+        replacingMessageId = UUID.fromString(overviewMessageId),
+        conversationId = conversationId,
+        text = voteCountProgress +
+            newLine +
+            // TODO add mentions with correct offset
+            statsMessage.data,
+        buttonList = emptyList()
+    )
 }

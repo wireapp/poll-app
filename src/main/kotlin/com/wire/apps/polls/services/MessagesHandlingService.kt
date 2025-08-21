@@ -1,6 +1,8 @@
 package com.wire.apps.polls.services
 
-import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.ButtonAction
+import com.wire.apps.polls.dto.ButtonAction.PollAction
+import com.wire.apps.polls.dto.ButtonAction.ShowResultsAction
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -30,14 +32,25 @@ class MessagesHandlingService(
      */
     suspend fun handleButtonAction(
         manager: WireApplicationManager,
-        pollAction: PollAction,
+        buttonAction: ButtonAction,
         conversationId: QualifiedId
     ) {
-        pollService.pollAction(
-            manager = manager,
-            pollAction = pollAction,
-            conversationId = conversationId
-        )
+        when (buttonAction) {
+            is PollAction -> {
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = buttonAction,
+                    conversationId = conversationId
+                )
+            }
+            is ShowResultsAction -> {
+                pollService.showResultsAction(
+                    manager = manager,
+                    showResultsAction = buttonAction,
+                    conversationId = conversationId
+                )
+            }
+        }
     }
 
     /**

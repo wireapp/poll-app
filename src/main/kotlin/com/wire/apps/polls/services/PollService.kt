@@ -2,7 +2,8 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.ButtonAction.PollAction
+import com.wire.apps.polls.dto.ButtonAction.ShowResultsAction
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
@@ -95,12 +96,37 @@ class PollService(
         pollAction: PollAction,
         conversationId: QualifiedId
     ) {
-        logger.info { "User voted ${pollAction.userId} in poll ${pollAction.pollId}" }
-        repository.vote(pollAction)
+        val pollId = pollAction.pollId
 
+        if (pollRepository.isPollMessage(pollId)) {
+            logger.info { "User voted ${pollAction.userId} in poll $pollId" }
+            pollRepository.vote(pollAction)
+            afterVoteUpdate(
+                manager = manager,
+                pollId = pollId,
+                conversationId = conversationId
+            )
+        }
+    }
+
+    suspend fun showResultsAction(
+        manager: WireApplicationManager,
+        showResultsAction: ShowResultsAction,
+        conversationId: QualifiedId
+    ) {
+        val pollId = overviewRepository.getPollMessage(
+            pollOverviewMessageId = showResultsAction.messageId
+        ).whenNull {
+            logger.warn {
+                "Show results button was already pressed " +
+                    "by another user in conversation $conversationId"
+            }
+        } ?: return
+
+        overviewRepository.showResults(pollId)
         afterVoteUpdate(
             manager = manager,
-            pollId = pollAction.pollId,
+            pollId = pollId,
             conversationId = conversationId
         )
     }

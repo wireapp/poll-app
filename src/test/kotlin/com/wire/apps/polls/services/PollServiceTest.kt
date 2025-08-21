@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.ButtonAction
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
@@ -88,7 +88,7 @@ class PollServiceTest {
                         manager = manager,
                         participationMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID,
+                            conversationId = CONVERSATION_ID
                         ),
                         stats = null
                     )
@@ -146,7 +146,7 @@ class PollServiceTest {
 
     @Nested
     inner class PollActionTest {
-        private val pollAction = PollAction(
+        private val pollAction = ButtonAction.PollAction(
             pollId = POLL_ID,
             optionId = 0,
             userId = Stub.id()
@@ -202,7 +202,7 @@ class PollServiceTest {
                         manager = manager,
                         participationMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID,
+                            conversationId = CONVERSATION_ID
                         ),
                         stats = statsMessage
                     )
@@ -228,7 +228,7 @@ class PollServiceTest {
                         manager = manager,
                         participationMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID,
+                            conversationId = CONVERSATION_ID
                         ),
                         stats = null
                     )
@@ -261,7 +261,7 @@ class PollServiceTest {
                             voteCountProgress = PollVoteCountProgress(
                                 totalVoteCount = 1,
                                 totalMembers = GROUP_SIZE
-                            ).display(),
+                            ).display()
                         ),
                         stats = null
                     )
@@ -299,7 +299,7 @@ class PollServiceTest {
                         manager = manager,
                         participationMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID,
+                            conversationId = CONVERSATION_ID
                         ),
                         stats = statsMessage
                     )
