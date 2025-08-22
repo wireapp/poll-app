@@ -1,10 +1,9 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
+import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.common.Text
-import com.wire.apps.polls.dto.common.toWireMention
 import com.wire.apps.polls.setup.configureContainer
-import com.wire.integrations.jvm.model.QualifiedId
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -18,8 +17,10 @@ import org.kodein.di.singleton
 import pw.forst.katlib.newLine
 import com.wire.apps.polls.utils.Stub
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class StatsFormattingServiceTest {
     val pollRepository = mockk<PollRepository>()
@@ -39,7 +40,6 @@ class StatsFormattingServiceTest {
     val statsFormattingService by di.instance<StatsFormattingService>()
 
     val testPollId = "test-poll-id"
-    val testConversationId = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString())
     val testGroupSize = 5
 
     @Test
@@ -52,7 +52,6 @@ class StatsFormattingServiceTest {
             // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
-                conversationId = testConversationId,
                 conversationMembers = testGroupSize
             )
 
@@ -71,7 +70,6 @@ class StatsFormattingServiceTest {
             // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
-                conversationId = testConversationId,
                 conversationMembers = testGroupSize
             )
 
@@ -96,13 +94,12 @@ class StatsFormattingServiceTest {
             // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
-                conversationId = testConversationId,
                 conversationMembers = testGroupSize
             )
 
             // assert
             result.shouldNotBeNull()
-            result.text.shouldBe(
+            result.data.shouldBe(
                 "**Results** for poll *\"What's your favorite color?\"*$newLine" +
                     "🟢🟢🟢⚪⚪ **Red** (3)$newLine" +
                     "🟢⚪⚪⚪⚪ *Blue* (1)$newLine" +
@@ -138,25 +135,24 @@ class StatsFormattingServiceTest {
             // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
-                conversationId = testConversationId,
                 conversationMembers = testGroupSize
             )
 
             // assert
             result.shouldNotBeNull()
 
-            val resultText = result.text
+            val resultText = result.data
             result.mentions shouldContainExactly listOf(
                 Stub.mention(
                     text = resultText,
                     userName = userName1,
                     qualifiedId = userId1
-                ).toWireMention(),
+                ),
                 Stub.mention(
                     text = resultText,
                     userName = userName2,
                     qualifiedId = userId2
-                ).toWireMention()
+                )
             )
         }
 
@@ -176,16 +172,79 @@ class StatsFormattingServiceTest {
             // act
             val result = statsFormattingService.formatStats(
                 pollId = testPollId,
-                conversationId = testConversationId,
                 conversationMembers = 3
             )
 
             // assert
             result.shouldNotBeNull()
-            result.text.shouldBe(
+            result.data.shouldBe(
                 "**Results** for poll *\"Do you like cookies?\"*$newLine" +
                     "🟢🟢⚪ **Yes** (2)$newLine" +
                     "🟢⚪⚪ *No* (1)"
             )
         }
+
+    @Nested
+    inner class ParticipationFormattingTest {
+        @Test
+        fun `when in initial stage, then bar should be empty with 0 percent`() {
+            // act
+            val votingCount = PollVoteCountProgress.new()
+
+            // assert
+            votingCount.shouldBe(
+                "⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪ 0%"
+            )
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+        fun `when n user voted out of ten, then bar should have n green dots`(n: Int) {
+            // arrange
+            val totalMembers = 10
+            val voteCountProgress = PollVoteCountProgress(n, totalMembers)
+
+            // act
+            val votingCount = voteCountProgress.display()
+
+            // assert
+            votingCount.shouldBe(
+                "🟢".repeat(n) + "⚪".repeat(totalMembers - n) + " ${n}0%"
+            )
+        }
+
+        @Test
+        fun `when n user voted out of 473, then bar should have correct percentage`() {
+            // arrange
+            val votesCast = listOf(
+                23,
+                36,
+                118,
+                212,
+                237,
+                355,
+                473
+            )
+            val totalMembers = 473
+
+            // act
+            val results = votesCast.map { voted ->
+                PollVoteCountProgress(voted, totalMembers).display()
+            }
+
+            // assert
+            val expected = listOf(
+                "⚪⚪⚪⚪⚪⚪⚪⚪⚪⚪ 5%",
+                "🟢⚪⚪⚪⚪⚪⚪⚪⚪⚪ 8%",
+                "🟢🟢⚪⚪⚪⚪⚪⚪⚪⚪ 25%",
+                "🟢🟢🟢🟢⚪⚪⚪⚪⚪⚪ 45%",
+                "🟢🟢🟢🟢🟢⚪⚪⚪⚪⚪ 50%",
+                "🟢🟢🟢🟢🟢🟢🟢🟢⚪⚪ 75%",
+                "🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢 100%"
+            )
+            expected.forEachIndexed { index, testCase ->
+                results[index].shouldBe(expected[index])
+            }
+        }
+    }
 }

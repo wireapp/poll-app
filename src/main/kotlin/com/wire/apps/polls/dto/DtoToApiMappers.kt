@@ -1,6 +1,7 @@
 package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Mention
+import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.common.toWireMention
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
@@ -28,33 +29,32 @@ fun newPoll(
     )
 }
 
-/**
- * Creates message for vote confirmation.
- */
-fun confirmVote(
-    pollId: String,
-    conversationId: QualifiedId,
-    offset: Int
-): WireMessage.ButtonActionConfirmation =
-    WireMessage.ButtonActionConfirmation(
-        id = UUID.randomUUID(),
+fun newVoteCount(conversationId: QualifiedId) =
+    WireMessage.Text.create(
         conversationId = conversationId,
-        sender = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString()),
-        referencedMessageId = pollId,
-        buttonId = offset.toString()
+        text = PollVoteCountProgress.new()
     )
+
+fun updateVoteCount(
+    conversationId: QualifiedId,
+    voteCountMessageId: String,
+    voteCountProgress: PollVoteCountProgress
+) = WireMessage.TextEdited.create(
+    replacingMessageId = UUID.fromString(voteCountMessageId),
+    conversationId = conversationId,
+    text = voteCountProgress.display()
+)
 
 /**
  * Creates stats (result of the poll) message.
  */
 fun statsMessage(
     conversationId: QualifiedId,
-    text: String,
-    mentions: List<Mention>
+    text: Text
 ) = WireMessage.Text.create(
     conversationId = conversationId,
-    text = text,
-    mentions = mentions.map { it.toWireMention() }
+    text = text.data,
+    mentions = text.mentions.map { it.toWireMention() }
 )
 
 /**

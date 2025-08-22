@@ -41,20 +41,6 @@ class MessagesHandlingServiceTest {
     }
 
     @Test
-    fun `handleText terminates when usersInput is null`() =
-        runTest {
-            // arrange
-            val usersInput = null
-
-            // act
-            messagesHandlingService.handleText(manager, usersInput)
-
-            // assert
-            verify { pollService wasNot Called }
-            verify { userCommunicationService wasNot Called }
-        }
-
-    @Test
     fun `handleText calls sendStatsForLatest when user inputs poll stats`() =
         runTest {
             // arrange

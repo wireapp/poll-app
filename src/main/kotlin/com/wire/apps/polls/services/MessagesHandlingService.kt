@@ -45,13 +45,8 @@ class MessagesHandlingService(
      */
     suspend fun handleText(
         manager: WireApplicationManager,
-        usersInput: UsersInput?
+        usersInput: UsersInput
     ) {
-        if (usersInput == null) {
-            logger.debug("Ignoring message as it does not have correct fields set.")
-            return
-        }
-
         val conversationId = usersInput.conversationId
         val trimmed = usersInput.text
             .trim().replace("\\s+".toRegex(), " ")

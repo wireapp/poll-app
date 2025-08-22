@@ -2,11 +2,11 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.confirmVote
-import com.wire.apps.polls.dto.newPoll
-import com.wire.apps.polls.dto.textMessage
 import com.wire.apps.polls.parser.PollFactory
+import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
+import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
@@ -14,11 +14,10 @@ import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
 
 /**
- * Service handling the polls. It communicates with the proxy via [proxySenderService].
+ * Service handling the polls. It communicates with the user via [userCommunicationService].
  */
 class PollService(
     private val factory: PollFactory,
-    private val proxySenderService: ProxySenderService,
     private val repository: PollRepository,
     private val conversationService: ConversationService,
     private val userCommunicationService: UserCommunicationService,
@@ -34,7 +33,10 @@ class PollService(
         val poll = factory
             .forUserInput(usersInput)
             .whenNull {
-                logger.warn { "It was not possible to create poll." }
+                logger.warn {
+                    "It was not possible to create poll " +
+                        "in conversation ${usersInput.conversationId}"
+                }
                 pollNotParsedFallback(
                     manager = manager,
                     conversationId = conversationId,
@@ -42,26 +44,26 @@ class PollService(
                 )
             } ?: return
 
-        val message = newPoll(
+        val messageId = userCommunicationService.sendPoll(
+            manager = manager,
             conversationId = conversationId,
-            body = poll.question.data,
-            buttons = poll.options,
-            mentions = poll.question.mentions
+            poll = poll
         )
 
         val pollId = repository.savePoll(
             poll = poll,
-            pollId = message.id.toString(),
+            pollId = messageId,
             userId = usersInput.sender.id.toString(),
             userDomain = usersInput.sender.domain,
             conversationId = conversationId.id.toString()
         )
-        logger.info { "Poll successfully created with id: $pollId" }
-
-        proxySenderService.send(
+        sendParticipation(
             manager = manager,
-            message = message
+            conversationId = conversationId,
+            pollId = pollId
         )
+
+        logger.info { "Poll successfully created with id: $pollId" }
     }
 
     private suspend fun pollNotParsedFallback(
@@ -70,8 +72,14 @@ class PollService(
         usersInput: UsersInput
     ) {
         usersInput.text.startsWith("/poll").whenTrue {
-            logger.info { "Command started with /poll, sending usage to user." }
-            userCommunicationService.reactionToWrongCommand(manager, conversationId)
+            logger.info {
+                "Invalid command started with /poll, sending usage to conversation $conversationId"
+            }
+            userCommunicationService.sendFallbackMessage(
+                manager = manager,
+                conversationId = conversationId,
+                messageType = WRONG_COMMAND
+            )
         }
     }
 
@@ -83,20 +91,10 @@ class PollService(
         pollAction: PollAction,
         conversationId: QualifiedId
     ) {
-        logger.info { "User voted" }
+        logger.info { "User voted ${pollAction.userId} in poll ${pollAction.pollId}" }
         repository.vote(pollAction)
-        logger.info { "Vote registered." }
 
-        val message = confirmVote(
-            pollId = pollAction.pollId,
-            conversationId = conversationId,
-            offset = pollAction.optionId
-        )
-        proxySenderService.send(
-            manager = manager,
-            message = message
-        )
-        sendStatsIfAllVoted(
+        afterVoteUpdate(
             manager = manager,
             pollId = pollAction.pollId,
             conversationId = conversationId
@@ -104,31 +102,38 @@ class PollService(
     }
 
     /**
-     * Provides users with immediate confirmation that voting is complete.
+     * Voting triggers update of poll participation message,
+     * and if everyone voted, we send the stats.
      */
-    private suspend fun sendStatsIfAllVoted(
+    private suspend fun afterVoteUpdate(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId
     ) {
         val conversationMembersCount = conversationService
             .getNumberOfConversationMembers(manager, conversationId)
-
         val votedSize = repository.votingUsers(pollId).size
+        val voteCountProgress = PollVoteCountProgress(votedSize, conversationMembersCount)
 
-        if (votedSize == conversationMembersCount) {
-            logger.info { "All users voted, sending statistics to the conversation." }
+        logger.info { "${voteCountProgress.logInfo()} in poll $pollId" }
+
+        if (voteCountProgress.everyoneVoted()) {
+            logger.info {
+                "All users voted, sending statistics to the conversation $conversationId"
+            }
             sendStats(
                 manager = manager,
                 pollId = pollId,
                 conversationId = conversationId,
-                conversationMembers = conversationMembersCount
+                conversationMembers = voteCountProgress.totalMembers
             )
-        } else {
-            logger.info {
-                "Users voted: $votedSize, members of conversation: $conversationMembersCount"
-            }
         }
+        sendParticipation(
+            manager = manager,
+            pollId = pollId,
+            conversationId = conversationId,
+            voteCountProgress = voteCountProgress
+        )
     }
 
     /**
@@ -140,21 +145,27 @@ class PollService(
         conversationId: QualifiedId,
         conversationMembers: Int
     ) {
-        logger.debug { "Sending stats for poll $pollId" }
-        logger.debug { "Conversation members: $conversationMembers" }
+        logger.debug {
+            "Sending stats for poll $pollId " +
+                "Conversation members: $conversationMembers"
+        }
         val stats = statsFormattingService
             .formatStats(
                 pollId = pollId,
-                conversationId = conversationId,
                 conversationMembers = conversationMembers
-            ) ?: textMessage(
-            conversationId = conversationId,
-            text = "No data for poll. Please create a new one."
-        )
+            ).whenNull {
+                logger.error { "It was not possible send stats for poll $pollId" }
+                userCommunicationService.sendFallbackMessage(
+                    manager = manager,
+                    conversationId = conversationId,
+                    messageType = MISSING_DATA
+                )
+            } ?: return
 
-        proxySenderService.send(
+        userCommunicationService.sendStats(
             manager = manager,
-            message = stats
+            conversationId = conversationId,
+            text = stats
         )
     }
 
@@ -166,7 +177,7 @@ class PollService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        logger.debug { "Sending latest stats" }
+        logger.debug { "Sending latest stats in conversation $conversationId" }
 
         val latest = repository.getCurrentPoll(conversationId).whenNull {
             logger.info { "No polls found for conversation $conversationId" }
@@ -180,5 +191,24 @@ class PollService(
             conversationId = conversationId,
             conversationMembers = conversationSize
         )
+    }
+
+    /**
+     * Displays visual representation with percentage of user who cast a votes to conversation size.
+     */
+    private suspend fun sendParticipation(
+        manager: WireApplicationManager,
+        pollId: String,
+        conversationId: QualifiedId,
+        voteCountProgress: PollVoteCountProgress = PollVoteCountProgress.initial()
+    ) {
+        val participationMessageId = repository.getParticipationId(pollId)
+        val newParticipationMessageId = userCommunicationService.sendOrUpdateParticipation(
+            manager = manager,
+            conversationId = conversationId,
+            participationMessageId = participationMessageId,
+            voteCountProgress = voteCountProgress
+        )
+        repository.setParticipationId(pollId, newParticipationMessageId)
     }
 }

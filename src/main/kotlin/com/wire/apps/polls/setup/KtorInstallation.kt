@@ -2,7 +2,7 @@ package com.wire.apps.polls.setup
 
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.wire.apps.polls.dao.DatabaseSetup
-import com.wire.apps.polls.dto.conf.DatabaseConfiguration
+import com.wire.apps.polls.setup.conf.DatabaseConfiguration
 import com.wire.apps.polls.routing.registerRoutes
 import com.wire.apps.polls.setup.errors.registerExceptionHandlers
 import com.wire.apps.polls.utils.createLogger

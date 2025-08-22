@@ -21,17 +21,17 @@ class PollFactory(
     fun forUserInput(usersInput: UsersInput): PollDto? {
         // TODO create better error handling and return probably Either
         val poll = inputParser.parsePoll(usersInput).whenNull {
-            logger.warn { "It was not possible to create poll for user input $usersInput." }
+            logger.warn { "It was not possible to create poll. $usersInput" }
         } ?: return null
 
         val (valid, errors) = pollValidation.validate(poll)
         return if (valid) {
-            logger.debug { "Poll successfully created for user input: $usersInput" }
+            logger.debug { "Poll successfully created. $usersInput" }
             poll
         } else {
             logger.warn {
-                "It was not possible to create poll for user input: " +
-                    "$usersInput due to errors listed bellow:" +
+                "It was not possible to create poll. $usersInput" +
+                    "due to errors listed bellow:" +
                     "$newLine${errors.joinToString(newLine)}"
             }
             null

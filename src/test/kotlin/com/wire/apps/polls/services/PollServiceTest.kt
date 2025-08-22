@@ -2,10 +2,13 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollVoteCountProgress
+import com.wire.apps.polls.dto.common.Text
+import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
+import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
 import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -29,14 +32,10 @@ class PollServiceTest {
     val repository = mockk<PollRepository>(relaxed = true)
     val conversationService = mockk<ConversationService>()
     val manager = mockk<WireApplicationManager>()
-    val proxySenderService = mockk<ProxySenderService> {
-        coEvery { send(manager, any()) } just Runs
-    }
-    val userCommunicationService = mockk<UserCommunicationService>()
+    val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
     val statsFormattingService = mockk<StatsFormattingService>()
 
     val testModule = DI.Module("testModule") {
-        bind<ProxySenderService>(overrides = true) with singleton { proxySenderService }
         bind<PollRepository>(overrides = true) with singleton { repository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
@@ -53,7 +52,7 @@ class PollServiceTest {
     @Nested
     inner class CreatePollTest {
         @Test
-        fun `when input is valid, then save the poll and send it`() =
+        fun `when input is valid, then save the poll and send it with initial participation`() =
             runTest {
                 // arrange
                 val usersInput = Stub.userInput("/poll \"Question\" \"Answer\"")
@@ -70,9 +69,21 @@ class PollServiceTest {
                         userDomain = usersInput.sender.domain,
                         conversationId = any()
                     )
-                    proxySenderService.send(manager, any())
+                    userCommunicationService.sendPoll(
+                        manager = manager,
+                        conversationId = usersInput.conversationId,
+                        poll = any()
+                    )
+                    userCommunicationService.sendOrUpdateParticipation(
+                        manager = manager,
+                        conversationId = usersInput.conversationId,
+                        participationMessageId = any(),
+                        voteCountProgress = PollVoteCountProgress.initial()
+                    )
+                    repository.getParticipationId(any())
+                    repository.setParticipationId(any(), any())
                 }
-                confirmVerified(repository, proxySenderService)
+                confirmVerified(repository, userCommunicationService)
             }
 
         @Test
@@ -81,7 +92,11 @@ class PollServiceTest {
                 // arrange
                 val usersInput = Stub.userInput("/poll \"question without options\"")
                 coEvery {
-                    userCommunicationService.reactionToWrongCommand(manager, any())
+                    userCommunicationService.sendFallbackMessage(
+                        manager = manager,
+                        conversationId = usersInput.conversationId,
+                        messageType = WRONG_COMMAND
+                    )
                 } just Runs
                 val pollServiceSpy = spyk(pollService, recordPrivateCalls = true)
 
@@ -89,7 +104,13 @@ class PollServiceTest {
                 pollServiceSpy.createPoll(manager, usersInput)
 
                 // assert
-                coVerify { userCommunicationService.reactionToWrongCommand(manager, any()) }
+                coVerify {
+                    userCommunicationService.sendFallbackMessage(
+                        manager = manager,
+                        conversationId = usersInput.conversationId,
+                        messageType = WRONG_COMMAND
+                    )
+                }
                 verify {
                     pollServiceSpy["pollNotParsedFallback"](manager, any<QualifiedId>(), usersInput)
                 }
@@ -101,9 +122,13 @@ class PollServiceTest {
                         userDomain = any(),
                         conversationId = any()
                     )
-                    proxySenderService.send(manager, any())
+                    userCommunicationService.sendPoll(
+                        manager = manager,
+                        conversationId = usersInput.conversationId,
+                        poll = any()
+                    )
                 }
-                confirmVerified(repository, proxySenderService, userCommunicationService)
+                confirmVerified(repository, userCommunicationService)
             }
     }
 
@@ -124,7 +149,7 @@ class PollServiceTest {
         }
 
         @Test
-        fun `when someone voted, then register vote and send confirmation`() =
+        fun `when someone voted, then register vote`() =
             runTest {
                 // act
                 pollService.pollAction(
@@ -136,10 +161,6 @@ class PollServiceTest {
                 // assert
                 coVerify(exactly = 1) {
                     repository.vote(pollAction)
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.ButtonActionConfirmation::class)
-                    )
                 }
             }
 
@@ -151,10 +172,9 @@ class PollServiceTest {
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
-                        conversationId = any(),
                         conversationMembers = any()
                     )
-                } returns WireMessage.Text.create(CONVERSATION_ID, "stats for test poll")
+                } returns Text("stats for test poll", emptyList())
 
                 // act
                 pollService.pollAction(
@@ -165,9 +185,10 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.Text::class)
+                    userCommunicationService.sendStats(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        text = any()
                     )
                 }
             }
@@ -187,9 +208,38 @@ class PollServiceTest {
 
                 // assert
                 coVerify(exactly = 0) {
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.Text::class)
+                    userCommunicationService.sendStats(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        text = any()
+                    )
+                }
+            }
+
+        @Test
+        fun `when someone voted, then update poll participation message`() =
+            runTest {
+                // arrange
+                val stubParticipationId = "participation id"
+                coEvery { repository.getParticipationId(POLL_ID) } returns stubParticipationId
+                coEvery { repository.votingUsers(any()).size } returns 1
+
+                // act
+                pollService.pollAction(
+                    manager = manager,
+                    pollAction = pollAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                coVerify {
+                    userCommunicationService.sendOrUpdateParticipation(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        participationMessageId = stubParticipationId,
+                        voteCountProgress = PollVoteCountProgress(
+                            totalVoteCount = 1,
+                            totalMembers = GROUP_SIZE
+                        )
                     )
                 }
             }
@@ -201,14 +251,13 @@ class PollServiceTest {
         fun `when stats formatting is successful, then send stats`() =
             runTest {
                 // arrange
-                val statsMessage = WireMessage.Text.create(
-                    CONVERSATION_ID,
-                    "stats for test poll"
+                val statsMessage = Text(
+                    "stats for test poll",
+                    emptyList()
                 )
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
-                        conversationId = any(),
                         conversationMembers = any()
                     )
                 } returns statsMessage
@@ -223,9 +272,10 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    proxySenderService.send(
-                        manager,
-                        statsMessage
+                    userCommunicationService.sendStats(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        text = statsMessage
                     )
                 }
             }
@@ -237,7 +287,6 @@ class PollServiceTest {
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
-                        conversationId = any(),
                         conversationMembers = any()
                     )
                 } returns null
@@ -252,9 +301,10 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    proxySenderService.send(
-                        manager,
-                        ofType(WireMessage.Text::class)
+                    userCommunicationService.sendFallbackMessage(
+                        manager = manager,
+                        conversationId = CONVERSATION_ID,
+                        messageType = MISSING_DATA
                     )
                 }
             }
