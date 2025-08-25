@@ -12,6 +12,9 @@ data class PollOverviewDto(
     val voteCountProgress: String = PollVoteCountProgress.new()
 ) {
     companion object : KLogging() {
+        /**
+         * Identify if button is inside of Poll Overview Message
+         */
         const val RESULTS_BUTTON_ID = "show_results"
 
         private val button = WireMessage.Button(

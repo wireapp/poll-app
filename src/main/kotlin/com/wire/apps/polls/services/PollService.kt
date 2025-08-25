@@ -2,8 +2,8 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.ButtonAction.PollAction
-import com.wire.apps.polls.dto.ButtonAction.ShowResultsAction
+import com.wire.apps.polls.dto.CompositeButtonAction.PollAction
+import com.wire.apps.polls.dto.CompositeButtonAction.ShowResultsAction
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput

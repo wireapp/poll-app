@@ -14,6 +14,9 @@ data class Option(
     val optionOrder: Int
 ) {
     companion object {
+        /**
+         * Prefix added to the button Item inside of Poll App Composite message
+         */
         const val OPTION_BUTTON_PREFIX = "poll_option"
     }
 }

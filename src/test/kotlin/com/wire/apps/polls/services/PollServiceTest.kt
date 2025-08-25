@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.ButtonAction
+import com.wire.apps.polls.dto.CompositeButtonAction
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
@@ -146,7 +146,7 @@ class PollServiceTest {
 
     @Nested
     inner class PollActionTest {
-        private val pollAction = ButtonAction.PollAction(
+        private val pollAction = CompositeButtonAction.PollAction(
             pollId = POLL_ID,
             optionId = 0,
             userId = Stub.id()

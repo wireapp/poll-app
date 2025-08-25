@@ -5,9 +5,14 @@ import com.wire.apps.polls.dto.PollOverviewDto.Companion.RESULTS_BUTTON_ID
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 
-sealed interface ButtonAction {
+/**
+ * To determine if a generic event is a button click on a specific Poll App message type,
+ * the respective button identifiers are assigned at creation:
+ * [RESULTS_BUTTON_ID] and [OPTION_BUTTON_PREFIX].
+ */
+sealed interface CompositeButtonAction {
     companion object {
-        fun fromWire(wireMessage: WireMessage.ButtonAction): ButtonAction? {
+        fun fromWireButton(wireMessage: WireMessage.ButtonAction): CompositeButtonAction? {
             return when {
                 wireMessage.buttonId == RESULTS_BUTTON_ID -> {
                     ShowResultsAction(
@@ -34,7 +39,7 @@ sealed interface ButtonAction {
     data class ShowResultsAction(
         val messageId: String,
         val userId: QualifiedId
-    ) : ButtonAction
+    ) : CompositeButtonAction
 
     /**
      * Represents poll vote from the user.
@@ -43,5 +48,5 @@ sealed interface ButtonAction {
         val pollId: String,
         val optionId: Int,
         val userId: QualifiedId
-    ) : ButtonAction
+    ) : CompositeButtonAction
 }
