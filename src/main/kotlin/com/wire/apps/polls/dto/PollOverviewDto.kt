@@ -12,11 +12,11 @@ data class PollOverviewDto(
     val voteCountProgress: String = PollVoteCountProgress.new()
 ) {
     companion object : KLogging() {
-        const val RESULTS_BUTTON_PREFIX = "show_results"
+        const val RESULTS_BUTTON_ID = "show_results"
 
         private val button = WireMessage.Button(
             text = "show results",
-            id = RESULTS_BUTTON_PREFIX
+            id = RESULTS_BUTTON_ID
         )
     }
 
