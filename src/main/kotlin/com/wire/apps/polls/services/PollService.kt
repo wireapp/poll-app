@@ -96,7 +96,9 @@ class PollService(
     ) {
         val pollId = pollVote.pollId
 
-        logger.info { "User ${pollVote.userId} voted in poll $pollId" }
+        logger.info {
+            "User ${pollVote.userId} voted in poll $pollId in conversation $conversationId"
+        }
         pollRepository.vote(pollVote)
         afterVoteUpdate(
             manager = manager,
@@ -112,7 +114,10 @@ class PollService(
     ) {
         val pollId = resultsRequest.pollId
 
-        logger.info { "User ${resultsRequest.userId} requested results for $pollId" }
+        logger.info {
+            "User ${resultsRequest.userId} requested results for $pollId " +
+                "in conversation $conversationId"
+        }
         pollRepository.showResults(pollId)
         afterVoteUpdate(
             manager = manager,
