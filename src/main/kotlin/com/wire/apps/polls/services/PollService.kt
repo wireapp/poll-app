@@ -140,7 +140,10 @@ class PollService(
         val votedSize = pollRepository.votingUsers(pollId).size
         val voteCountProgress = PollVoteCountProgress(votedSize, conversationMembersCount)
 
-        logger.info { "${voteCountProgress.logInfo()} in poll $pollId" }
+        logger.info {
+            "Users voted: ${voteCountProgress.totalVoteCount}, " +
+                "members of conversation: ${voteCountProgress.totalMembers} in poll $pollId"
+        }
 
         if (voteCountProgress.everyoneVoted()) {
             logger.info {
