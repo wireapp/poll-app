@@ -1,9 +1,8 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.ButtonPressed.PollVote
-import com.wire.apps.polls.dto.ButtonPressed.ResultsRequest
-import com.wire.apps.polls.dto.PollOverviewDto
+import com.wire.apps.polls.dto.PollAction.VoteAction
+import com.wire.apps.polls.dto.PollAction.ShowResultsAction
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.common.Text
@@ -87,39 +86,39 @@ class PollService(
     }
 
     /**
-     * Confirms to the user that their vote has been successfully registered.
+     * Registers vote in database and triggers post vote update of overview message
      */
-    suspend fun registerVote(
+    suspend fun processVoteAction(
         manager: WireApplicationManager,
-        pollVote: PollVote,
+        voteAction: VoteAction,
         conversationId: QualifiedId
     ) {
-        val pollId = pollVote.pollId
+        val pollId = voteAction.pollId
 
         logger.info {
-            "User ${pollVote.userId} voted in poll $pollId in conversation $conversationId"
+            "User ${voteAction.userId} voted in poll $pollId in conversation $conversationId"
         }
-        pollRepository.vote(pollVote)
-        afterVoteUpdate(
+        pollRepository.saveVote(voteAction)
+        onPollActionProcessed(
             manager = manager,
             pollId = pollId,
             conversationId = conversationId
         )
     }
 
-    suspend fun showResults(
+    suspend fun processShowResultsAction(
         manager: WireApplicationManager,
-        resultsRequest: ResultsRequest,
+        showResultsAction: ShowResultsAction,
         conversationId: QualifiedId
     ) {
-        val pollId = resultsRequest.pollId
+        val pollId = showResultsAction.pollId
 
         logger.info {
-            "User ${resultsRequest.userId} requested results for $pollId " +
+            "User ${showResultsAction.userId} requested results for $pollId " +
                 "in conversation $conversationId"
         }
-        pollRepository.showResults(pollId)
-        afterVoteUpdate(
+        pollRepository.setResultVisibilityToTrue(pollId)
+        onPollActionProcessed(
             manager = manager,
             pollId = pollId,
             conversationId = conversationId
@@ -130,7 +129,7 @@ class PollService(
      * Voting triggers update of poll overview message,
      * and if everyone voted, we send the stats.
      */
-    private suspend fun afterVoteUpdate(
+    private suspend fun onPollActionProcessed(
         manager: WireApplicationManager,
         pollId: String,
         conversationId: QualifiedId
@@ -149,7 +148,7 @@ class PollService(
             logger.info {
                 "All users voted, sending statistics to the conversation $conversationId"
             }
-            pollRepository.showResults(pollId)
+            pollRepository.setResultVisibilityToTrue(pollId)
         }
         refreshOverview(
             manager = manager,

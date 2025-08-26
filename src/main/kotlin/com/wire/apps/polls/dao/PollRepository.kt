@@ -1,6 +1,6 @@
 package com.wire.apps.polls.dao
 
-import com.wire.apps.polls.dto.ButtonPressed.PollVote
+import com.wire.apps.polls.dto.PollAction.VoteAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
@@ -9,6 +9,7 @@ import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
@@ -41,7 +42,7 @@ class PollRepository {
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
             it[this.overviewMessageId] = null
-            it[this.resultsVisible] = false
+            it[this.isResultVisible] = false
         }
 
         Mentions.batchInsert(poll.question.mentions) {
@@ -85,16 +86,9 @@ class PollRepository {
                 }.singleOrNull()
         }
 
-    suspend fun isPollMessage(pollId: String) =
+    suspend fun isPollMessage(messageId: String) =
         newSuspendedTransaction {
-            Polls.select { Polls.id eq pollId }
-                .limit(1)
-                .any()
-        }
-
-    suspend fun isOverviewMessage(pollOverviewMessageId: String) =
-        newSuspendedTransaction {
-            Polls.select { Polls.overviewMessageId eq pollOverviewMessageId }
+            Polls.select { (Polls.id eq messageId) or (Polls.overviewMessageId eq messageId) }
                 .limit(1)
                 .any()
         }
@@ -103,12 +97,12 @@ class PollRepository {
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
      */
-    suspend fun vote(pollVote: PollVote) =
+    suspend fun saveVote(voteAction: VoteAction) =
         newSuspendedTransaction {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
-                it[pollId] = pollVote.pollId
-                it[pollOption] = pollVote.index
-                it[userId] = pollVote.userId.id.toString()
+                it[pollId] = voteAction.pollId
+                it[pollOption] = voteAction.buttonIndex
+                it[userId] = voteAction.userId.id.toString()
             }
         }
 
@@ -147,24 +141,24 @@ class PollRepository {
                 .mapToSet { it[Votes.userId] }
         }
 
-    suspend fun getPollMessage(pollOverviewMessageId: String) =
+    suspend fun getPollId(pollOverviewMessageId: String) =
         newSuspendedTransaction {
             Polls.select { Polls.overviewMessageId eq pollOverviewMessageId }
                 .singleOrNull()?.get(Polls.id)
         }
 
-    suspend fun showResults(pollId: String) =
+    suspend fun setResultVisibilityToTrue(pollId: String) =
         newSuspendedTransaction {
             Polls.update({
                 Polls.id eq pollId
-            }) { it[this.resultsVisible] = true }
+            }) { it[this.isResultVisible] = true }
         }
 
-    suspend fun areResultsVisible(pollId: String): Boolean {
+    suspend fun isResultVisible(pollId: String): Boolean {
         return newSuspendedTransaction {
             Polls
                 .select { Polls.id eq pollId }
-                .single()[Polls.resultsVisible]
+                .single()[Polls.isResultVisible]
         }
     }
 

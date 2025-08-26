@@ -1,7 +1,7 @@
 package com.wire.apps.polls.setup
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.services.ButtonActionIdentifier
+import com.wire.apps.polls.dto.PollActionMapper
 import com.wire.apps.polls.parser.InputParser
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.parser.PollValidation
@@ -55,7 +55,7 @@ fun DI.MainBuilder.configureContainer() {
 
     bind<ConversationService>() with singleton { ConversationService() }
 
-    bind<ButtonActionIdentifier>() with singleton { ButtonActionIdentifier(instance()) }
+    bind<PollActionMapper>() with singleton { PollActionMapper(instance()) }
 
     bind<MessagesHandlingService>() with
         singleton { MessagesHandlingService(instance(), instance()) }

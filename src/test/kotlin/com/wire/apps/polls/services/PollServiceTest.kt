@@ -1,12 +1,8 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.ButtonPressed
-import com.wire.apps.polls.dto.PollOverviewDto
-import com.wire.apps.polls.dto.PollVoteCountProgress
+import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.common.Text
-import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
@@ -35,13 +31,11 @@ class PollServiceTest {
     val conversationService = mockk<ConversationService>()
     val manager = mockk<WireApplicationManager>()
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
-    val statsFormattingService = mockk<StatsFormattingService>()
 
     val testModule = DI.Module("testModule") {
         bind<PollRepository>(overrides = true) with singleton { pollRepository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
-        bind<StatsFormattingService>(overrides = true) with singleton { statsFormattingService }
     }
 
     val di = DI {
@@ -63,6 +57,7 @@ class PollServiceTest {
                     text = "/poll \"Question\" \"Answer\"",
                     mentions = emptyList()
                 )
+                coEvery { pollRepository.getOverviewMessageId(any()) } returns null
 
                 // act
                 pollService.createPoll(manager, usersInput)
@@ -81,17 +76,12 @@ class PollServiceTest {
                         conversationId = usersInput.conversationId,
                         poll = any()
                     )
-                    userCommunicationService.sendOrUpdatePollOverview(
+                    userCommunicationService.sendInitialPollOverview(
                         manager = manager,
-                        overviewMessageId = any(),
-                        pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID
-                        ),
-                        stats = null
+                        conversationId = usersInput.conversationId
                     )
                     pollRepository.getOverviewMessageId(any())
                     pollRepository.setOverviewMessageId(any(), any())
-                    pollRepository.areResultsVisible(any())
                 }
                 confirmVerified(pollRepository, userCommunicationService)
             }
@@ -144,9 +134,9 @@ class PollServiceTest {
 
     @Nested
     inner class PollActionTest {
-        private val pollVote = ButtonPressed.PollVote(
+        private val voteAction = PollAction.VoteAction(
             pollId = POLL_ID,
-            index = 0,
+            buttonIndex = 0,
             userId = Stub.id()
         )
 
@@ -160,18 +150,18 @@ class PollServiceTest {
         }
 
         @Test
-        fun `when someone voted, then register vote`() =
+        fun `when someone voted, then save vote`() =
             runTest {
                 // act
-                pollService.registerVote(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollVote = pollVote,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify(exactly = 1) {
-                    pollRepository.vote(pollVote)
+                    pollRepository.saveVote(voteAction)
                 }
             }
 
@@ -182,15 +172,15 @@ class PollServiceTest {
                 coEvery { pollRepository.votingUsers(any()).size } returns GROUP_SIZE
 
                 // act
-                pollService.registerVote(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollVote = pollVote,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify {
-                    pollRepository.showResults(POLL_ID)
+                    pollRepository.setResultVisibilityToTrue(POLL_ID)
                 }
             }
 
@@ -198,31 +188,23 @@ class PollServiceTest {
         fun `when results are set to visible, then poll overview should be updated with stats`() =
             runTest {
                 // arrange
-                coEvery { pollRepository.areResultsVisible(POLL_ID) } returns true
-                val statsMessage = Text("stats for test poll", emptyList())
-                coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationMembers = any()
-                    )
-                } returns statsMessage
+                coEvery { pollRepository.isResultVisible(POLL_ID) } returns true
 
                 // act
-                pollService.registerVote(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollVote = pollVote,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify {
-                    userCommunicationService.sendOrUpdatePollOverview(
+                    userCommunicationService.updatePollResults(
                         manager = manager,
+                        conversationId = CONVERSATION_ID,
                         overviewMessageId = any(),
-                        pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID
-                        ),
-                        stats = statsMessage
+                        voteCountProgress = any(),
+                        pollId = POLL_ID
                     )
                 }
             }
@@ -234,21 +216,19 @@ class PollServiceTest {
                 coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
-                pollService.registerVote(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollVote = pollVote,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
-                coVerify(exactly = 0) {
-                    userCommunicationService.sendOrUpdatePollOverview(
+                coVerify(exactly = 1) {
+                    userCommunicationService.updatePollProgressBar(
                         manager = manager,
+                        conversationId = CONVERSATION_ID,
                         overviewMessageId = any(),
-                        pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID
-                        ),
-                        stats = null
+                        voteCountProgress = any()
                     )
                 }
             }
@@ -264,24 +244,18 @@ class PollServiceTest {
                 coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
-                pollService.registerVote(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollVote = pollVote,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 coVerify {
-                    userCommunicationService.sendOrUpdatePollOverview(
+                    userCommunicationService.updatePollProgressBar(
                         manager = manager,
                         overviewMessageId = stubOverviewId,
-                        pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID,
-                            voteCountProgress = PollVoteCountProgress(
-                                totalVoteCount = 1,
-                                totalMembers = GROUP_SIZE
-                            ).display()
-                        ),
-                        stats = null
+                        conversationId = CONVERSATION_ID,
+                        voteCountProgress = any()
                     )
                 }
             }
@@ -293,17 +267,7 @@ class PollServiceTest {
         fun `when stats formatting is successful, then send stats`() =
             runTest {
                 // arrange
-                coEvery { pollRepository.areResultsVisible(POLL_ID) } returns true
-                val statsMessage = Text(
-                    "stats for test poll",
-                    emptyList()
-                )
-                coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationMembers = any()
-                    )
-                } returns statsMessage
+                coEvery { pollRepository.isResultVisible(POLL_ID) } returns true
 
                 // act
                 pollService.refreshOverview(
@@ -314,42 +278,12 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    userCommunicationService.sendOrUpdatePollOverview(
+                    userCommunicationService.updatePollResults(
                         manager = manager,
                         overviewMessageId = any(),
-                        pollOverviewDto = PollOverviewDto(
-                            conversationId = CONVERSATION_ID
-                        ),
-                        stats = statsMessage
-                    )
-                }
-            }
-
-        @Test
-        fun `when stats formatting fails, then inform user that it failed`() =
-            runTest {
-                // arrange
-                coEvery { pollRepository.areResultsVisible(POLL_ID) } returns true
-                coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationMembers = any()
-                    )
-                } returns null
-
-                // act
-                pollService.refreshOverview(
-                    manager = manager,
-                    pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID
-                )
-
-                // assert
-                coVerify {
-                    userCommunicationService.sendFallbackMessage(
-                        manager = manager,
                         conversationId = CONVERSATION_ID,
-                        messageType = MISSING_DATA
+                        voteCountProgress = any(),
+                        pollId = POLL_ID
                     )
                 }
             }

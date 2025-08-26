@@ -1,8 +1,9 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dto.PollDto
-import com.wire.apps.polls.dto.PollOverviewDto
-import com.wire.apps.polls.dto.common.Text
+import com.wire.apps.polls.dto.PollVoteCountProgress
+import com.wire.apps.polls.dto.updatePollOverviewResults
+import com.wire.apps.polls.dto.initialPollOverview
 import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.dto.textMessage
 import com.wire.integrations.jvm.model.QualifiedId
