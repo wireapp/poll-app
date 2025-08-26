@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.CompositeButtonAction
+import com.wire.apps.polls.dto.ButtonPressed
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
@@ -146,9 +146,9 @@ class PollServiceTest {
 
     @Nested
     inner class PollActionTest {
-        private val pollAction = CompositeButtonAction.PollAction(
+        private val pollVote = ButtonPressed.PollVote(
             pollId = POLL_ID,
-            optionId = 0,
+            index = 0,
             userId = Stub.id()
         )
 
@@ -165,15 +165,15 @@ class PollServiceTest {
         fun `when someone voted, then register vote`() =
             runTest {
                 // act
-                pollService.pollAction(
+                pollService.registerVote(
                     manager = manager,
-                    pollAction = pollAction,
+                    pollVote = pollVote,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify(exactly = 1) {
-                    pollRepository.vote(pollAction)
+                    pollRepository.vote(pollVote)
                 }
             }
 
@@ -184,9 +184,9 @@ class PollServiceTest {
                 coEvery { pollRepository.votingUsers(any()).size } returns GROUP_SIZE
 
                 // act
-                pollService.pollAction(
+                pollService.registerVote(
                     manager = manager,
-                    pollAction = pollAction,
+                    pollVote = pollVote,
                     conversationId = CONVERSATION_ID
                 )
 
@@ -210,9 +210,9 @@ class PollServiceTest {
                 } returns statsMessage
 
                 // act
-                pollService.pollAction(
+                pollService.registerVote(
                     manager = manager,
-                    pollAction = pollAction,
+                    pollVote = pollVote,
                     conversationId = CONVERSATION_ID
                 )
 
@@ -236,9 +236,9 @@ class PollServiceTest {
                 coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
-                pollService.pollAction(
+                pollService.registerVote(
                     manager = manager,
-                    pollAction = pollAction,
+                    pollVote = pollVote,
                     conversationId = CONVERSATION_ID
                 )
 
@@ -266,9 +266,9 @@ class PollServiceTest {
                 coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
-                pollService.pollAction(
+                pollService.registerVote(
                     manager = manager,
-                    pollAction = pollAction,
+                    pollVote = pollVote,
                     conversationId = CONVERSATION_ID
                 )
 

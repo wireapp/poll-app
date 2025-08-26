@@ -1,8 +1,8 @@
 package com.wire.apps.polls.services
 
-import com.wire.apps.polls.dto.CompositeButtonAction
-import com.wire.apps.polls.dto.CompositeButtonAction.PollAction
-import com.wire.apps.polls.dto.CompositeButtonAction.ShowResultsAction
+import com.wire.apps.polls.dto.ButtonPressed
+import com.wire.apps.polls.dto.ButtonPressed.PollVote
+import com.wire.apps.polls.dto.ButtonPressed.ResultsRequest
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -30,23 +30,23 @@ class MessagesHandlingService(
     /**
      * Records the user's vote based on the selected button.
      */
-    suspend fun handleButtonAction(
+    suspend fun handleButtonPressed(
         manager: WireApplicationManager,
-        compositeButtonAction: CompositeButtonAction,
+        buttonPressed: ButtonPressed,
         conversationId: QualifiedId
     ) {
-        when (compositeButtonAction) {
-            is PollAction -> {
-                pollService.pollAction(
+        when (buttonPressed) {
+            is PollVote -> {
+                pollService.registerVote(
                     manager = manager,
-                    pollAction = compositeButtonAction,
+                    pollVote = buttonPressed,
                     conversationId = conversationId
                 )
             }
-            is ShowResultsAction -> {
-                pollService.showResultsAction(
+            is ResultsRequest -> {
+                pollService.showResults(
                     manager = manager,
-                    showResultsAction = compositeButtonAction,
+                    resultsRequest = buttonPressed,
                     conversationId = conversationId
                 )
             }

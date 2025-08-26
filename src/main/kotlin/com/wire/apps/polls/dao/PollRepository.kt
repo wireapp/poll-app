@@ -1,6 +1,6 @@
 package com.wire.apps.polls.dao
 
-import com.wire.apps.polls.dto.CompositeButtonAction.PollAction
+import com.wire.apps.polls.dto.ButtonPressed.PollVote
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
@@ -98,12 +98,12 @@ class PollRepository {
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
      */
-    suspend fun vote(pollAction: PollAction) =
+    suspend fun vote(pollVote: PollVote) =
         newSuspendedTransaction {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
-                it[pollId] = pollAction.pollId
-                it[pollOption] = pollAction.optionId
-                it[userId] = pollAction.userId.id.toString()
+                it[pollId] = pollVote.pollId
+                it[pollOption] = pollVote.index
+                it[userId] = pollVote.userId.id.toString()
             }
         }
 

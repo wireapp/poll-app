@@ -2,8 +2,8 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
-import com.wire.apps.polls.dto.CompositeButtonAction.PollAction
-import com.wire.apps.polls.dto.CompositeButtonAction.ShowResultsAction
+import com.wire.apps.polls.dto.ButtonPressed.PollVote
+import com.wire.apps.polls.dto.ButtonPressed.ResultsRequest
 import com.wire.apps.polls.dto.PollOverviewDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
@@ -91,16 +91,17 @@ class PollService(
     /**
      * Confirms to the user that their vote has been successfully registered.
      */
-    suspend fun pollAction(
+    suspend fun registerVote(
         manager: WireApplicationManager,
-        pollAction: PollAction,
+        pollVote: PollVote,
         conversationId: QualifiedId
     ) {
-        val pollId = pollAction.pollId
+        val pollId = pollVote.pollId
 
+        // TODO: condition should be in button action mapper
         if (pollRepository.isPollMessage(pollId)) {
-            logger.info { "User voted ${pollAction.userId} in poll $pollId" }
-            pollRepository.vote(pollAction)
+            logger.info { "User voted ${pollVote.userId} in poll $pollId" }
+            pollRepository.vote(pollVote)
             afterVoteUpdate(
                 manager = manager,
                 pollId = pollId,
@@ -109,13 +110,14 @@ class PollService(
         }
     }
 
-    suspend fun showResultsAction(
+    suspend fun showResults(
         manager: WireApplicationManager,
-        showResultsAction: ShowResultsAction,
+        resultsRequest: ResultsRequest,
         conversationId: QualifiedId
     ) {
+        // TODO: condition should be in button action mapper
         val pollId = overviewRepository.getPollMessage(
-            pollOverviewMessageId = showResultsAction.messageId
+            pollOverviewMessageId = resultsRequest.overviewMessageId
         ).whenNull {
             logger.warn {
                 "Show results button was already pressed " +
