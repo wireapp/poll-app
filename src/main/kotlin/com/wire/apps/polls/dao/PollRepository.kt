@@ -164,8 +164,10 @@ class PollRepository {
 
     suspend fun setOverviewMessageId(
         pollId: String,
-        overviewMessageId: String
+        overviewMessageId: String?
     ) = newSuspendedTransaction {
+        overviewMessageId ?: return@newSuspendedTransaction
+
         Polls.update({
             Polls.id eq pollId
         }) { it[this.overviewMessageId] = overviewMessageId }

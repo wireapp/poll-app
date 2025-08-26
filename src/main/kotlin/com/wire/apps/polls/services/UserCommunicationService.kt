@@ -6,16 +6,19 @@ import com.wire.apps.polls.dto.updatePollOverviewResults
 import com.wire.apps.polls.dto.initialPollOverview
 import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.dto.textMessage
+import com.wire.apps.polls.dto.updatePollOverviewProgressBar
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.model.WireMessage
 import com.wire.integrations.jvm.service.WireApplicationManager
 import mu.KLogging
+import pw.forst.katlib.whenNull
 
 /**
  * Service used for handling user commands.
  */
 class UserCommunicationService(
     private val proxySenderService: ProxySenderService,
+    private val statsFormattingService: StatsFormattingService,
     private val version: String
 ) {
     private companion object : KLogging() {
@@ -36,7 +39,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        textMessage(conversationId, "Hello, I'm Poll App. $USAGE").send(manager)
+        manager.send(textMessage(conversationId, "Hello, I'm Poll App. $USAGE"))
     }
 
     /**
@@ -51,7 +54,7 @@ class UserCommunicationService(
             FallbackMessageType.WRONG_COMMAND -> "I couldn't recognize your command. $USAGE"
             FallbackMessageType.MISSING_DATA -> "No data for poll. Please create a new one. $USAGE"
         }
-        textMessage(conversationId, message).send(manager)
+        manager.send(textMessage(conversationId, message))
     }
 
     enum class FallbackMessageType {
@@ -66,7 +69,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        textMessage(conversationId, commands).send(manager)
+        manager.send(textMessage(conversationId, commands))
     }
 
     /**
@@ -76,7 +79,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        textMessage(conversationId, "\uD83D\uDE07").send(manager)
+        manager.send(textMessage(conversationId, "\uD83D\uDE07"))
     }
 
     /**
@@ -86,7 +89,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        textMessage(conversationId, "My version is: *$version*").send(manager)
+        manager.send(textMessage(conversationId, "My version is: *$version*"))
     }
 
     suspend fun sendPoll(
@@ -100,38 +103,81 @@ class UserCommunicationService(
             buttons = poll.options,
             mentions = poll.question.mentions
         )
-        message.send(manager)
+        manager.send(message)
 
         return message.id.toString()
     }
 
-    suspend fun sendOrUpdatePollOverview(
+    suspend fun sendInitialPollOverview(
         manager: WireApplicationManager,
-        overviewMessageId: String?,
-        pollOverviewDto: PollOverviewDto,
-        stats: Text?
+        conversationId: QualifiedId
     ): String {
-        val wireMessage = if (overviewMessageId == null) {
-            logger.debug {
-                "Sending initial Poll overview for conversation ${pollOverviewDto.conversationId}"
-            }
-            pollOverviewDto.createInitialMessage()
-        } else {
-            pollOverviewDto.update(
-                overviewMessageId = overviewMessageId,
-                stats = stats
-            )
-        }
+        val wireMessage = initialPollOverview(conversationId)
 
-        wireMessage.send(manager)
+        logger.debug {
+            "Sending initial Poll overview for conversation $conversationId"
+        }
+        manager.send(wireMessage)
 
         return wireMessage.id.toString()
     }
 
-    private suspend fun WireMessage.send(manager: WireApplicationManager) {
+    suspend fun updatePollProgressBar(
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        overviewMessageId: String,
+        voteCountProgress: String
+    ): String {
+        val wireMessage = updatePollOverviewProgressBar(
+            conversationId = conversationId,
+            overviewMessageId = overviewMessageId,
+            voteCountProgress = voteCountProgress
+        )
+
+        manager.send(wireMessage)
+
+        return wireMessage.id.toString()
+    }
+
+    suspend fun updatePollResults(
+        manager: WireApplicationManager,
+        conversationId: QualifiedId,
+        overviewMessageId: String,
+        voteCountProgress: PollVoteCountProgress,
+        pollId: String
+    ): String? {
+        val stats = statsFormattingService
+            .formatStats(
+                pollId = pollId,
+                conversationMembers = voteCountProgress.totalMembers
+            ).whenNull {
+                logger.error { "It was not possible to send stats for poll $pollId" }
+                sendFallbackMessage(
+                    manager = manager,
+                    conversationId = conversationId,
+                    messageType = FallbackMessageType.MISSING_DATA
+                )
+            } ?: return null
+        val wireMessage = updatePollOverviewResults(
+            conversationId = conversationId,
+            overviewMessageId = overviewMessageId,
+            stats = stats,
+            voteCountProgress = voteCountProgress.display()
+        )
+
+        logger.debug {
+            "Sending stats for poll $pollId " +
+                "Conversation members: ${voteCountProgress.totalMembers}"
+        }
+        manager.send(wireMessage)
+
+        return wireMessage.id.toString()
+    }
+
+    private suspend fun WireApplicationManager.send(message: WireMessage) {
         proxySenderService.send(
-            manager = manager,
-            message = this
+            manager = this,
+            message = message
         )
     }
 }

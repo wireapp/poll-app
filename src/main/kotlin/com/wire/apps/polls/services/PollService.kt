@@ -5,9 +5,7 @@ import com.wire.apps.polls.dto.PollAction.VoteAction
 import com.wire.apps.polls.dto.PollAction.ShowResultsAction
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.parser.PollFactory
-import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -22,8 +20,7 @@ class PollService(
     private val factory: PollFactory,
     private val pollRepository: PollRepository,
     private val conversationService: ConversationService,
-    private val userCommunicationService: UserCommunicationService,
-    private val statsFormattingService: StatsFormattingService
+    private val userCommunicationService: UserCommunicationService
 ) {
     private companion object : KLogging()
 
@@ -158,32 +155,6 @@ class PollService(
         )
     }
 
-    suspend fun generateStats(
-        manager: WireApplicationManager,
-        pollId: String,
-        conversationId: QualifiedId,
-        conversationMembers: Int
-    ): Text? {
-        logger.debug { "Verifying if stats are visible for poll $pollId" }
-        if (!pollRepository.areResultsVisible(pollId)) return null
-        logger.debug {
-            "Sending stats for poll $pollId " +
-                "Conversation members: $conversationMembers"
-        }
-        return statsFormattingService
-            .formatStats(
-                pollId = pollId,
-                conversationMembers = conversationMembers
-            ).whenNull {
-                logger.error { "It was not possible to send stats for poll $pollId" }
-                userCommunicationService.sendFallbackMessage(
-                    manager = manager,
-                    conversationId = conversationId,
-                    messageType = MISSING_DATA
-                )
-            }
-    }
-
     /**
      * Displays visual representation with percentage of user who cast a votes to conversation size.
      */
@@ -195,22 +166,31 @@ class PollService(
     ) {
         val overviewMessageId = pollRepository.getOverviewMessageId(pollId)
 
-        val statsMessage = generateStats(
-            manager = manager,
-            conversationId = conversationId,
-            pollId = pollId,
-            conversationMembers = voteCountProgress.totalMembers
-        )
-        val pollOverviewDto = PollOverviewDto(
-            conversationId = conversationId,
-            voteCountProgress = voteCountProgress.display()
-        )
-        val newOverviewMessageId = userCommunicationService.sendOrUpdatePollOverview(
-            manager = manager,
-            overviewMessageId = overviewMessageId,
-            pollOverviewDto = pollOverviewDto,
-            stats = statsMessage
-        )
+        val newOverviewMessageId = when {
+            overviewMessageId == null -> {
+                userCommunicationService.sendInitialPollOverview(
+                    manager = manager,
+                    conversationId = conversationId
+                )
+            }
+            pollRepository.isResultVisible(pollId) -> {
+                userCommunicationService.updatePollResults(
+                    manager = manager,
+                    conversationId = conversationId,
+                    overviewMessageId = overviewMessageId,
+                    voteCountProgress = voteCountProgress,
+                    pollId = pollId
+                )
+            }
+            else -> {
+                userCommunicationService.updatePollProgressBar(
+                    manager = manager,
+                    conversationId = conversationId,
+                    overviewMessageId = overviewMessageId,
+                    voteCountProgress = voteCountProgress.display()
+                )
+            }
+        }
         pollRepository.setOverviewMessageId(pollId, newOverviewMessageId)
     }
 }
