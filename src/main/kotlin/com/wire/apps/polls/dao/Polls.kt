@@ -40,6 +40,17 @@ object Polls : Table("polls") {
     val body: Column<String> = text("body", collate = null)
 
     /**
+     * ID of a message storing how many users voted out of group size
+     */
+    val overviewMessageId: Column<String?> =
+        varchar("overview_message_id", UUID_LENGTH).nullable()
+
+    /**
+     * Determine if results are visible or hidden
+     */
+    val resultsVisible: Column<Boolean> = bool("results_visible")
+
+    /**
      * Timestamp when was this poll created.
      */
     val created: Column<LocalDateTime> = datetime("time_stamp")

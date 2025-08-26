@@ -106,18 +106,18 @@ class UserCommunicationService(
 
     suspend fun sendOrUpdatePollOverview(
         manager: WireApplicationManager,
-        participationMessageId: String?,
+        overviewMessageId: String?,
         pollOverviewDto: PollOverviewDto,
         stats: Text?
     ): String {
-        val wireMessage = if (participationMessageId == null) {
+        val wireMessage = if (overviewMessageId == null) {
             logger.debug {
                 "Sending initial Poll overview for conversation ${pollOverviewDto.conversationId}"
             }
             pollOverviewDto.createInitialMessage()
         } else {
             pollOverviewDto.update(
-                overviewMessageId = participationMessageId,
+                overviewMessageId = overviewMessageId,
                 stats = stats
             )
         }

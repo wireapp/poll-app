@@ -71,7 +71,7 @@ data class PollOverviewDto(
         buttonList = emptyList()
     )
 //    private fun appendUpdatedResults(
-//        overviewMessageId: String,
+//        pollId: String,
 //        stats: Text
 //    ): WireMessage.CompositeEdited {
 //        val voteProgressMessage = WireMessage.Text.create(
@@ -83,7 +83,7 @@ data class PollOverviewDto(
 //            text = stats
 //        )
 //        return WireMessage.CompositeEdited(
-//            replacingMessageId = UUID.fromString(overviewMessageId),
+//            replacingMessageId = UUID.fromString(pollId),
 //            conversationId = conversationId,
 //            id = UUID.randomUUID(),
 //            sender = QualifiedId(UUID.randomUUID(), UUID.randomUUID().toString()),

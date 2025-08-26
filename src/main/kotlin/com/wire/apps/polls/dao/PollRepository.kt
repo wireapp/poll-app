@@ -11,12 +11,14 @@ import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.update
 import pw.forst.exposed.insertOrUpdate
 import pw.forst.katlib.mapToSet
 
 /**
  * Simple repository for handling database transactions on one place.
  */
+@Suppress("TooManyFunctions")
 class PollRepository {
     private companion object : KLogging()
 
@@ -38,11 +40,7 @@ class PollRepository {
             it[this.isActive] = true
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
-        }
-
-        PollOverview.insert {
-            it[this.pollId] = pollId
-            it[this.id] = null
+            it[this.overviewMessageId] = null
             it[this.resultsVisible] = false
         }
 
@@ -94,6 +92,13 @@ class PollRepository {
                 .any()
         }
 
+    suspend fun isOverviewMessage(pollOverviewMessageId: String) =
+        newSuspendedTransaction {
+            Polls.select { Polls.overviewMessageId eq pollOverviewMessageId }
+                .limit(1)
+                .any()
+        }
+
     /**
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
@@ -140,5 +145,42 @@ class PollRepository {
                 .slice(Votes.userId)
                 .select { Votes.pollId eq pollId }
                 .mapToSet { it[Votes.userId] }
+        }
+
+    suspend fun getPollMessage(pollOverviewMessageId: String) =
+        newSuspendedTransaction {
+            Polls.select { Polls.id eq pollOverviewMessageId }
+                .singleOrNull()?.get(Polls.id)
+        }
+
+    suspend fun showResults(pollId: String) =
+        newSuspendedTransaction {
+            Polls.update({
+                Polls.id eq pollId
+            }) { it[this.resultsVisible] = true }
+        }
+
+    suspend fun areResultsVisible(pollId: String): Boolean {
+        return newSuspendedTransaction {
+            Polls
+                .select { Polls.id eq pollId }
+                .single()[Polls.resultsVisible]
+        }
+    }
+
+    suspend fun setOverviewMessageId(
+        pollId: String,
+        overviewMessageId: String
+    ) = newSuspendedTransaction {
+        Polls.update({
+            Polls.id eq pollId
+        }) { it[this.id] = overviewMessageId }
+    }
+
+    suspend fun getOverviewMessageId(pollId: String) =
+        newSuspendedTransaction {
+            Polls
+                .select { Polls.id eq pollId }
+                .singleOrNull()?.get(Polls.id)
         }
 }

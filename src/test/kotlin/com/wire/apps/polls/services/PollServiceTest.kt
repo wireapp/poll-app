@@ -1,6 +1,5 @@
 package com.wire.apps.polls.services
 
-import com.wire.apps.polls.dao.OverviewRepository
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.ButtonPressed
 import com.wire.apps.polls.dto.PollOverviewDto
@@ -33,7 +32,6 @@ import org.kodein.di.singleton
 
 class PollServiceTest {
     val pollRepository = mockk<PollRepository>(relaxed = true)
-    val overviewRepository = mockk<OverviewRepository>(relaxed = true)
     val conversationService = mockk<ConversationService>()
     val manager = mockk<WireApplicationManager>()
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
@@ -41,7 +39,6 @@ class PollServiceTest {
 
     val testModule = DI.Module("testModule") {
         bind<PollRepository>(overrides = true) with singleton { pollRepository }
-        bind<OverviewRepository>(overrides = true) with singleton { overviewRepository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
         bind<StatsFormattingService>(overrides = true) with singleton { statsFormattingService }
@@ -57,7 +54,7 @@ class PollServiceTest {
     @Nested
     inner class CreatePollTest {
         @Test
-        fun `when input is valid, then save the poll and send it with initial participation`() =
+        fun `when input is valid, then save the poll and send it with initial overview`() =
             runTest {
                 // arrange
                 val usersInput = UsersInput(
@@ -86,14 +83,15 @@ class PollServiceTest {
                     )
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        participationMessageId = any(),
+                        overviewMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
                             conversationId = CONVERSATION_ID
                         ),
                         stats = null
                     )
-                    overviewRepository.getParticipationId(any())
-                    overviewRepository.setParticipationId(any(), any())
+                    pollRepository.getOverviewMessageId(any())
+                    pollRepository.setOverviewMessageId(any(), any())
+                    pollRepository.areResultsVisible(any())
                 }
                 confirmVerified(pollRepository, userCommunicationService)
             }
@@ -192,7 +190,7 @@ class PollServiceTest {
 
                 // assert
                 coVerify {
-                    overviewRepository.showResults(POLL_ID)
+                    pollRepository.showResults(POLL_ID)
                 }
             }
 
@@ -200,7 +198,7 @@ class PollServiceTest {
         fun `when results are set to visible, then poll overview should be updated with stats`() =
             runTest {
                 // arrange
-                coEvery { overviewRepository.areResultsVisible(POLL_ID) } returns true
+                coEvery { pollRepository.areResultsVisible(POLL_ID) } returns true
                 val statsMessage = Text("stats for test poll", emptyList())
                 coEvery {
                     statsFormattingService.formatStats(
@@ -220,7 +218,7 @@ class PollServiceTest {
                 coVerify {
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        participationMessageId = any(),
+                        overviewMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
                             conversationId = CONVERSATION_ID
                         ),
@@ -246,7 +244,7 @@ class PollServiceTest {
                 coVerify(exactly = 0) {
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        participationMessageId = any(),
+                        overviewMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
                             conversationId = CONVERSATION_ID
                         ),
@@ -256,13 +254,13 @@ class PollServiceTest {
             }
 
         @Test
-        fun `when someone voted, then update poll participation message`() =
+        fun `when someone voted, then update poll overview message`() =
             runTest {
                 // arrange
-                val stubParticipationId = "participation id"
+                val stubOverviewId = "overview id"
                 coEvery {
-                    overviewRepository.getParticipationId(POLL_ID)
-                } returns stubParticipationId
+                    pollRepository.getOverviewMessageId(POLL_ID)
+                } returns stubOverviewId
                 coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
@@ -275,7 +273,7 @@ class PollServiceTest {
                 coVerify {
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        participationMessageId = stubParticipationId,
+                        overviewMessageId = stubOverviewId,
                         pollOverviewDto = PollOverviewDto(
                             conversationId = CONVERSATION_ID,
                             voteCountProgress = PollVoteCountProgress(
@@ -295,7 +293,7 @@ class PollServiceTest {
         fun `when stats formatting is successful, then send stats`() =
             runTest {
                 // arrange
-                coEvery { overviewRepository.areResultsVisible(POLL_ID) } returns true
+                coEvery { pollRepository.areResultsVisible(POLL_ID) } returns true
                 val statsMessage = Text(
                     "stats for test poll",
                     emptyList()
@@ -308,7 +306,7 @@ class PollServiceTest {
                 } returns statsMessage
 
                 // act
-                pollService.sendParticipation(
+                pollService.refreshOverview(
                     manager = manager,
                     pollId = POLL_ID,
                     conversationId = CONVERSATION_ID
@@ -318,7 +316,7 @@ class PollServiceTest {
                 coVerify {
                     userCommunicationService.sendOrUpdatePollOverview(
                         manager = manager,
-                        participationMessageId = any(),
+                        overviewMessageId = any(),
                         pollOverviewDto = PollOverviewDto(
                             conversationId = CONVERSATION_ID
                         ),
@@ -331,7 +329,7 @@ class PollServiceTest {
         fun `when stats formatting fails, then inform user that it failed`() =
             runTest {
                 // arrange
-                coEvery { overviewRepository.areResultsVisible(POLL_ID) } returns true
+                coEvery { pollRepository.areResultsVisible(POLL_ID) } returns true
                 coEvery {
                     statsFormattingService.formatStats(
                         pollId = any(),
@@ -340,7 +338,7 @@ class PollServiceTest {
                 } returns null
 
                 // act
-                pollService.sendParticipation(
+                pollService.refreshOverview(
                     manager = manager,
                     pollId = POLL_ID,
                     conversationId = CONVERSATION_ID
