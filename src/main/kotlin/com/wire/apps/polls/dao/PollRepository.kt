@@ -149,7 +149,7 @@ class PollRepository {
 
     suspend fun getPollMessage(pollOverviewMessageId: String) =
         newSuspendedTransaction {
-            Polls.select { Polls.id eq pollOverviewMessageId }
+            Polls.select { Polls.overviewMessageId eq pollOverviewMessageId }
                 .singleOrNull()?.get(Polls.id)
         }
 
@@ -174,13 +174,13 @@ class PollRepository {
     ) = newSuspendedTransaction {
         Polls.update({
             Polls.id eq pollId
-        }) { it[this.id] = overviewMessageId }
+        }) { it[this.overviewMessageId] = overviewMessageId }
     }
 
     suspend fun getOverviewMessageId(pollId: String) =
         newSuspendedTransaction {
             Polls
                 .select { Polls.id eq pollId }
-                .singleOrNull()?.get(Polls.id)
+                .singleOrNull()?.get(Polls.overviewMessageId)
         }
 }
