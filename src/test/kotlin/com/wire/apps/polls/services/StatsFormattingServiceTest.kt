@@ -185,7 +185,7 @@ class StatsFormattingServiceTest {
         }
 
     @Nested
-    inner class ParticipationFormattingTest {
+    inner class ProgressBarFormattingTest {
         @Test
         fun `when in initial stage, then bar should be empty with 0 percent`() {
             // act

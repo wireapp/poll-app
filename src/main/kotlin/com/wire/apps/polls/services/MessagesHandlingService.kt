@@ -1,6 +1,8 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollAction.VoteAction
+import com.wire.apps.polls.dto.PollAction.ShowResultsAction
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.integrations.jvm.model.QualifiedId
 import com.wire.integrations.jvm.service.WireApplicationManager
@@ -28,22 +30,33 @@ class MessagesHandlingService(
     /**
      * Records the user's vote based on the selected button.
      */
-    suspend fun handleButtonAction(
+    suspend fun handlePollAction(
         manager: WireApplicationManager,
         pollAction: PollAction,
         conversationId: QualifiedId
     ) {
-        pollService.pollAction(
-            manager = manager,
-            pollAction = pollAction,
-            conversationId = conversationId
-        )
+        when (pollAction) {
+            is VoteAction -> {
+                pollService.processVoteAction(
+                    manager = manager,
+                    voteAction = pollAction,
+                    conversationId = conversationId
+                )
+            }
+            is ShowResultsAction -> {
+                pollService.processShowResultsAction(
+                    manager = manager,
+                    showResultsAction = pollAction,
+                    conversationId = conversationId
+                )
+            }
+        }
     }
 
     /**
      * Makes app interactive by executing user-issued commands.
      */
-    suspend fun handleText(
+    suspend fun handleUserCommand(
         manager: WireApplicationManager,
         usersInput: UsersInput
     ) {
@@ -53,10 +66,6 @@ class MessagesHandlingService(
             .lowercase()
 
         when {
-            // stats request
-            trimmed == "/poll stats" -> {
-                pollService.sendStatsForLatest(manager, conversationId)
-            }
             // send version when asked
             trimmed == "/poll version" -> {
                 userCommunicationService.sendVersion(manager, conversationId)

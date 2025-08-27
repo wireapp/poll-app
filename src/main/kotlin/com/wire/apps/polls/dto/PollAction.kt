@@ -1,22 +1,22 @@
 package com.wire.apps.polls.dto
 
 import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
 
-/**
- * Represents poll vote from the user.
- */
-data class PollAction(
-    val pollId: String,
-    val optionId: Int,
-    val userId: QualifiedId
-) {
-    companion object {
-        fun fromWire(wireMessage: WireMessage.ButtonAction): PollAction =
-            PollAction(
-                pollId = wireMessage.referencedMessageId,
-                optionId = wireMessage.buttonId.toInt(),
-                userId = wireMessage.sender
-            )
-    }
+sealed interface PollAction {
+    /**
+     * Represents user clicking on "show results" button
+     */
+    data class ShowResultsAction(
+        val pollId: String,
+        val userId: QualifiedId
+    ) : PollAction
+
+    /**
+     * Represents which option did user choose in Poll.
+     */
+    data class VoteAction(
+        val pollId: String,
+        val optionIndex: Int,
+        val userId: QualifiedId
+    ) : PollAction
 }

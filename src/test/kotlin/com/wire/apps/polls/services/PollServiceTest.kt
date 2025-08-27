@@ -2,9 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.PollAction
-import com.wire.apps.polls.dto.PollVoteCountProgress
-import com.wire.apps.polls.dto.common.Text
-import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.MISSING_DATA
+import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
@@ -29,17 +27,15 @@ import org.kodein.di.instance
 import org.kodein.di.singleton
 
 class PollServiceTest {
-    val repository = mockk<PollRepository>(relaxed = true)
+    val pollRepository = mockk<PollRepository>(relaxed = true)
     val conversationService = mockk<ConversationService>()
     val manager = mockk<WireApplicationManager>()
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
-    val statsFormattingService = mockk<StatsFormattingService>()
 
     val testModule = DI.Module("testModule") {
-        bind<PollRepository>(overrides = true) with singleton { repository }
+        bind<PollRepository>(overrides = true) with singleton { pollRepository }
         bind<ConversationService>(overrides = true) with singleton { conversationService }
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
-        bind<StatsFormattingService>(overrides = true) with singleton { statsFormattingService }
     }
 
     val di = DI {
@@ -52,17 +48,23 @@ class PollServiceTest {
     @Nested
     inner class CreatePollTest {
         @Test
-        fun `when input is valid, then save the poll and send it with initial participation`() =
+        fun `when input is valid, then save the poll and send it with initial overview`() =
             runTest {
                 // arrange
-                val usersInput = Stub.userInput("/poll \"Question\" \"Answer\"")
+                val usersInput = UsersInput(
+                    sender = Stub.id(),
+                    conversationId = CONVERSATION_ID,
+                    text = "/poll \"Question\" \"Answer\"",
+                    mentions = emptyList()
+                )
+                coEvery { pollRepository.getOverviewMessageId(any()) } returns null
 
                 // act
                 pollService.createPoll(manager, usersInput)
 
                 // assert
                 coVerify {
-                    repository.savePoll(
+                    pollRepository.savePoll(
                         poll = any(),
                         pollId = any(),
                         userId = usersInput.sender.id.toString(),
@@ -74,16 +76,14 @@ class PollServiceTest {
                         conversationId = usersInput.conversationId,
                         poll = any()
                     )
-                    userCommunicationService.sendOrUpdateParticipation(
+                    userCommunicationService.sendInitialPollOverview(
                         manager = manager,
-                        conversationId = usersInput.conversationId,
-                        participationMessageId = any(),
-                        voteCountProgress = PollVoteCountProgress.initial()
+                        conversationId = usersInput.conversationId
                     )
-                    repository.getParticipationId(any())
-                    repository.setParticipationId(any(), any())
+                    pollRepository.getOverviewMessageId(any())
+                    pollRepository.setOverviewMessageId(any(), any())
                 }
-                confirmVerified(repository, userCommunicationService)
+                confirmVerified(pollRepository, userCommunicationService)
             }
 
         @Test
@@ -115,7 +115,7 @@ class PollServiceTest {
                     pollServiceSpy["pollNotParsedFallback"](manager, any<QualifiedId>(), usersInput)
                 }
                 coVerify(exactly = 0) {
-                    repository.savePoll(
+                    pollRepository.savePoll(
                         poll = any(),
                         pollId = any(),
                         userId = any(),
@@ -128,15 +128,15 @@ class PollServiceTest {
                         poll = any()
                     )
                 }
-                confirmVerified(repository, userCommunicationService)
+                confirmVerified(pollRepository, userCommunicationService)
             }
     }
 
     @Nested
     inner class PollActionTest {
-        private val pollAction = PollAction(
+        private val voteAction = PollAction.VoteAction(
             pollId = POLL_ID,
-            optionId = 0,
+            optionIndex = 0,
             userId = Stub.id()
         )
 
@@ -146,49 +146,65 @@ class PollServiceTest {
             every {
                 conversationService.getNumberOfConversationMembers(manager, CONVERSATION_ID)
             } returns GROUP_SIZE
+            coEvery { pollRepository.isPollMessage(POLL_ID) } returns true
         }
 
         @Test
-        fun `when someone voted, then register vote`() =
+        fun `when someone voted, then save vote`() =
             runTest {
                 // act
-                pollService.pollAction(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollAction = pollAction,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify(exactly = 1) {
-                    repository.vote(pollAction)
+                    pollRepository.saveVote(voteAction)
                 }
             }
 
         @Test
-        fun `when everyone in the conversation voted, then send the stats`() =
+        fun `when everyone in the conversation voted, then results are set to visible`() =
             runTest {
                 // arrange
-                coEvery { repository.votingUsers(any()).size } returns GROUP_SIZE
-                coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationMembers = any()
-                    )
-                } returns Text("stats for test poll", emptyList())
+                coEvery { pollRepository.votingUsers(any()).size } returns GROUP_SIZE
 
                 // act
-                pollService.pollAction(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollAction = pollAction,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify {
-                    userCommunicationService.sendStats(
+                    pollRepository.setResultVisibilityToTrue(POLL_ID)
+                }
+            }
+
+        @Test
+        fun `when results are set to visible, then poll overview should be updated with stats`() =
+            runTest {
+                // arrange
+                coEvery { pollRepository.isResultVisible(POLL_ID) } returns true
+
+                // act
+                pollService.processVoteAction(
+                    manager = manager,
+                    voteAction = voteAction,
+                    conversationId = CONVERSATION_ID
+                )
+
+                // assert
+                coVerify {
+                    userCommunicationService.updatePollResults(
                         manager = manager,
                         conversationId = CONVERSATION_ID,
-                        text = any()
+                        overviewMessageId = any(),
+                        voteCountProgress = any(),
+                        pollId = POLL_ID
                     )
                 }
             }
@@ -197,49 +213,49 @@ class PollServiceTest {
         fun `when it is not the last vote, then don't send stats`() =
             runTest {
                 // arrange
-                coEvery { repository.votingUsers(any()).size } returns 1
+                coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
-                pollService.pollAction(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollAction = pollAction,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 // assert
-                coVerify(exactly = 0) {
-                    userCommunicationService.sendStats(
+                coVerify(exactly = 1) {
+                    userCommunicationService.updatePollProgressBar(
                         manager = manager,
                         conversationId = CONVERSATION_ID,
-                        text = any()
+                        overviewMessageId = any(),
+                        voteCountProgress = any()
                     )
                 }
             }
 
         @Test
-        fun `when someone voted, then update poll participation message`() =
+        fun `when someone voted, then update poll overview message`() =
             runTest {
                 // arrange
-                val stubParticipationId = "participation id"
-                coEvery { repository.getParticipationId(POLL_ID) } returns stubParticipationId
-                coEvery { repository.votingUsers(any()).size } returns 1
+                val stubOverviewId = "overview id"
+                coEvery {
+                    pollRepository.getOverviewMessageId(POLL_ID)
+                } returns stubOverviewId
+                coEvery { pollRepository.votingUsers(any()).size } returns 1
 
                 // act
-                pollService.pollAction(
+                pollService.processVoteAction(
                     manager = manager,
-                    pollAction = pollAction,
+                    voteAction = voteAction,
                     conversationId = CONVERSATION_ID
                 )
 
                 coVerify {
-                    userCommunicationService.sendOrUpdateParticipation(
+                    userCommunicationService.updatePollProgressBar(
                         manager = manager,
+                        overviewMessageId = stubOverviewId,
                         conversationId = CONVERSATION_ID,
-                        participationMessageId = stubParticipationId,
-                        voteCountProgress = PollVoteCountProgress(
-                            totalVoteCount = 1,
-                            totalMembers = GROUP_SIZE
-                        )
+                        voteCountProgress = any()
                     )
                 }
             }
@@ -251,60 +267,23 @@ class PollServiceTest {
         fun `when stats formatting is successful, then send stats`() =
             runTest {
                 // arrange
-                val statsMessage = Text(
-                    "stats for test poll",
-                    emptyList()
-                )
-                coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationMembers = any()
-                    )
-                } returns statsMessage
+                coEvery { pollRepository.isResultVisible(POLL_ID) } returns true
 
                 // act
-                pollService.sendStats(
+                pollService.refreshOverview(
                     manager = manager,
                     pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID,
-                    conversationMembers = GROUP_SIZE
+                    conversationId = CONVERSATION_ID
                 )
 
                 // assert
                 coVerify {
-                    userCommunicationService.sendStats(
+                    userCommunicationService.updatePollResults(
                         manager = manager,
+                        overviewMessageId = any(),
                         conversationId = CONVERSATION_ID,
-                        text = statsMessage
-                    )
-                }
-            }
-
-        @Test
-        fun `when stats formatting fails, then inform user that it failed`() =
-            runTest {
-                // arrange
-                coEvery {
-                    statsFormattingService.formatStats(
-                        pollId = any(),
-                        conversationMembers = any()
-                    )
-                } returns null
-
-                // act
-                pollService.sendStats(
-                    manager = manager,
-                    pollId = POLL_ID,
-                    conversationId = CONVERSATION_ID,
-                    conversationMembers = GROUP_SIZE
-                )
-
-                // assert
-                coVerify {
-                    userCommunicationService.sendFallbackMessage(
-                        manager = manager,
-                        conversationId = CONVERSATION_ID,
-                        messageType = MISSING_DATA
+                        voteCountProgress = any(),
+                        pollId = POLL_ID
                     )
                 }
             }

@@ -1,16 +1,15 @@
 package com.wire.apps.polls.dao
 
-import com.wire.apps.polls.dto.PollAction
+import com.wire.apps.polls.dto.PollAction.VoteAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
-import com.wire.integrations.jvm.model.QualifiedId
 import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
-import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.update
@@ -20,6 +19,7 @@ import pw.forst.katlib.mapToSet
 /**
  * Simple repository for handling database transactions on one place.
  */
+@Suppress("TooManyFunctions")
 class PollRepository {
     private companion object : KLogging()
 
@@ -41,7 +41,8 @@ class PollRepository {
             it[this.isActive] = true
             it[this.conversationId] = conversationId
             it[this.body] = poll.question.data
-            it[this.participationMessageId] = null
+            it[this.overviewMessageId] = null
+            it[this.isResultVisible] = false
         }
 
         Mentions.batchInsert(poll.question.mentions) {
@@ -85,16 +86,23 @@ class PollRepository {
                 }.singleOrNull()
         }
 
+    suspend fun isPollMessage(messageId: String) =
+        newSuspendedTransaction {
+            Polls.select { (Polls.id eq messageId) or (Polls.overviewMessageId eq messageId) }
+                .limit(1)
+                .any()
+        }
+
     /**
      * Register new vote to the poll. If the poll with provided pollId does not exist,
      * database contains foreign key to an option and poll so the SQL exception is thrown.
      */
-    suspend fun vote(pollAction: PollAction) =
+    suspend fun saveVote(voteAction: VoteAction) =
         newSuspendedTransaction {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
-                it[pollId] = pollAction.pollId
-                it[pollOption] = pollAction.optionId
-                it[userId] = pollAction.userId.id.toString()
+                it[pollId] = voteAction.pollId
+                it[pollOption] = voteAction.optionIndex
+                it[userId] = voteAction.userId.id.toString()
             }
         }
 
@@ -133,36 +141,42 @@ class PollRepository {
                 .mapToSet { it[Votes.userId] }
         }
 
-    /**
-     * Allows users to view stats without specifying a poll.
-     */
-    suspend fun getCurrentPoll(conversationId: QualifiedId) =
+    suspend fun getPollId(pollOverviewMessageId: String) =
         newSuspendedTransaction {
-            Polls
-                .slice(Polls.id)
-                // it must be for single conversation
-                .select { Polls.conversationId eq conversationId.id.toString() }
-                // such as latest is on top
-                .orderBy(Polls.created to SortOrder.DESC)
-                // select just one
-                .limit(1)
-                .singleOrNull()
-                ?.get(Polls.id)
+            Polls.select { Polls.overviewMessageId eq pollOverviewMessageId }
+                .singleOrNull()?.get(Polls.id)
         }
 
-    suspend fun setParticipationId(
-        pollId: String,
-        participationMessageId: String
-    ) = newSuspendedTransaction {
-        Polls.update({
-            Polls.id eq pollId
-        }) { it[this.participationMessageId] = participationMessageId }
+    suspend fun setResultVisibilityToTrue(pollId: String) =
+        newSuspendedTransaction {
+            Polls.update({
+                Polls.id eq pollId
+            }) { it[this.isResultVisible] = true }
+        }
+
+    suspend fun isResultVisible(pollId: String): Boolean {
+        return newSuspendedTransaction {
+            Polls
+                .select { Polls.id eq pollId }
+                .single()[Polls.isResultVisible]
+        }
     }
 
-    suspend fun getParticipationId(pollId: String) =
+    suspend fun setOverviewMessageId(
+        pollId: String,
+        overviewMessageId: String?
+    ) = newSuspendedTransaction {
+        overviewMessageId ?: return@newSuspendedTransaction
+
+        Polls.update({
+            Polls.id eq pollId
+        }) { it[this.overviewMessageId] = overviewMessageId }
+    }
+
+    suspend fun getOverviewMessageId(pollId: String) =
         newSuspendedTransaction {
             Polls
                 .select { Polls.id eq pollId }
-                .singleOrNull()?.get(Polls.participationMessageId)
+                .singleOrNull()?.get(Polls.overviewMessageId)
         }
 }

@@ -41,28 +41,13 @@ class MessagesHandlingServiceTest {
     }
 
     @Test
-    fun `handleText calls sendStatsForLatest when user inputs poll stats`() =
-        runTest {
-            // arrange
-            val usersInput = Stub.userInput("/poll stats")
-
-            // act
-            messagesHandlingService.handleText(manager, usersInput)
-
-            // assert
-            coVerify(exactly = 1) { pollService.sendStatsForLatest(any(), any()) }
-            coVerify(exactly = 0) { pollService.createPoll(any(), any()) }
-            verify { userCommunicationService wasNot Called }
-        }
-
-    @Test
-    fun `handleText calls createPoll when user input starts will poll`() =
+    fun `handleUserCommand calls createPoll when user input starts will poll`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput("/poll question yes no")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify(exactly = 1) { pollService.createPoll(any(), any()) }
@@ -70,13 +55,13 @@ class MessagesHandlingServiceTest {
         }
 
     @Test
-    fun `handleText calls sendVersion when user inputs poll version`() =
+    fun `handleUserCommand calls sendVersion when user inputs poll version`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput("/poll version")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendVersion(any(), any()) }
@@ -84,13 +69,13 @@ class MessagesHandlingServiceTest {
         }
 
     @Test
-    fun `handleText calls sendHelp when user inputs poll help`() =
+    fun `handleUserCommand calls sendHelp when user inputs poll help`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput("/poll help")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }
@@ -98,13 +83,13 @@ class MessagesHandlingServiceTest {
         }
 
     @Test
-    fun `handleText calls goodApp when user inputs good app`() =
+    fun `handleUserCommand calls goodApp when user inputs good app`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput("good app")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.goodApp(any(), any()) }
@@ -112,13 +97,13 @@ class MessagesHandlingServiceTest {
         }
 
     @Test
-    fun `handleText ignores message unrelated to app`() =
+    fun `handleUserCommand ignores message unrelated to app`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput("how is everyone?")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             verify { pollService wasNot Called }
@@ -134,26 +119,26 @@ class MessagesHandlingServiceTest {
             "/poll version pls"
         ]
     )
-    fun `handleText calls createPoll to instruct users how to create poll`(command: String) =
+    fun `handleUserCommand calls createPoll to instruct users how to create poll`(command: String) =
         runTest {
             // arrange
             val usersInput = Stub.userInput(command)
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify { pollService.createPoll(any(), any()) }
         }
 
     @Test
-    fun `handleText ignores case when matching command`() =
+    fun `handleUserCommand ignores case when matching command`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput("/Poll help")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }
@@ -161,13 +146,13 @@ class MessagesHandlingServiceTest {
         }
 
     @Test
-    fun `handleText ignores additional whitespaces`() =
+    fun `handleUserCommand ignores additional whitespaces`() =
         runTest {
             // arrange
             val usersInput = Stub.userInput(" /poll  help ")
 
             // act
-            messagesHandlingService.handleText(manager, usersInput)
+            messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }

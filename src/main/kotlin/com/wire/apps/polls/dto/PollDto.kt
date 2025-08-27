@@ -1,6 +1,7 @@
 package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Text
+import com.wire.apps.polls.utils.OPTION_BUTTON_PREFIX
 import com.wire.integrations.jvm.model.WireMessage
 
 data class PollDto(
@@ -16,5 +17,5 @@ data class Option(
 fun Option.toWireButton(): WireMessage.Button =
     WireMessage.Button(
         text = this.content,
-        id = this.optionOrder.toString()
+        id = OPTION_BUTTON_PREFIX + this.optionOrder
     )

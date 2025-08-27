@@ -27,8 +27,4 @@ data class PollVoteCountProgress(
     }
 
     fun everyoneVoted() = (totalVoteCount == totalMembers)
-
-    fun logInfo(): String {
-        return "Users voted: $totalVoteCount, members of conversation: $totalMembers"
-    }
 }

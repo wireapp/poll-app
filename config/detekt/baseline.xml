@@ -2,7 +2,5 @@
 <SmellBaseline>
     <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>CyclomaticComplexMethod:MessagesHandlingService.kt$MessagesHandlingService$private suspend fun handleText( token: String, message: Message ): Boolean</ID>
-    <ID>SpreadOperator:InputParser.kt$InputParser$(*delimiters)</ID>
   </CurrentIssues>
 </SmellBaseline>
