@@ -39,6 +39,9 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
+        logger.info {
+            "App added to conversation $conversationId, sending usage"
+        }
         manager.send(textMessage(conversationId, "Hello, I'm Poll App. $USAGE"))
     }
 
@@ -134,6 +137,9 @@ class UserCommunicationService(
             voteCountProgress = voteCountProgress
         )
 
+        logger.debug {
+            "Updating progress bar of Poll overview for conversation $conversationId"
+        }
         manager.send(wireMessage)
 
         return wireMessage.id.toString()

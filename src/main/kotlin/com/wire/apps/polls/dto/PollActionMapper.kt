@@ -19,7 +19,13 @@ class PollActionMapper(private val pollRepository: PollRepository) {
         when {
             buttonAction.isShowResults() -> mapToShowResultsAction(buttonAction)
             buttonAction.isVoteAction() -> mapToVoteAction(buttonAction)
-            else -> null
+            else -> {
+                logger.debug {
+                    "Received ButtonAction in conversation ${buttonAction.conversationId} " +
+                        "is unrelated to Poll App"
+                }
+                null
+            }
         }
 
     private suspend fun mapToShowResultsAction(
