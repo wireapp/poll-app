@@ -39,7 +39,7 @@ fun Routing.events() {
             override suspend fun onMessage(wireMessage: WireMessage.Text) {
                 val usersInput = fromWire(wireMessage)
 
-                handler.handleText(manager, usersInput)
+                handler.handleUserCommand(manager, usersInput)
             }
 
             override suspend fun onButtonAction(wireMessage: WireMessage.ButtonAction) {

@@ -56,7 +56,7 @@ class MessagesHandlingService(
     /**
      * Makes app interactive by executing user-issued commands.
      */
-    suspend fun handleText(
+    suspend fun handleUserCommand(
         manager: WireApplicationManager,
         usersInput: UsersInput
     ) {
