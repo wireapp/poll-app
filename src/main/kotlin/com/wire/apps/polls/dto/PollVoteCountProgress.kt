@@ -13,9 +13,7 @@ data class PollVoteCountProgress(
 
         fun initial() = PollVoteCountProgress(0, 0)
 
-        fun new(): String {
-            return initial().display()
-        }
+        fun new(): String = initial().display()
     }
 
     fun display(): String {

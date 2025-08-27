@@ -103,7 +103,10 @@ class StatsFormattingService(
     private fun prepareTitle(body: String) = "$TITLE_PREFIX${body}\"*"
 }
 
-internal class VoteDisplay(val voted: Int, val outOf: Int) {
+internal class VoteDisplay(
+    val voted: Int,
+    val outOf: Int
+) {
     private companion object {
         const val NOT_VOTE = "⚪"
         const val VOTE = "🟢"

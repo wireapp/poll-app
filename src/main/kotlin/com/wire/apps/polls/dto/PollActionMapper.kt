@@ -12,7 +12,9 @@ import pw.forst.katlib.whenNull
  * the respective button identifiers are assigned at creation:
  * [RESULTS_BUTTON_ID] and [OPTION_BUTTON_PREFIX].
  */
-class PollActionMapper(private val pollRepository: PollRepository) {
+class PollActionMapper(
+    private val pollRepository: PollRepository
+) {
     private companion object : KLogging()
 
     suspend fun fromButtonAction(buttonAction: WireMessage.ButtonAction): PollAction? =
