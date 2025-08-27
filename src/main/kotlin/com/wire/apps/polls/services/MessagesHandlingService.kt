@@ -28,7 +28,7 @@ class MessagesHandlingService(
     }
 
     /**
-     * Records the user's vote based on the selected showResultsButton.
+     * Records the user's vote based on the selected button.
      */
     suspend fun handlePollAction(
         manager: WireApplicationManager,
