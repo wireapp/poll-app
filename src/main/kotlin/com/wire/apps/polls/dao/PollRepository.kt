@@ -101,7 +101,7 @@ class PollRepository {
         newSuspendedTransaction {
             Votes.insertOrUpdate(Votes.pollId, Votes.userId) {
                 it[pollId] = voteAction.pollId
-                it[pollOption] = voteAction.buttonIndex
+                it[pollOption] = voteAction.optionIndex
                 it[userId] = voteAction.userId.id.toString()
             }
         }

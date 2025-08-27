@@ -16,7 +16,7 @@ sealed interface PollAction {
      */
     data class VoteAction(
         val pollId: String,
-        val buttonIndex: Int,
+        val optionIndex: Int,
         val userId: QualifiedId
     ) : PollAction
 }

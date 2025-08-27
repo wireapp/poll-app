@@ -136,7 +136,7 @@ class PollServiceTest {
     inner class PollActionTest {
         private val voteAction = PollAction.VoteAction(
             pollId = POLL_ID,
-            buttonIndex = 0,
+            optionIndex = 0,
             userId = Stub.id()
         )
 

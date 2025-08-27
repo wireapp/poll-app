@@ -51,7 +51,7 @@ class PollActionMapper(private val pollRepository: PollRepository) {
 
         return PollAction.VoteAction(
             pollId = buttonAction.referencedMessageId,
-            buttonIndex = optionIndex,
+            optionIndex = optionIndex,
             userId = buttonAction.sender
         )
     }
