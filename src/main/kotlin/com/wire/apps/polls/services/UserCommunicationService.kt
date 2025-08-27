@@ -3,7 +3,7 @@ package com.wire.apps.polls.services
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.updatePollOverviewResults
-import com.wire.apps.polls.dto.initialPollOverview
+import com.wire.apps.polls.dto.createPollOverview
 import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.dto.textMessage
 import com.wire.apps.polls.dto.updatePollOverviewProgressBar
@@ -115,7 +115,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ): String {
-        val wireMessage = initialPollOverview(conversationId)
+        val wireMessage = createPollOverview(conversationId)
 
         logger.debug {
             "Sending initial Poll overview for conversation $conversationId"

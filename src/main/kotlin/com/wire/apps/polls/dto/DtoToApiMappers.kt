@@ -36,7 +36,7 @@ private val showResultsButton = WireMessage.Button(
     id = RESULTS_BUTTON_ID
 )
 
-fun initialPollOverview(conversationId: QualifiedId) =
+fun createPollOverview(conversationId: QualifiedId) =
     WireMessage.Composite.create(
         conversationId = conversationId,
         text = PollVoteCountProgress.new(),
