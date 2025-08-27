@@ -27,9 +27,11 @@ class InputParser {
         val quote = String(delimiters)
         val pollOptionRegex = "[$quote](.*?)[$quote]".toRegex()
 
-        val parsedOptions = pollOptionRegex.findAll(pollOptions)
+        val parsedOptions = pollOptionRegex
+            .findAll(pollOptions)
             .map { it.groupValues[1] }
-            .filter { it.isNotBlank() }.toList()
+            .filter { it.isNotBlank() }
+            .toList()
 
         val inverseMatch = pollOptionRegex.replace(pollOptions, "")
 
@@ -50,11 +52,10 @@ class InputParser {
     /**
      * Preserves compatibility with existing database schema by using index as the button ID.
      */
-    private fun parseButtons(buttons: List<String>): List<Option> {
-        return buttons.mapIndexed { index, text ->
+    private fun parseButtons(buttons: List<String>): List<Option> =
+        buttons.mapIndexed { index, text ->
             Option(text, index)
         }
-    }
 
     /**
      * In the command issued by user, mention offset includes "/poll" prefix and whitespaces.

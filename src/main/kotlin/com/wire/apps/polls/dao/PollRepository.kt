@@ -88,7 +88,8 @@ class PollRepository {
 
     suspend fun isPollMessage(messageId: String) =
         newSuspendedTransaction {
-            Polls.select { (Polls.id eq messageId) or (Polls.overviewMessageId eq messageId) }
+            Polls
+                .select { (Polls.id eq messageId) or (Polls.overviewMessageId eq messageId) }
                 .limit(1)
                 .any()
         }
@@ -143,8 +144,10 @@ class PollRepository {
 
     suspend fun getPollId(pollOverviewMessageId: String) =
         newSuspendedTransaction {
-            Polls.select { Polls.overviewMessageId eq pollOverviewMessageId }
-                .singleOrNull()?.get(Polls.id)
+            Polls
+                .select { Polls.overviewMessageId eq pollOverviewMessageId }
+                .singleOrNull()
+                ?.get(Polls.id)
         }
 
     suspend fun setResultVisibilityToTrue(pollId: String) =
@@ -154,13 +157,12 @@ class PollRepository {
             }) { it[this.isResultVisible] = true }
         }
 
-    suspend fun isResultVisible(pollId: String): Boolean {
-        return newSuspendedTransaction {
+    suspend fun isResultVisible(pollId: String) =
+        newSuspendedTransaction {
             Polls
                 .select { Polls.id eq pollId }
                 .single()[Polls.isResultVisible]
         }
-    }
 
     suspend fun setOverviewMessageId(
         pollId: String,
@@ -177,6 +179,7 @@ class PollRepository {
         newSuspendedTransaction {
             Polls
                 .select { Polls.id eq pollId }
-                .singleOrNull()?.get(Polls.overviewMessageId)
+                .singleOrNull()
+                ?.get(Polls.overviewMessageId)
         }
 }
