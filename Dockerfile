@@ -1,4 +1,4 @@
-FROM gradle:8.7-jdk17 AS build
+FROM gradle:8.12-jdk21 AS build
 LABEL description="Wire Poll App"
 LABEL project="wire-apps:polls"
 
@@ -9,7 +9,7 @@ COPY . .
 RUN gradle shadowJar --no-daemon
 
 # Runtime
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
