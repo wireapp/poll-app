@@ -38,10 +38,8 @@ dependencies {
 
     // logging
     implementation("net.logstash.logback", "logstash-logback-encoder", "8.1")
+    implementation("ch.qos.logback", "logback-classic", "1.5.19")
     implementation("io.github.microutils", "kotlin-logging", "2.0.6")
-    // if-else in logback.xml
-    implementation("org.codehaus.janino", "janino", "3.1.2")
-    implementation("ch.qos.logback", "logback-classic", "1.2.3")
 
     // DI
     implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", "7.5.0")
