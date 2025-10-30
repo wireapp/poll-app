@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pollapp.fullname" . }}-config
+  labels:
+    {{- include "pollapp.labels" . | nindent 4 }}

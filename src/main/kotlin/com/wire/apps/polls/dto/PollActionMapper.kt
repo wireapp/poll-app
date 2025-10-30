@@ -3,7 +3,7 @@ package com.wire.apps.polls.dto
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.utils.OPTION_BUTTON_PREFIX
 import com.wire.apps.polls.utils.RESULTS_BUTTON_ID
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.sdk.model.WireMessage
 import mu.KLogging
 import pw.forst.katlib.whenNull
 

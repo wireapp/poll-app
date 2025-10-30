@@ -3,7 +3,7 @@ import org.jlleitschuh.gradle.ktlint.reporter.ReporterType
 plugins {
     kotlin("jvm") version "2.2.21"
     application
-    id("com.gradleup.shadow") version "9.2.2"
+    id("com.github.johnrengelman.shadow") version "8.1.1"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("net.nemerosa.versioning") version "3.1.0"
@@ -21,20 +21,16 @@ repositories {
 }
 
 dependencies {
-    implementation("com.wire", "wire-apps-jvm-sdk", "0.0.16")
+    implementation("com.wire", "wire-apps-jvm-sdk", "0.0.17")
     // stdlib
     implementation(kotlin("stdlib-jdk8"))
     // extension functions
     implementation("pw.forst", "katlib", "2.0.3")
 
     // Ktor server dependencies
-    val ktorVersion = "1.6.3"
+    val ktorVersion = "3.2.3"
+    implementation("io.ktor", "ktor-server-core", ktorVersion)
     implementation("io.ktor", "ktor-server-netty", ktorVersion)
-    implementation("io.ktor", "ktor-jackson", ktorVersion)
-
-    // Prometheus metrics
-    implementation("io.ktor", "ktor-metrics-micrometer", ktorVersion)
-    implementation("io.micrometer", "micrometer-registry-prometheus", "1.6.6")
 
     // logging
     implementation("net.logstash.logback", "logstash-logback-encoder", "8.1")
@@ -42,7 +38,7 @@ dependencies {
     implementation("io.github.microutils", "kotlin-logging", "2.0.6")
 
     // DI
-    implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", "7.5.0")
+    implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", "7.28.0")
 
     // database
     implementation("org.postgresql", "postgresql", "42.2.20")

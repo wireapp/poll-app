@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.setup.configureContainer
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.service.WireApplicationManager
 import io.mockk.Called
 import io.mockk.coVerify
 import io.mockk.confirmVerified

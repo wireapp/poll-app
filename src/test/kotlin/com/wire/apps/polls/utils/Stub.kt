@@ -2,7 +2,7 @@ package com.wire.apps.polls.utils
 
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.common.Mention
-import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.sdk.model.QualifiedId
 import java.util.UUID
 
 internal object Stub {

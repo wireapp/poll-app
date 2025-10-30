@@ -1,8 +1,8 @@
 package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Mention
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.model.WireMessage
 
 /**
  * Wrapper for the text received by this app. Should be used as a container for all user texts in the app.

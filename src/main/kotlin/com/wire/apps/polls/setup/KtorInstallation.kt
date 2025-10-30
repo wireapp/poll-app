@@ -1,24 +1,16 @@
 package com.wire.apps.polls.setup
 
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.wire.apps.polls.dao.DatabaseSetup
+import com.wire.apps.polls.routing.events
 import com.wire.apps.polls.setup.conf.DatabaseConfiguration
-import com.wire.apps.polls.routing.registerRoutes
-import com.wire.apps.polls.setup.errors.registerExceptionHandlers
 import com.wire.apps.polls.utils.createLogger
-import io.ktor.application.Application
-import io.ktor.application.install
-import io.ktor.features.ContentNegotiation
-import io.ktor.features.DefaultHeaders
-import io.ktor.jackson.jackson
-import io.ktor.metrics.micrometer.MicrometerMetrics
-import io.ktor.routing.routing
-import io.micrometer.core.instrument.distribution.DistributionStatisticConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.routing.get
+import io.ktor.server.routing.routing
 import org.flywaydb.core.Flyway
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
-import java.text.DateFormat
 
 private val installationLogger = createLogger("ApplicationSetup")
 
@@ -33,12 +25,12 @@ fun Application.init() {
     // connect to the database
     connectDatabase()
 
-    // configure Ktor
-    installFrameworks()
-
     // register routing
     routing {
-        registerRoutes()
+        get("/health") {
+            call.response.status(HttpStatusCode.OK)
+        }
+        events()
     }
 }
 
@@ -79,31 +71,5 @@ fun migrateDatabase(dbConfig: DatabaseConfiguration) {
         } else {
             "Applied ${migrateResult.migrationsExecuted} migrations."
         }
-    }
-}
-
-/**
- * Configure Ktor and install necessary extensions.
- */
-fun Application.installFrameworks() {
-    install(ContentNegotiation) {
-        jackson {
-            // enable pretty print for JSONs
-            enable(SerializationFeature.INDENT_OUTPUT)
-            dateFormat = DateFormat.getDateTimeInstance()
-        }
-    }
-
-    install(DefaultHeaders)
-
-    registerExceptionHandlers()
-
-    val prometheusRegistry by closestDI().instance<PrometheusMeterRegistry>()
-    install(MicrometerMetrics) {
-        registry = prometheusRegistry
-        distributionStatisticConfig = DistributionStatisticConfig
-            .Builder()
-            .percentilesHistogram(true)
-            .build()
     }
 }

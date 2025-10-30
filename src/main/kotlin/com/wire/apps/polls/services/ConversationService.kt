@@ -1,7 +1,7 @@
 package com.wire.apps.polls.services
 
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.service.WireApplicationManager
 
 /**
  * Provides possibility to check the conversation details.

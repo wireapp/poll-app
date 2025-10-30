@@ -4,8 +4,8 @@ import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollAction.VoteAction
 import com.wire.apps.polls.dto.PollAction.ShowResultsAction
 import com.wire.apps.polls.dto.UsersInput
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.service.WireApplicationManager
 import mu.KLogging
 
 /**

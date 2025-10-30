@@ -1,6 +1,6 @@
 package com.wire.apps.polls.dto
 
-import com.wire.integrations.jvm.model.QualifiedId
+import com.wire.sdk.model.QualifiedId
 
 sealed interface PollAction {
     /**

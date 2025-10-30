@@ -1,9 +1,8 @@
 .env
 
-# SDK files
-apps.db
-cryptography
-src/main/resources/demo.properties
+# Ignore Storage directory content but keep the directory
+storage/*
+!storage/.gitkeep
 
 # Created by https://www.gitignore.io/api/java,kotlin,jetbrains+all
 # Edit at https://www.gitignore.io/?templates=java,kotlin,jetbrains+all

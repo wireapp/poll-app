@@ -13,7 +13,8 @@ Basic usage
 * `/poll version` prints the current version of the poll app
 
 ## Technologies used
-* HTTP Server for Prometheus - [Ktor](https://ktor.io/)
+* Kotlin + JDK 21
+* Ktor HTTP Server - [Ktor](https://ktor.io/)
 * Dependency Injection - [Kodein](https://github.com/Kodein-Framework/Kodein-DI)
 * Build system - [Gradle](https://gradle.org/)
 * Communication with [Wire Applications JVM SDK](https://github.com/wireapp/wire-apps-jvm-sdk)
@@ -27,70 +28,12 @@ Basic usage
 
 For more details see [Makefile](Makefile).
 
-## Docker Images
-
-Poll app has public [docker image](https://quay.io/wire/poll-bot).
-```bash
-quay.io/wire/poll-bot
-```
-
-Tag `latest` is the latest release. [Releases](https://github.com/wireapp/poll-bot/releases) have then images with corresponding tag, so you
-can always roll back. Tag `staging` is build from the latest commit in `staging` branch.
-
-
 ## App configuration
 Configuration is currently being loaded from the environment variables.
 
-```kotlin
-    /**
-     * Username for the database.
-     */
-    const val DB_USER = "DB_USER"
-
-    /**
-     * Password for the database.
-     */
-    const val DB_PASSWORD = "DB_PASSWORD"
-
-    /**
-     * URL for the database.
-     *
-     * Example:
-     * `jdbc:postgresql://localhost:5432/app-database`
-     */
-    const val DB_URL = "DB_URL"
-
-```
-
 Via the system variables - see [complete list](src/main/kotlin/com/wire/apps/polls/setup/EnvConfigVariables.kt).
+And also the env variables required by `Wire Applications JVM SDK`
 
 ## Docker Compose
 To run app inside docker compose environment with default PostgreSQL database,
-please create `.env` file in the root directory with the following variables:
-```bash
-# database
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-POSTGRES_DB=
-
-# application
-DB_USER=
-DB_PASSWORD=
-DB_URL=
-
-```
-
-Such configuration can look for example like that:
-
-```bash
-# database
-POSTGRES_USER=wire-poll-app
-POSTGRES_PASSWORD=super-secret-wire-pwd
-POSTGRES_DB=poll-app
-
-# application
-DB_USER=wire-poll-app
-DB_PASSWORD=super-secret-wire-pwd
-DB_URL=jdbc:postgresql://db:5432/poll-app
-
-```
+please create `.env` file in the root directory, starting from the .env.sample file.

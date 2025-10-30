@@ -7,9 +7,9 @@ import com.wire.apps.polls.dto.createPollOverview
 import com.wire.apps.polls.dto.newPoll
 import com.wire.apps.polls.dto.textMessage
 import com.wire.apps.polls.dto.updatePollOverviewProgressBar
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.model.WireMessage
+import com.wire.sdk.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.whenNull
 
