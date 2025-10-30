@@ -1,4 +1,4 @@
-FROM gradle:8.4.0-jdk21 AS build
+FROM gradle:8.14.3-jdk21 AS build
 LABEL description="Wire Poll App"
 LABEL project="wire-apps:polls"
 
