@@ -1,8 +1,8 @@
 package com.wire.apps.polls.services
 
-import com.wire.integrations.jvm.exception.WireException
-import com.wire.integrations.jvm.model.WireMessage
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.exception.WireException
+import com.wire.sdk.model.WireMessage
+import com.wire.sdk.service.WireApplicationManager
 import mu.KLogging
 
 /**

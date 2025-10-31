@@ -2,7 +2,7 @@ package com.wire.apps.polls.dto
 
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.utils.OPTION_BUTTON_PREFIX
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.sdk.model.WireMessage
 
 data class PollDto(
     val question: Text,

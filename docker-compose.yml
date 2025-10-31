@@ -11,14 +11,17 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - poll-app:/app
+      - poll-app:/app/storage
     depends_on:
       - db
 
   db:
     image: postgres:13
     container_name: poll-app-db
-    env_file: .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - 5432:5432
     volumes:

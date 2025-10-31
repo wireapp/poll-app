@@ -1,0 +1,9 @@
+apiVersion: v2
+name: pollapp
+description: Wire Poll-App - A Helm chart for deploying the Wire Poll app
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+home: https://github.com/wireapp/poll-app
+maintainers:
+  - name: Wire Integrations Team

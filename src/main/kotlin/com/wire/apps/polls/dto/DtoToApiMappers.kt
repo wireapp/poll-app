@@ -4,8 +4,8 @@ import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
 import com.wire.apps.polls.dto.common.toWireMention
 import com.wire.apps.polls.utils.RESULTS_BUTTON_ID
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.model.WireMessage
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.model.WireMessage
 import java.util.UUID
 import pw.forst.katlib.newLine
 
@@ -58,7 +58,7 @@ fun updatePollOverviewProgressBar(
  * TODO replace below function with the commented out.
  * Clients need to implement rendering of a Composite Items in any order and not only:
  * One [Text]
- * Followed by one or more [Button]s
+ * Followed by one or more [com.wire.sdk.model.WireMessage.Button]
  *
  * As defined in the protobuf definition:
  * https://github.com/wireapp/generic-message-proto/blob/master/proto/messages.proto#L75-L86

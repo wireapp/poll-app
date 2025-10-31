@@ -1,12 +1,12 @@
-FROM gradle:8.12-jdk21 AS build
+FROM gradle:8.14.3-jdk21 AS build
 LABEL description="Wire Poll App"
 LABEL project="wire-apps:polls"
 
 WORKDIR /setup
 
-COPY . .
+COPY . ./
 
-RUN gradle shadowJar --no-daemon
+RUN ./gradlew clean shadowJar --no-daemon
 
 # Runtime
 FROM eclipse-temurin:21-jre
@@ -16,7 +16,7 @@ WORKDIR /app
 # Copy the fat jar from the build stage
 COPY --from=build /setup/build/libs/poll-app*.jar /app/app.jar
 
-ENV JSON_LOGGING=true
+RUN mkdir -p storage
 
 # Run the application
 EXPOSE 8080

@@ -4,7 +4,7 @@ import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.service.WireApplicationManager
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk

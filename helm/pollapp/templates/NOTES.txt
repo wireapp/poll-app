@@ -1,0 +1,74 @@
+Wire poll-app has been deployed successfully!
+
+The Wire Poll App is now running and will respond to these commands in Wire:
+  - /poll "Question" "Option 1" "Option 2" - Create a new poll
+  - /poll help - Show help information
+  - /poll version - Show the current version of the poll app
+
+AVAILABLE ENDPOINTS:
+  - GET /health - Server running
+
+DEPLOYMENT INFORMATION:
+{{- if .Values.persistence.enabled }}
+- Persistent storage: {{ .Values.persistence.size }} ({{ .Values.persistence.storageClass | default "default" }} storage class)
+{{- end }}
+- Health checks: Startup, liveness, and readiness probes configured
+- Resource limits: {{ .Values.resources.limits.cpu }} CPU, {{ .Values.resources.limits.memory }} memory
+- Service: {{ .Values.service.type }} on port {{ .Values.service.port }} -> {{ .Values.service.targetPort }}
+
+MONITORING & DEBUGGING:
+
+1. Check application status:
+   kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name={{ include "pollapp.name" . }}
+
+2. View application logs:
+   kubectl logs -f deployment/{{ include "pollapp.fullname" . }} -n {{ .Release.Namespace }}
+
+3. Access health endpoint:
+{{- if contains "ClusterIP" .Values.service.type }}
+   kubectl port-forward -n {{ .Release.Namespace }} svc/{{ include "pollapp.fullname" . }} 8080:{{ .Values.service.port }}
+   # Then visit: http://localhost:8080/health
+{{- else if contains "NodePort" .Values.service.type }}
+   export NODE_PORT=$(kubectl get -n {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "pollapp.fullname" . }})
+   export NODE_IP=$(kubectl get nodes -n {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+   # Visit: http://$NODE_IP:$NODE_PORT/health
+{{- else if contains "LoadBalancer" .Values.service.type }}
+   export SERVICE_IP=$(kubectl get svc -n {{ .Release.Namespace }} {{ include "pollapp.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+   # Visit: http://$SERVICE_IP:{{ .Values.service.port }}/health
+{{- end }}
+
+4. Check configuration:
+   kubectl describe configmap/{{ include "pollapp.fullname" . }} -n {{ .Release.Namespace }}
+{{- if .Values.secrets.secretName }}
+   kubectl describe secret/{{ .Values.secrets.secretName }} -n {{ .Release.Namespace }}
+{{- end }}
+
+CONFIGURATION:
+{{- range .Values.env }}
+{{- if eq .name "WIRE_SDK_USER_ID" }}
+- Wire SDK User Id: {{ .value | default "Not configured" }}
+{{- end }}
+{{- if eq .name "WIRE_SDK_EMAIL" }}
+- Wire SDK User Email: {{ .value | default "Not configured" }}
+{{- end }}
+{{- if eq .name "WIRE_SDK_ENVIRONMENT" }}
+- Wire SDK Environment: {{ .value | default "Not configured" }}
+{{- end }}
+{{- if eq .name "DB_USER" }}
+- Database user: {{ .value | default "Not configured" }}
+{{- end }}
+{{- if eq .name "DB_URL" }}
+- Database Url: {{ .value | default "Not configured" }}
+{{- end }}
+{{- if eq .name "SDK_APP_ID" }}
+- Wire SDK App Id: {{ .value | default "Not configured" }}
+{{- end }}
+{{- if eq .name "API_HOST_URL" }}
+- Wire API Host Url: {{ .value | default "Not configured" }}
+{{- end }}
+{{- end }}
+{{- if .Values.secrets.secretName }}
+- Secrets mounted at: {{ .Values.secrets.mountPath }}
+{{- end }}
+
+The app is ready to create and manage polls in Wire conversations!

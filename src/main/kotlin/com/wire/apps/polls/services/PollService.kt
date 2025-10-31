@@ -7,8 +7,8 @@ import com.wire.apps.polls.dto.PollVoteCountProgress
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.service.WireApplicationManager
 import mu.KLogging
 import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue

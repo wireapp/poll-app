@@ -6,8 +6,8 @@ import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.apps.polls.setup.configureContainer
 import com.wire.apps.polls.utils.Stub
-import com.wire.integrations.jvm.model.QualifiedId
-import com.wire.integrations.jvm.service.WireApplicationManager
+import com.wire.sdk.model.QualifiedId
+import com.wire.sdk.service.WireApplicationManager
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify

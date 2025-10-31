@@ -12,8 +12,6 @@ import com.wire.apps.polls.services.ProxySenderService
 import com.wire.apps.polls.services.StatsFormattingService
 import com.wire.apps.polls.services.UserCommunicationService
 import com.wire.apps.polls.utils.createLogger
-import io.micrometer.prometheus.PrometheusConfig
-import io.micrometer.prometheus.PrometheusMeterRegistry
 import mu.KLogger
 import org.kodein.di.DI
 import org.kodein.di.bind
@@ -24,14 +22,6 @@ fun DI.MainBuilder.configureContainer() {
     bind<PollValidation>() with singleton { PollValidation() }
 
     bind<ProxySenderService>() with singleton { ProxySenderService() }
-
-    bind<PrometheusMeterRegistry>() with singleton {
-        PrometheusMeterRegistry(PrometheusConfig.DEFAULT).apply {
-            with(this.config()) {
-                commonTags("application", "poll-app")
-            }
-        }
-    }
 
     bind<InputParser>() with singleton { InputParser() }
 

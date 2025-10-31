@@ -1,0 +1,16 @@
+# Staging environment overrides
+env:
+  - name: WIRE_SDK_USER_ID
+    value: "3adad8bb-4564-4040-b4d0-e4e8156c137a"
+  - name: WIRE_SDK_EMAIL
+    value: "marian.kijewski+poll.app@wire.com"
+  - name: WIRE_SDK_ENVIRONMENT
+    value: "staging.zinfra.io"
+  - name: DB_USER
+    value: "poll-app-user"
+  - name: DB_URL
+    value: "jdbc:postgresql://apps-staging-aurora-pg.cluster-cfuao0euwimd.eu-central-1.rds.amazonaws.com:5432/poll-app-db"
+  - name: SDK_APP_ID
+    value: "e130e8bd-6367-4931-adbc-6840412948b4"
+  - name: API_HOST_URL
+    value: "https://staging-nginz-https.zinfra.io"
