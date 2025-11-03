@@ -27,7 +27,6 @@ class UserCommunicationService(
         val commands = """
             Following commands are available:
             `/poll "Question" "Option 1" "Option 2"` will create poll
-            `/poll stats` will send result of the last poll in the conversation
             `/poll help` to show help
         """.trimIndent()
     }
