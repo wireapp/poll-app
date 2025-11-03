@@ -114,7 +114,7 @@ class MessagesHandlingServiceTest {
     @ValueSource(
         strings = [
             "/poll execute",
-            "/poll statssss",
+            "/poll stats",
             "/poll help me",
             "/poll version pls"
         ]
