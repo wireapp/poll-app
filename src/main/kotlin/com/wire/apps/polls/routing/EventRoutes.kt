@@ -29,20 +29,20 @@ fun Routing.events() {
         apiHost = sdkConfig.apiHostUrl,
         cryptographyStoragePassword = sdkConfig.cryptoPassword,
         wireEventsHandler = object : WireEventsHandlerSuspending() {
-            override suspend fun onConversationJoin(
+            override suspend fun onAppAddedToConversation(
                 conversation: ConversationData,
                 members: List<ConversationMember>
             ) {
                 handler.handleConversationJoin(manager, conversation.id)
             }
 
-            override suspend fun onMessage(wireMessage: WireMessage.Text) {
+            override suspend fun onTextMessageReceived(wireMessage: WireMessage.Text) {
                 val usersInput = fromWire(wireMessage)
 
                 handler.handleUserCommand(manager, usersInput)
             }
 
-            override suspend fun onButtonAction(wireMessage: WireMessage.ButtonAction) {
+            override suspend fun onButtonClicked(wireMessage: WireMessage.ButtonAction) {
                 val pollAction = pollActionMapper.fromButtonAction(wireMessage) ?: return
 
                 handler.handlePollAction(
