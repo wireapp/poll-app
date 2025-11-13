@@ -23,8 +23,9 @@ class PollActionMapper(
             buttonAction.isVoteAction() -> mapToVoteAction(buttonAction)
             else -> {
                 logger.debug {
-                    "Received ButtonAction in conversation ${buttonAction.conversationId} " +
-                        "is unrelated to Poll App"
+                    "Unknown ButtonAction. conversationId: ${buttonAction.conversationId}, " +
+                        "referencedMessageId: ${buttonAction.referencedMessageId}," +
+                        "sender: ${buttonAction.sender}"
                 }
                 null
             }

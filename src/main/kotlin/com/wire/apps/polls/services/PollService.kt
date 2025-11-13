@@ -32,10 +32,6 @@ class PollService(
         val poll = factory
             .forUserInput(usersInput)
             .whenNull {
-                logger.warn {
-                    "It was not possible to create poll " +
-                        "in conversation ${usersInput.conversationId}"
-                }
                 pollNotParsedFallback(
                     manager = manager,
                     conversationId = conversationId,

@@ -25,5 +25,8 @@ class ProxySenderService {
                 "It was not possible to send a message in ${message.conversationId}. ${e.message}"
             }
         }
+        // TODO ::: We should wrap this exception and throw it.
+        //  Currently, the app swallows this exceptions.
+        //  And all callers continue executing as if nothing happened.
     }
 }
