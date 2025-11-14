@@ -38,10 +38,8 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        logger.info {
-            "App added to conversation $conversationId, sending usage"
-        }
         manager.send(textMessage(conversationId, "Hello, I'm Poll App. $USAGE"))
+        logger.info("App sent a welcome message. conversationId: $conversationId")
     }
 
     /**

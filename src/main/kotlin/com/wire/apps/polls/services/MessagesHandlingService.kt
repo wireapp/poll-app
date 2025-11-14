@@ -20,7 +20,7 @@ class MessagesHandlingService(
     /**
      * Welcomes the user by listing available commands.
      */
-    suspend fun handleConversationJoin(
+    suspend fun handleAppAddedToConversation(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {

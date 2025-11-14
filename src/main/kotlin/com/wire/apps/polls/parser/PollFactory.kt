@@ -19,20 +19,30 @@ class PollFactory(
      * Parse and create poll for the [usersInput].
      */
     fun forUserInput(usersInput: UsersInput): PollDto? {
-        // TODO create better error handling and return probably Either
+        // TODO : Create better error handling and throw exceptions instead of returning nulls.
+        //  Then move these logs to Service layer.
         val poll = inputParser.parsePoll(usersInput).whenNull {
-            logger.warn { "It was not possible to create poll. $usersInput" }
+            logger.warn {
+                "Poll creation is failed. Reason: Command is not parseable. " +
+                    "conversationId: ${usersInput.conversationId}, " +
+                    "sender: ${usersInput.sender}"
+            }
         } ?: return null
 
         val (valid, errors) = pollValidation.validate(poll)
         return if (valid) {
-            logger.debug { "Poll successfully created. $usersInput" }
+            logger.info {
+                "Poll creation is successful." +
+                    "conversationId: ${usersInput.conversationId}, " +
+                    "sender: ${usersInput.sender}"
+            }
             poll
         } else {
             logger.warn {
-                "It was not possible to create poll. $usersInput" +
-                    "due to errors listed bellow:" +
-                    "$newLine${errors.joinToString(newLine)}"
+                "Poll creation failed. Reason: Command is not valid. " +
+                    "conversationId: ${usersInput.conversationId}, " +
+                    "sender: ${usersInput.sender}," +
+                    "errors: ${errors.joinToString(newLine)}"
             }
             null
         }

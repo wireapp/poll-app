@@ -27,8 +27,6 @@ data class UsersInput(
      */
     val mentions: List<Mention>
 ) {
-    override fun toString(): String = "User $sender sent message in conversation $conversationId"
-
     companion object {
         fun fromWire(wireMessage: WireMessage.Text): UsersInput {
             val mentions = Mention.fromWireList(wireMessage.mentions)
