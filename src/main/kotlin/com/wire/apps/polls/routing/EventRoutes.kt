@@ -48,7 +48,7 @@ fun Routing.events() {
                     "Event received. Event: TextMessageReceived, " +
                         "conversationId: ${wireMessage.conversationId}, " +
                         "messageId: ${wireMessage.id}, " +
-                        "senderId: ${wireMessage.sender.id}"
+                        "senderId: ${wireMessage.sender}"
                 )
                 val usersInput = fromWire(wireMessage)
                 // TODO :: It is better to validate the command here
@@ -64,7 +64,7 @@ fun Routing.events() {
                     "Event received. Event: ButtonClicked, " +
                         "conversationId: ${wireMessage.conversationId}, " +
                         "messageId: ${wireMessage.id}, " +
-                        "senderId: ${wireMessage.sender.id}"
+                        "senderId: ${wireMessage.sender}"
                 )
                 val pollAction = pollActionMapper.fromButtonAction(wireMessage) ?: return
 
