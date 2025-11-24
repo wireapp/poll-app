@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm") version "2.2.21"
     application
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("net.nemerosa.versioning") version "3.1.0"
 }
