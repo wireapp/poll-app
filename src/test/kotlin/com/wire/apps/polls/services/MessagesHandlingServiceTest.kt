@@ -71,7 +71,6 @@ class MessagesHandlingServiceTest {
             coVerify(exactly = 1) { userCommunicationService.sendVersion(any(), any()) }
             verify { pollService wasNot Called }
             verify { usageMetrics wasNot Called }
-
         }
 
     @Test
