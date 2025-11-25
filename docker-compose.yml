@@ -1,5 +1,6 @@
 services:
   app:
+    platform: linux/amd64 # Allows using core-crypto on macOs
     build:
       context: .
       dockerfile: Dockerfile
