@@ -1,6 +1,7 @@
 package com.wire.apps.polls.services
 
 import com.wire.apps.polls.setup.configureContainer
+import com.wire.apps.polls.setup.metrics.UsageMetrics
 import com.wire.sdk.service.WireApplicationManager
 import io.mockk.Called
 import io.mockk.coVerify
@@ -22,10 +23,12 @@ class MessagesHandlingServiceTest {
     val userCommunicationService = mockk<UserCommunicationService>(relaxed = true)
     val pollService = mockk<PollService>(relaxed = true)
     val manager = mockk<WireApplicationManager>()
+    val usageMetrics = mockk<UsageMetrics>(relaxed = true)
 
     val testModule = DI.Module("testModule") {
         bind<UserCommunicationService>(overrides = true) with singleton { userCommunicationService }
         bind<PollService>(overrides = true) with singleton { pollService }
+        bind<UsageMetrics>(overrides = true) with singleton { usageMetrics }
     }
 
     val di = DI {
@@ -50,6 +53,7 @@ class MessagesHandlingServiceTest {
             messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
+            coVerify(exactly = 1) { usageMetrics.onCreatePollCommand() }
             coVerify(exactly = 1) { pollService.createPoll(any(), any()) }
             verify { userCommunicationService wasNot Called }
         }
@@ -66,6 +70,8 @@ class MessagesHandlingServiceTest {
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendVersion(any(), any()) }
             verify { pollService wasNot Called }
+            verify { usageMetrics wasNot Called }
+
         }
 
     @Test
@@ -78,6 +84,7 @@ class MessagesHandlingServiceTest {
             messagesHandlingService.handleUserCommand(manager, usersInput)
 
             // assert
+            coVerify(exactly = 1) { usageMetrics.onHelpCommand() }
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }
             verify { pollService wasNot Called }
         }
@@ -94,6 +101,7 @@ class MessagesHandlingServiceTest {
             // assert
             coVerify(exactly = 1) { userCommunicationService.goodApp(any(), any()) }
             verify { pollService wasNot Called }
+            verify { usageMetrics wasNot Called }
         }
 
     @Test
@@ -108,6 +116,7 @@ class MessagesHandlingServiceTest {
             // assert
             verify { pollService wasNot Called }
             verify { userCommunicationService wasNot Called }
+            verify { usageMetrics wasNot Called }
         }
 
     @ParameterizedTest
@@ -129,6 +138,7 @@ class MessagesHandlingServiceTest {
 
             // assert
             coVerify { pollService.createPoll(any(), any()) }
+            coVerify(exactly = 1) { usageMetrics.onCreatePollCommand() }
         }
 
     @Test
@@ -142,6 +152,7 @@ class MessagesHandlingServiceTest {
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }
+            coVerify(exactly = 1) { usageMetrics.onHelpCommand() }
             verify { pollService wasNot Called }
         }
 
@@ -156,6 +167,7 @@ class MessagesHandlingServiceTest {
 
             // assert
             coVerify(exactly = 1) { userCommunicationService.sendHelp(any(), any()) }
+            coVerify(exactly = 1) { usageMetrics.onHelpCommand() }
             verify { pollService wasNot Called }
         }
 }
