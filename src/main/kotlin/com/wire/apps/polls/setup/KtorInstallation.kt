@@ -11,7 +11,6 @@ import io.ktor.server.metrics.micrometer.MicrometerMetrics
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.flywaydb.core.Flyway
 import org.kodein.di.instance
@@ -48,13 +47,15 @@ fun Application.setupEventRouting() {
 }
 
 fun Application.setupMetrics() {
-    val micrometerRegistry = PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    val prometheusRegistry by closestDI().instance<PrometheusMeterRegistry>()
+
     install(MicrometerMetrics) {
-        registry = micrometerRegistry
+        registry = prometheusRegistry
     }
+
     routing {
         get("/metrics") {
-            call.respond(micrometerRegistry.scrape())
+            call.respond(prometheusRegistry.scrape())
         }
     }
 }
@@ -74,7 +75,7 @@ fun Application.connectDatabase() {
         // TODO verify handling, maybe exit the App?
         installationLogger.error {
             "It was not possible to connect to db database! " +
-                    "The application will start but it won't work."
+                "The application will start but it won't work."
         }
     }
 }
