@@ -4,6 +4,7 @@ import com.wire.apps.polls.dto.PollAction
 import com.wire.apps.polls.dto.PollAction.VoteAction
 import com.wire.apps.polls.dto.PollAction.ShowResultsAction
 import com.wire.apps.polls.dto.UsersInput
+import com.wire.apps.polls.setup.metrics.UsageMetrics
 import com.wire.sdk.model.QualifiedId
 import com.wire.sdk.service.WireApplicationManager
 import mu.KLogging
@@ -13,7 +14,8 @@ import mu.KLogging
  */
 class MessagesHandlingService(
     private val pollService: PollService,
-    private val userCommunicationService: UserCommunicationService
+    private val userCommunicationService: UserCommunicationService,
+    private val usageMetrics: UsageMetrics
 ) {
     private companion object : KLogging()
 
@@ -73,11 +75,14 @@ class MessagesHandlingService(
             }
             // send version when asked
             trimmed == "/poll help" -> {
+                usageMetrics.onHelpCommand()
                 userCommunicationService.sendHelp(manager, conversationId)
             }
-            // poll request
-            trimmed.startsWith("/poll") ->
+            // poll creation request
+            trimmed.startsWith("/poll") -> {
+                usageMetrics.onCreatePollCommand()
                 pollService.createPoll(manager, usersInput)
+            }
             // Easter egg, good app is good
             trimmed == "good app" -> {
                 userCommunicationService.goodApp(manager, conversationId)

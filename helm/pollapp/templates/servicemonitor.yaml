@@ -1,0 +1,13 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "pollapp.fullname" . }}
+  labels:
+    {{- include "pollapp.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - port: http
+      path: /metrics
+  selector:
+    matchLabels:
+      {{- include "pollapp.selectorLabels" . | nindent 6 }}

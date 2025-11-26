@@ -6,8 +6,12 @@ import com.wire.apps.polls.setup.conf.DatabaseConfiguration
 import com.wire.apps.polls.utils.createLogger
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.metrics.micrometer.MicrometerMetrics
+import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import org.flywaydb.core.Flyway
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
@@ -22,15 +26,37 @@ fun Application.init() {
     // now kodein is running and can be used
     installationLogger.debug { "DI container started." }
 
-    // connect to the database
     connectDatabase()
+    setupHealthEndpoint()
+    setupEventRouting()
+    setupMetrics()
+}
 
-    // register routing
+fun Application.setupHealthEndpoint() {
     routing {
         get("/health") {
             call.response.status(HttpStatusCode.OK)
         }
+    }
+}
+
+fun Application.setupEventRouting() {
+    routing {
         events()
+    }
+}
+
+fun Application.setupMetrics() {
+    val prometheusRegistry by closestDI().instance<PrometheusMeterRegistry>()
+
+    install(MicrometerMetrics) {
+        registry = prometheusRegistry
+    }
+
+    routing {
+        get("/metrics") {
+            call.respond(prometheusRegistry.scrape())
+        }
     }
 }
 

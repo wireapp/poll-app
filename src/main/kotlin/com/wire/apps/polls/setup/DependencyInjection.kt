@@ -11,7 +11,10 @@ import com.wire.apps.polls.services.PollService
 import com.wire.apps.polls.services.ProxySenderService
 import com.wire.apps.polls.services.StatsFormattingService
 import com.wire.apps.polls.services.UserCommunicationService
+import com.wire.apps.polls.setup.metrics.UsageMetrics
 import com.wire.apps.polls.utils.createLogger
+import io.micrometer.prometheusmetrics.PrometheusConfig
+import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
 import mu.KLogger
 import org.kodein.di.DI
 import org.kodein.di.bind
@@ -47,9 +50,17 @@ fun DI.MainBuilder.configureContainer() {
     bind<PollActionMapper>() with singleton { PollActionMapper(instance()) }
 
     bind<MessagesHandlingService>() with
-        singleton { MessagesHandlingService(instance(), instance()) }
+        singleton { MessagesHandlingService(instance(), instance(), instance()) }
 
     bind<StatsFormattingService>() with singleton { StatsFormattingService(instance()) }
+
+    bind<PrometheusMeterRegistry>() with singleton {
+        PrometheusMeterRegistry(PrometheusConfig.DEFAULT)
+    }
+
+    bind<UsageMetrics>() with singleton {
+        UsageMetrics(instance())
+    }
 
     bind<KLogger>("routing-logger") with singleton { createLogger("Routing") }
     bind<KLogger>("install-logger") with singleton { createLogger("KtorStartup") }

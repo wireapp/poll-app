@@ -37,6 +37,10 @@ dependencies {
     implementation("ch.qos.logback", "logback-classic", "1.5.19")
     implementation("io.github.microutils", "kotlin-logging", "2.0.6")
 
+    // metrics
+    implementation("io.ktor", "ktor-server-metrics-micrometer", ktorVersion)
+    implementation("io.micrometer", "micrometer-registry-prometheus", "1.16.0")
+
     // DI
     implementation("org.kodein.di", "kodein-di-framework-ktor-server-jvm", "7.28.0")
 
