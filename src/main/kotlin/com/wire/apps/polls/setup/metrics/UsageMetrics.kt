@@ -16,11 +16,20 @@ class UsageMetrics(
         .description("Number of Poll creation commands received")
         .register(registry)
 
+    private val appAddedToConversationCounter: Counter = Counter
+        .builder("pollapp_added_to_conversation_total")
+        .description("Number of times the app is added to a conversation")
+        .register(registry)
+
     fun onHelpCommand() {
         helpCommandCounter.increment()
     }
 
     fun onCreatePollCommand() {
         createPollCommandCounter.increment()
+    }
+
+    fun onAppAddedToConversation() {
+        appAddedToConversationCounter.increment()
     }
 }
