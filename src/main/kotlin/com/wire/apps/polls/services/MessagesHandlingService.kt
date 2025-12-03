@@ -26,6 +26,7 @@ class MessagesHandlingService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
+        usageMetrics.onAppAddedToConversation()
         userCommunicationService.sayHello(manager, conversationId)
     }
 
