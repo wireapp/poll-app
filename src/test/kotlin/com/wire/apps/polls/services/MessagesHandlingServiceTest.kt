@@ -169,4 +169,13 @@ class MessagesHandlingServiceTest {
             coVerify(exactly = 1) { usageMetrics.onHelpCommand() }
             verify { pollService wasNot Called }
         }
+
+    @Test
+    fun `handleAppAddedToConversation method call triggers needed method calls`() =
+        runTest {
+            messagesHandlingService.handleAppAddedToConversation(manager, Stub.id())
+
+            coVerify(exactly = 1) { usageMetrics.onAppAddedToConversation() }
+            coVerify(exactly = 1) { userCommunicationService.sayHello(any(), any()) }
+        }
 }
