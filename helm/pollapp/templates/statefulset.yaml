@@ -1,10 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: {{ include "pollapp.fullname" . }}
   labels:
     {{- include "pollapp.labels" . | nindent 4 }}
 spec:
+  serviceName: {{ include "pollapp.fullname" . }}
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
