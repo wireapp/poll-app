@@ -143,6 +143,8 @@ modules.xml
 # Sonarlint plugin
 .idea/sonarlint
 
+CLAUDE.md
+
 ### Kotlin ###
 # Compiled class file
 
