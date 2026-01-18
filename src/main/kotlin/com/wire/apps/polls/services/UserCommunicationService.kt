@@ -22,12 +22,14 @@ class UserCommunicationService(
     private val version: String
 ) {
     private companion object : KLogging() {
-        const val WELCOME_TEXT =
+        private const val WELCOME_TEXT =
             "👋 Hi, I'm the Poll App. Thanks for adding me to the conversation.\n" +
                 "You can use me to create polls directly in Wire.\n" +
-                "I'm here to help make everyday work a little easier."
+                "I'm here to help make everyday work a little easier.\n"
         const val USAGE = "To create poll please text: " +
             "`/poll \"Question\" \"Option 1\" \"Option 2\"`. To display usage write `/poll help`"
+
+        const val WELCOME_MESSAGE = WELCOME_TEXT + USAGE
     }
 
     /**
@@ -37,12 +39,7 @@ class UserCommunicationService(
         manager: WireApplicationManager,
         conversationId: QualifiedId
     ) {
-        val message = buildString {
-            appendLine(WELCOME_TEXT)
-            append(USAGE)
-        }
-
-        manager.send(textMessage(conversationId, message))
+        manager.send(textMessage(conversationId, WELCOME_MESSAGE))
         logger.info("App sent a welcome message. conversationId: $conversationId")
     }
 
