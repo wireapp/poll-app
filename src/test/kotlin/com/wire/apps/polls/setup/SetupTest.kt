@@ -4,6 +4,7 @@ import com.wire.apps.polls.dao.DatabaseSetup
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
@@ -20,5 +21,7 @@ class SetupTest {
             assertFailsWith<IllegalStateException> {
                 application.connectDatabase()
             }
+
+            unmockkObject(DatabaseSetup)
         }
 }
