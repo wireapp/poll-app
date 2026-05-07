@@ -63,6 +63,7 @@ dependencies {
     testImplementation("io.mockk", "mockk", "1.13.16")
     testImplementation("org.jetbrains.kotlinx", "kotlinx-coroutines-test", "1.7.3")
     testImplementation("org.junit.jupiter", "junit-jupiter-params", "5.10.0")
+    testImplementation("io.ktor", "ktor-server-test-host", ktorVersion)
 }
 
 ktlint {
