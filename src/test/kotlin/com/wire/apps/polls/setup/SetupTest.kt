@@ -1,5 +1,6 @@
+package com.wire.apps.polls.setup
+
 import com.wire.apps.polls.dao.DatabaseSetup
-import com.wire.apps.polls.setup.connectDatabase
 import io.ktor.server.testing.testApplication
 import io.mockk.every
 import io.mockk.mockkObject
