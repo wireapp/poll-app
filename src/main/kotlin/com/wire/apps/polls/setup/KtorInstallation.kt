@@ -72,11 +72,7 @@ fun Application.connectDatabase() {
         installationLogger.info { "DB connected." }
         migrateDatabase(dbConfig)
     } else {
-        // TODO verify handling, maybe exit the App?
-        installationLogger.error {
-            "It was not possible to connect to db database! " +
-                "The application will start but it won't work."
-        }
+        error("Unable to connect to the database")
     }
 }
 
