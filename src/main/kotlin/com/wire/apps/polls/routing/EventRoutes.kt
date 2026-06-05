@@ -6,7 +6,7 @@ import com.wire.apps.polls.setup.conf.SDKConfiguration
 import com.wire.apps.polls.services.MessagesHandlingService
 import com.wire.sdk.WireAppSdk
 import com.wire.sdk.WireEventsHandlerSuspending
-import com.wire.sdk.model.ConversationData
+import com.wire.sdk.model.Conversation
 import com.wire.sdk.model.ConversationMember
 import com.wire.sdk.model.WireMessage
 import io.ktor.server.routing.Routing
@@ -29,10 +29,10 @@ fun Routing.events() {
         applicationId = sdkConfig.appId,
         apiToken = sdkConfig.appToken,
         apiHost = sdkConfig.apiHostUrl,
-        cryptographyStoragePassword = sdkConfig.cryptoPassword,
+        cryptographyStorageKey = sdkConfig.cryptoPassword.toByteArray(),
         wireEventsHandler = object : WireEventsHandlerSuspending() {
             override suspend fun onAppAddedToConversation(
-                conversation: ConversationData,
+                conversation: Conversation,
                 members: List<ConversationMember>
             ) {
                 logger.info(
@@ -59,22 +59,22 @@ fun Routing.events() {
                 )
             }
 
-            override suspend fun onButtonClicked(wireMessage: WireMessage.ButtonAction) {
+            override suspend fun onButtonClicked(buttonAction: WireMessage.ButtonAction) {
                 logger.info(
                     "Event received. Event: ButtonClicked, " +
-                        "conversationId: ${wireMessage.conversationId}, " +
-                        "messageId: ${wireMessage.id}, " +
-                        "senderId: ${wireMessage.sender}"
+                        "conversationId: ${buttonAction.conversationId}, " +
+                        "messageId: ${buttonAction.id}, " +
+                        "senderId: ${buttonAction.sender}"
                 )
-                val pollAction = pollActionMapper.fromButtonAction(wireMessage) ?: return
+                val pollAction = pollActionMapper.fromButtonAction(buttonAction) ?: return
 
                 handler.handlePollAction(
                     manager = manager,
                     pollAction = pollAction,
-                    conversationId = wireMessage.conversationId
+                    conversationId = buttonAction.conversationId
                 )
                 logger.info(
-                    "Button click on poll is processed. conversationId: ${wireMessage.conversationId}"
+                    "Button click on poll is processed. conversationId: ${buttonAction.conversationId}"
                 )
             }
         }
