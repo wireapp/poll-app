@@ -59,10 +59,6 @@ affinity: {}
 
 # Environment variables for the application
 env:
-  - name: WIRE_SDK_USER_ID
-    value: ""
-  - name: WIRE_SDK_EMAIL
-    value: ""
   - name: WIRE_SDK_ENVIRONMENT
     value: ""
   - name: DB_USER

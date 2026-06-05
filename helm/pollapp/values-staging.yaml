@@ -1,9 +1,5 @@
 # Staging environment overrides
 env:
-  - name: WIRE_SDK_USER_ID
-    value: "3adad8bb-4564-4040-b4d0-e4e8156c137a"
-  - name: WIRE_SDK_EMAIL
-    value: "marian.kijewski+poll.app@wire.com"
   - name: WIRE_SDK_ENVIRONMENT
     value: "staging.zinfra.io"
   - name: DB_USER
