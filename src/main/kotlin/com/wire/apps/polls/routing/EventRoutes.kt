@@ -9,10 +9,10 @@ import com.wire.sdk.WireEventsHandlerSuspending
 import com.wire.sdk.model.Conversation
 import com.wire.sdk.model.ConversationMember
 import com.wire.sdk.model.WireMessage
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.routing.Routing
 import org.kodein.di.instance
 import org.kodein.di.ktor.closestDI
-import org.slf4j.LoggerFactory
 import kotlin.getValue
 
 /**
@@ -23,7 +23,7 @@ fun Routing.events() {
     val handler by di.instance<MessagesHandlingService>()
     val sdkConfig by di.instance<SDKConfiguration>()
     val pollActionMapper by di.instance<PollActionMapper>()
-    val logger = LoggerFactory.getLogger(this::class.java)
+    val logger = KotlinLogging.logger {}
 
     val wireAppSdk = WireAppSdk(
         applicationId = sdkConfig.appId,
@@ -35,37 +35,37 @@ fun Routing.events() {
                 conversation: Conversation,
                 members: List<ConversationMember>
             ) {
-                logger.info(
+                logger.info {
                     "Event received. Event: AppAddedToConversation, " +
                         "conversationId: ${conversation.id}"
-                )
+                }
                 handler.handleAppAddedToConversation(manager, conversation.id)
-                logger.info("App added to conversation. conversationId: ${conversation.id}")
+                logger.info { "App added to conversation. conversationId: ${conversation.id}" }
             }
 
             override suspend fun onTextMessageReceived(wireMessage: WireMessage.Text) {
-                logger.info(
+                logger.info {
                     "Event received. Event: TextMessageReceived, " +
                         "conversationId: ${wireMessage.conversationId}, " +
                         "messageId: ${wireMessage.id}, " +
                         "senderId: ${wireMessage.sender}"
-                )
+                }
                 val usersInput = fromWire(wireMessage)
                 // TODO :: It is better to validate the command here
                 //  and not go to the handler if the command is invalid
                 handler.handleUserCommand(manager, usersInput)
-                logger.info(
+                logger.info {
                     "Text message is processed. conversationId: ${wireMessage.conversationId}"
-                )
+                }
             }
 
             override suspend fun onButtonClicked(buttonAction: WireMessage.ButtonAction) {
-                logger.info(
+                logger.info {
                     "Event received. Event: ButtonClicked, " +
                         "conversationId: ${buttonAction.conversationId}, " +
                         "messageId: ${buttonAction.id}, " +
                         "senderId: ${buttonAction.sender}"
-                )
+                }
                 val pollAction = pollActionMapper.fromButtonAction(buttonAction) ?: return
 
                 handler.handlePollAction(
@@ -73,9 +73,9 @@ fun Routing.events() {
                     pollAction = pollAction,
                     conversationId = buttonAction.conversationId
                 )
-                logger.info(
+                logger.info {
                     "Button click on poll is processed. conversationId: ${buttonAction.conversationId}"
-                )
+                }
             }
         }
     )
