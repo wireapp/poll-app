@@ -9,7 +9,7 @@ import com.wire.apps.polls.parser.PollFactory
 import com.wire.apps.polls.services.UserCommunicationService.FallbackMessageType.WRONG_COMMAND
 import com.wire.sdk.model.QualifiedId
 import com.wire.sdk.service.WireApplicationManager
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import pw.forst.katlib.whenNull
 import pw.forst.katlib.whenTrue
 
@@ -22,7 +22,7 @@ class PollService(
     private val conversationService: ConversationService,
     private val userCommunicationService: UserCommunicationService
 ) {
-    private companion object : KLogging()
+    private val logger = KotlinLogging.logger {}
 
     suspend fun createPoll(
         manager: WireApplicationManager,

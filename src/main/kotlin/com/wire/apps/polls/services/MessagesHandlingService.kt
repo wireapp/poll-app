@@ -7,7 +7,7 @@ import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.setup.metrics.UsageMetrics
 import com.wire.sdk.model.QualifiedId
 import com.wire.sdk.service.WireApplicationManager
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Connect conversation-based events to app functionality
@@ -17,7 +17,7 @@ class MessagesHandlingService(
     private val userCommunicationService: UserCommunicationService,
     private val usageMetrics: UsageMetrics
 ) {
-    private companion object : KLogging()
+    private val logger = KotlinLogging.logger {}
 
     /**
      * Welcomes the user by listing available commands.
@@ -88,7 +88,7 @@ class MessagesHandlingService(
             trimmed == "good app" -> {
                 userCommunicationService.goodApp(manager, conversationId)
             }
-            else -> logger.debug("Ignoring the message, unrecognized command.")
+            else -> logger.debug { "Ignoring the message, unrecognized command." }
         }
     }
 }

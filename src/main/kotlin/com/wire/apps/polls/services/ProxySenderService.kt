@@ -3,13 +3,13 @@ package com.wire.apps.polls.services
 import com.wire.sdk.exception.WireException
 import com.wire.sdk.model.WireMessage
 import com.wire.sdk.service.WireApplicationManager
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Service responsible for sending requests to the proxy service.
  */
 class ProxySenderService {
-    private companion object : KLogging()
+    private val logger = KotlinLogging.logger {}
 
     /**
      * Respond to the event issued by user.

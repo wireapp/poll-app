@@ -5,10 +5,12 @@ import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.UsersInput
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class InputParser {
-    private companion object : KLogging() {
+    private val logger = KotlinLogging.logger {}
+
+    private companion object {
         val delimiters = charArrayOf('\"', '“')
 
         val delimitersSet = delimiters.toSet()

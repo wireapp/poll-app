@@ -4,7 +4,7 @@ import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.utils.OPTION_BUTTON_PREFIX
 import com.wire.apps.polls.utils.RESULTS_BUTTON_ID
 import com.wire.sdk.model.WireMessage
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import pw.forst.katlib.whenNull
 
 /**
@@ -15,7 +15,7 @@ import pw.forst.katlib.whenNull
 class PollActionMapper(
     private val pollRepository: PollRepository
 ) {
-    private companion object : KLogging()
+    private val logger = KotlinLogging.logger {}
 
     suspend fun fromButtonAction(buttonAction: WireMessage.ButtonAction): PollAction? =
         when {
