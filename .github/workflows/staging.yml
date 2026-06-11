@@ -43,25 +43,3 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-
-#      - name: Update Helm values for staging with new image tag
-#        id: update_helm_tag
-#        run: |
-#          TAG=$(echo "${{ steps.meta.outputs.tags }}" | grep -oE '[^:]+$')
-#          echo "::set-output name=tag::$TAG"
-#          sed -i 's/^\( *tag: \).*/\1"'$TAG'"/' helm/pollapp/values-staging.yaml
-#        shell: bash
-#
-#      - name: Commit and push updated Helm values
-#        run: |
-#          git config --global user.name "github-actions[bot]"
-#          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-#          git add helm/pollapp/values-staging.yaml
-#          git commit -m "chore: Update staging Helm image tag to ${{ steps.update_helm_tag.outputs.tag }} [ci skip]"
-#          git pull --rebase origin main
-#          git push
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        shell: bash
-
-      # This build just pushes the image to quay.io, will add deploy steps when ArgoCD is set up
