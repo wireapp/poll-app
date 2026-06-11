@@ -3,7 +3,6 @@ package com.wire.apps.polls.parser
 import com.wire.apps.polls.dto.Option
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Text
-import mu.KLogging
 
 private typealias QuestionRule = (Text) -> String?
 private typealias OptionRule = (Option) -> String?
@@ -13,8 +12,6 @@ private typealias PollRule = (PollDto) -> String?
  * Class validating the polls.
  */
 class PollValidation {
-    private companion object : KLogging()
-
     private val questionRules =
         listOf<QuestionRule> { question ->
             if (question.data.isNotBlank()) null else "The question must not be empty!"

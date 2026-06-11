@@ -15,7 +15,7 @@ import com.wire.apps.polls.setup.metrics.UsageMetrics
 import com.wire.apps.polls.utils.createLogger
 import io.micrometer.prometheusmetrics.PrometheusConfig
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry
-import mu.KLogger
+import io.github.oshai.kotlinlogging.KLogger
 import org.kodein.di.DI
 import org.kodein.di.bind
 import org.kodein.di.instance

@@ -35,7 +35,7 @@ dependencies {
     // logging
     implementation("net.logstash.logback", "logstash-logback-encoder", "8.1")
     implementation("ch.qos.logback", "logback-classic", "1.5.19")
-    implementation("io.github.microutils", "kotlin-logging", "2.0.6")
+    implementation("io.github.oshai", "kotlin-logging", "8.0.4")
 
     // metrics
     implementation("io.ktor", "ktor-server-metrics-micrometer", ktorVersion)

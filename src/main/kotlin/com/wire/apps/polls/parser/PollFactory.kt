@@ -2,7 +2,7 @@ package com.wire.apps.polls.parser
 
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.UsersInput
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import pw.forst.katlib.newLine
 import pw.forst.katlib.whenNull
 
@@ -13,7 +13,7 @@ class PollFactory(
     private val inputParser: InputParser,
     private val pollValidation: PollValidation
 ) {
-    private companion object : KLogging()
+    private val logger = KotlinLogging.logger {}
 
     /**
      * Parse and create poll for the [usersInput].

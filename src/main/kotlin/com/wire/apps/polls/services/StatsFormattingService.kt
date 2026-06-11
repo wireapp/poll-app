@@ -2,7 +2,7 @@ package com.wire.apps.polls.services
 
 import com.wire.apps.polls.dao.PollRepository
 import com.wire.apps.polls.dto.common.Text
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import pw.forst.katlib.newLine
 import pw.forst.katlib.whenNull
 import kotlin.math.min
@@ -10,7 +10,9 @@ import kotlin.math.min
 class StatsFormattingService(
     private val repository: PollRepository
 ) {
-    private companion object : KLogging() {
+    private val logger = KotlinLogging.logger {}
+
+    private companion object {
         const val TITLE_PREFIX = "**Results** for poll *\""
 
         /**

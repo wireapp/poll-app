@@ -10,7 +10,7 @@ import com.wire.apps.polls.dto.updatePollOverviewProgressBar
 import com.wire.sdk.model.QualifiedId
 import com.wire.sdk.model.WireMessage
 import com.wire.sdk.service.WireApplicationManager
-import mu.KLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import pw.forst.katlib.whenNull
 
 /**
@@ -21,7 +21,9 @@ class UserCommunicationService(
     private val statsFormattingService: StatsFormattingService,
     private val version: String
 ) {
-    private companion object : KLogging() {
+    private val logger = KotlinLogging.logger {}
+
+    private companion object {
         private const val WELCOME_TEXT =
             "👋 Hi, I'm the Poll App. Thanks for adding me to the conversation.\n" +
                 "You can use me to create polls directly in Wire.\n" +
@@ -40,7 +42,7 @@ class UserCommunicationService(
         conversationId: QualifiedId
     ) {
         manager.send(textMessage(conversationId, WELCOME_MESSAGE))
-        logger.info("App sent a welcome message. conversationId: $conversationId")
+        logger.info { "App sent a welcome message. conversationId: $conversationId" }
     }
 
     /**

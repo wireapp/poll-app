@@ -4,7 +4,6 @@ import com.wire.apps.polls.dto.PollAction.VoteAction
 import com.wire.apps.polls.dto.PollDto
 import com.wire.apps.polls.dto.common.Mention
 import com.wire.apps.polls.dto.common.Text
-import mu.KLogging
 import org.jetbrains.exposed.sql.JoinType
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.batchInsert
@@ -21,8 +20,6 @@ import pw.forst.katlib.mapToSet
  */
 @Suppress("TooManyFunctions")
 class PollRepository {
-    private companion object : KLogging()
-
     /**
      * Saves given poll to database and returns its id (same as the [pollId] parameter,
      * but this design supports fluent style in the services.)
