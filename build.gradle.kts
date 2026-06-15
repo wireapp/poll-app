@@ -21,7 +21,7 @@ repositories {
 }
 
 dependencies {
-    implementation("com.wire", "wire-apps-jvm-sdk", "0.2.0-alpha")
+    implementation("com.wire", "wire-apps-jvm-sdk", "0.2.0")
     // stdlib
     implementation(kotlin("stdlib-jdk8"))
     // extension functions
