@@ -1,0 +1,15 @@
+# Namespace-specific values for apps-poll-prod.
+# Move this to argocd-integrations repo when ArgoCd is configured for apps-prod cluster.
+image:
+  repository: quay.io/wire/poll-app
+  tag: "sha-9a03ad7"
+
+env:
+  - name: DB_USER
+    value: "poll-app-user"
+  - name: DB_URL
+    value: "jdbc:postgresql://apps-prod-aurora-pg.cluster-cfym8eeo0ka0.eu-central-1.rds.amazonaws.com:5432/poll-app-db"
+  - name: SDK_APP_ID
+    value: "64b8bc67-77da-43dc-9d97-bf857627de07"
+  - name: API_HOST_URL
+    value: "https://prod-nginz-https.wire.com"
