@@ -28,9 +28,9 @@ class UserCommunicationService(
             "Hi there,\n" +
                 "I'm the Poll app. Let me help you make decisions and get feedback " +
                 "from your team.\n\n" +
-                "Here’s how it works:\n" +
+                "Here's how it works:\n" +
                 "🗳️ Your votes are always anonymous\n" +
-                "📊 People can view the current vote count at any time.\n" +
+                "📊 People can view the current vote count at any time\n" +
                 "🔍 Get a reminder how to start a poll by entering `/poll help`\n\n"
 
         private const val USAGE =
