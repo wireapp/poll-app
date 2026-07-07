@@ -25,11 +25,17 @@ class UserCommunicationService(
 
     private companion object {
         private const val WELCOME_TEXT =
-            "👋 Hi, I'm the Poll App. Thanks for adding me to the conversation.\n" +
-                "You can use me to create polls directly in Wire.\n" +
-                "I'm here to help make everyday work a little easier.\n"
-        const val USAGE = "To create poll please text: " +
-            "`/poll \"Question\" \"Option 1\" \"Option 2\"`. To display usage write `/poll help`"
+            "Hi there,\n" +
+                "I'm the Poll app. Let me help you make decisions and get feedback " +
+                "from your team.\n\n" +
+                "Here's how it works:\n" +
+                "🗳️ Your votes are always anonymous\n" +
+                "📊 People can view the current vote count at any time\n" +
+                "🔍 Get a reminder how to start a poll by entering `/poll help`\n\n"
+
+        private const val USAGE =
+            "To start a poll use this command:\n" +
+                "`/poll \"What do you want for lunch?\" \"Pizza\" \"Sushi\" \"Burgers\"`"
 
         const val WELCOME_MESSAGE = WELCOME_TEXT + USAGE
     }
