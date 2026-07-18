@@ -21,7 +21,9 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import kotlin.test.Ignore
 
+@Ignore("Percentage voting blocked until WPB-27239 is done")
 class StatsFormattingServiceTest {
     val pollRepository = mockk<PollRepository>()
 

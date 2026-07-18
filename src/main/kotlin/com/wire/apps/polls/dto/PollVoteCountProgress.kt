@@ -1,8 +1,5 @@
 package com.wire.apps.polls.dto
 
-import com.wire.apps.polls.services.VoteDisplay
-import kotlin.math.roundToInt
-
 data class PollVoteCountProgress(
     val totalVoteCount: Int,
     val totalMembers: Int
@@ -16,12 +13,12 @@ data class PollVoteCountProgress(
         fun new(): String = initial().display()
     }
 
+    /**
+     * Percentage voting blocked until WPB-27239 is done
+     */
     fun display(): String {
-        val percent = if (totalMembers > 0) totalVoteCount.toDouble() / totalMembers else 0.0
-        val voteDisplay = VoteDisplay((percent * BLOCKS).roundToInt(), BLOCKS)
-        val percentDisplay = (percent * PERCENTAGE_FACTOR).roundToInt()
-
-        return "$voteDisplay $percentDisplay%"
+        val progressString = (0 until totalVoteCount).joinToString("") { "🟢" }
+        return "$progressString ($totalVoteCount)"
     }
 
     fun everyoneVoted() = (totalVoteCount == totalMembers)
