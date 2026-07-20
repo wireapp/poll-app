@@ -5,7 +5,6 @@ import com.wire.apps.polls.dto.common.Text
 import io.github.oshai.kotlinlogging.KotlinLogging
 import pw.forst.katlib.newLine
 import pw.forst.katlib.whenNull
-import kotlin.math.min
 
 class StatsFormattingService(
     private val repository: PollRepository
@@ -71,6 +70,7 @@ class StatsFormattingService(
      * - ⬛⬛⬛ A (3)
      * - ⬜⬜⬜ B (1)
      */
+    @Suppress("UnusedParameter")
     private fun formatVotes(
         stats: Map<Pair<Int, String>, Int>,
         conversationMembers: Int
@@ -79,10 +79,8 @@ class StatsFormattingService(
         val mostPopularOptionVoteCount =
             requireNotNull(stats.values.maxOrNull()) { "There were no stats!" }
 
-        val maximumSize = min(
-            conversationMembers,
-            mostPopularOptionVoteCount + MAX_VOTE_PLACEHOLDER_COUNT
-        )
+        // Percentage voting blocked until WPB-27239 is done
+        val maximumSize = mostPopularOptionVoteCount
 
         return stats
             .map { (option, votingUsers) ->
