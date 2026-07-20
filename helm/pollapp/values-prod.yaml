@@ -2,7 +2,7 @@
 # Move this to argocd-integrations repo when ArgoCd is configured for apps-prod cluster.
 image:
   repository: quay.io/wire/poll-app
-  tag: "sha-9a03ad7"
+  tag: "sha-5c7f84a"
 
 env:
   - name: DB_USER
