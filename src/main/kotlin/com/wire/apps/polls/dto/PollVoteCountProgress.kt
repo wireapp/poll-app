@@ -16,10 +16,7 @@ data class PollVoteCountProgress(
     /**
      * Percentage voting blocked until WPB-27239 is done
      */
-    fun display(): String {
-        val progressString = (0 until totalVoteCount).joinToString("") { "🟢" }
-        return "$progressString ($totalVoteCount)"
-    }
+    fun display(): String = "Total votes: $totalVoteCount"
 
     fun everyoneVoted() = (totalVoteCount == totalMembers)
 }
