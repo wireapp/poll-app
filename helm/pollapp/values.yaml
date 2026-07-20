@@ -59,8 +59,6 @@ affinity: {}
 
 # Environment variables for the application
 env:
-  - name: WIRE_SDK_ENVIRONMENT
-    value: ""
   - name: DB_USER
     value: ""
   - name: DB_URL
