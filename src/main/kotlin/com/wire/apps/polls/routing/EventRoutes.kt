@@ -26,7 +26,6 @@ fun Routing.events() {
     val logger = KotlinLogging.logger {}
 
     val wireAppSdk = WireAppSdk(
-        applicationId = sdkConfig.appId,
         apiToken = sdkConfig.appToken,
         apiHost = sdkConfig.apiHostUrl,
         cryptographyStorageKey = sdkConfig.cryptoPassword.toByteArray(),

@@ -63,8 +63,6 @@ env:
     value: ""
   - name: DB_URL
     value: ""
-  - name: SDK_APP_ID
-    value: ""
   - name: API_HOST_URL
     value: ""
 
