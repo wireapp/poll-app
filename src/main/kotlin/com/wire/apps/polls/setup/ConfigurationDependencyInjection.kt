@@ -7,7 +7,6 @@ import com.wire.apps.polls.setup.EnvConfigVariables.CRYPTO_PASSWORD
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_PASSWORD
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_URL
 import com.wire.apps.polls.setup.EnvConfigVariables.DB_USER
-import com.wire.apps.polls.setup.EnvConfigVariables.SDK_APP_ID
 import com.wire.apps.polls.setup.EnvConfigVariables.SDK_APP_TOKEN
 import com.wire.apps.polls.utils.createLogger
 import org.kodein.di.DI
@@ -16,7 +15,6 @@ import org.kodein.di.singleton
 import pw.forst.katlib.getEnv
 import pw.forst.katlib.whenNull
 import java.io.File
-import java.util.UUID
 
 private val logger = createLogger("EnvironmentLoaderLogger")
 
@@ -58,7 +56,6 @@ fun DI.MainBuilder.bindConfiguration() {
 
     bind<SDKConfiguration>() with singleton {
         SDKConfiguration(
-            appId = UUID.fromString(getEnvOrThrow(SDK_APP_ID)),
             appToken = getEnvOrThrow(SDK_APP_TOKEN),
             apiHostUrl = getEnvOrLogDefault(API_HOST_URL, "https://prod-nginz-https.wire.com"),
             cryptoPassword = getEnvOrThrow(CRYPTO_PASSWORD)
