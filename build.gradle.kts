@@ -18,10 +18,13 @@ application {
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://maven.wire.com")
+    }
 }
 
 dependencies {
-    implementation("com.wire", "wire-apps-jvm-sdk", "0.3.0")
+    implementation("com.wire", "wire-apps-jvm-sdk", "0.3.1")
     // stdlib
     implementation(kotlin("stdlib-jdk8"))
     // extension functions
